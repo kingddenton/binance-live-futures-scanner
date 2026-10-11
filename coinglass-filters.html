@@ -473,332 +473,344 @@ async function worker(items, count, task, signal) {
   await Promise.all(workers);
 } 
 function getEnabledFilters() {
-  return activeFilters();
-}
-
-function getColumnLabel(key) {
-  if (key === "pair") return "Pair";
-  if (key === "change24") return "24h Change";
-  if (key === "quoteVolume") return "24h Quote Volume";
-
-  const parts = key.split("_");
-  const group = parts.shift();
-  const tf = parts.join("_");
-
-  if (group === "rsi") return "RSI " + tf;
-  if (group === "price") return "Price Change " + tf + " %";
-  if (group === "volume") return "Volume Change " + tf + " %";
-  return key;
-}
-
-function getCellValue(row, key) {
-  if (key === "pair") return row.symbol || row.pair || "";
-  if (key === "change24") return row.change24;
-  if (key === "quoteVolume") return row.quoteVolume;
-  return row[key];
-}
-
-function displayValue(value, key) {
-  if (value === null || value === undefined || !Number.isFinite(Number(value))) {
-    return "—";
+  try {
+    return activeFilters();
+  } catch (error) {
+    setScanStatus(error.message || "Please check the filter settings.");
+    return null;
   }
-
-  if (key === "quoteVolume") return fmtNum(Number(value));
-  if (key === "change24" || key.startsWith("price_") || key.startsWith("volume_")) {
-    return fmtPct(Number(value));
-  }
-  if (key.startsWith("rsi_")) return Number(value).toFixed(2);
-
-  return String(value);
 }
+
+let repeatTimer = null;
 
 function renderResults() {
-  const table = $("results");
-  if (!table) {
-    console.error('Cannot find the results table element with id="results".');
-    return;
-  }
+  const head = $("resultsHead");
+  const body = $("resultsBody");
+  if (!head || !body) return;
 
   const columns = [
-    {key:"pair", label:"Pair"},
-    ...Array.from(visibleColumns)
-      .filter(key => key !== "pair")
-      .map(key => ({key, label:getColumnLabel(key)}))
+    { key: "pair", label: "Pair" }
   ];
 
-  columns.sort((a, b) => {
-    if (a.key === "pair") return -1;
-    if (b.key === "pair") return 1;
-    return 0;
-  });
-
-  const rows = [...latestResults];
-
-  rows.sort((a, b) => {
-    const av = getCellValue(a, sortKey);
-    const bv = getCellValue(b, sortKey);
-
-    if (av == null) return 1;
-    if (bv == null) return -1;
-
-    const an = Number(av);
-    const bn = Number(bv);
-
-    if (Number.isFinite(an) && Number.isFinite(bn)) {
-      return (an - bn) * sortDirection;
-    }
-
-    return String(av).localeCompare(String(bv)) * sortDirection;
-  });
-
-  let thead = table.querySelector("thead");
-  let tbody = table.querySelector("tbody");
-
-  if (!thead) {
-    thead = document.createElement("thead");
-    table.appendChild(thead);
-  }
-  if (!tbody) {
-    tbody = document.createElement("tbody");
-    table.appendChild(tbody);
+  if (visibleColumns.has("change24")) {
+    columns.push({ key: "change24", label: "24h Change" });
   }
 
-  thead.innerHTML = "";
-  tbody.innerHTML = "";
+  if (visibleColumns.has("quoteVolume")) {
+    columns.push({ key: "quoteVolume", label: "24h Volume" });
+  }
 
-  const headerRow = document.createElement("tr");
-
-  for (const col of columns) {
-    const th = document.createElement("th");
-    th.textContent = col.label;
-
-    if (col.key !== "pair") {
-      th.style.cursor = "pointer";
-      if (sortKey === col.key) {
-        th.textContent += sortDirection === 1 ? " ▲" : " ▼";
-      }
-
-      th.addEventListener("click", () => {
-        if (sortKey === col.key) {
-          sortDirection *= -1;
-        } else {
-          sortKey = col.key;
-          sortDirection = -1;
-        }
-
-        localStorage.setItem(sortPrefsKey, JSON.stringify({
-          key: sortKey,
-          direction: sortDirection
-        }));
-
-        renderResults();
+  for (const key of visibleColumns) {
+    if (key.startsWith("rsi_")) {
+      columns.push({
+        key,
+        label: "RSI " + key.slice(4)
+      });
+    } else if (key.startsWith("price_")) {
+      columns.push({
+        key,
+        label: "Price Change " + key.slice(6) + " %"
+      });
+    } else if (key.startsWith("volume_")) {
+      columns.push({
+        key,
+        label: "Volume Change " + key.slice(7) + " %"
       });
     }
-
-    headerRow.appendChild(th);
   }
 
-  thead.appendChild(headerRow);
-
-  for (const row of rows) {
-    const tr = document.createElement("tr");
-
-    for (const col of columns) {
-      const td = document.createElement("td");
-      const value = getCellValue(row, col.key);
-      td.textContent = col.key === "pair"
-        ? String(value || "—")
-        : displayValue(value, col.key);
-
-      if (col.key === "change24" || col.key.startsWith("price_") ||
-          col.key.startsWith("volume_")) {
-        td.className = pctClass(Number(value));
+  head.innerHTML =
+    "<tr>" +
+    columns.map(col => {
+      if (col.key === "pair") {
+        return "<th>" + col.label + "</th>";
       }
 
-      tr.appendChild(td);
+      return (
+        '<th data-sort="' +
+        col.key +
+        '" style="cursor:pointer">' +
+        col.label +
+        (sortKey === col.key
+          ? (sortDirection === 1 ? " ▲" : " ▼")
+          : "") +
+        "</th>"
+      );
+    }).join("") +
+    "</tr>";
+
+  head.querySelectorAll("[data-sort]").forEach(th => {
+    th.addEventListener("click", () => {
+      const key = th.getAttribute("data-sort");
+
+      if (sortKey === key) {
+        sortDirection *= -1;
+      } else {
+        sortKey = key;
+        sortDirection = key === "quoteVolume" ? -1 : 1;
+      }
+
+      savePrefs();
+      renderResults();
+    });
+  });
+
+  const sorted = [...latestResults].sort((a, b) => {
+    const av = Number(a[sortKey]);
+    const bv = Number(b[sortKey]);
+
+    if (Number.isFinite(av) && Number.isFinite(bv)) {
+      return (av - bv) * sortDirection;
     }
 
-    tbody.appendChild(tr);
-  }
+    return String(a[sortKey] ?? "")
+      .localeCompare(String(b[sortKey] ?? "")) * sortDirection;
+  });
 
-  const info = $("resultInfo");
-  if (info) {
-    info.textContent = `${rows.length} matching pairs`;
-  }
-}
+  body.innerHTML = sorted.map(row => {
+    return (
+      "<tr>" +
+      columns.map(col => {
+        const value = row[col.key];
 
-function setScanStatus(message) {
-  const status = $("status");
-  if (status) status.textContent = message;
+        if (col.key === "pair") {
+          return (
+            "<td><strong>" +
+            String(value ?? "") +
+            "</strong></td>"
+          );
+        }
+
+        if (
+          value === null ||
+          value === undefined ||
+          value === "" ||
+          !Number.isFinite(Number(value))
+        ) {
+          return "<td>—</td>";
+        }
+
+        const n = Number(value);
+
+        const formatted =
+          col.key === "quoteVolume"
+            ? n.toLocaleString(undefined, {
+                maximumFractionDigits: 0
+              })
+            : n.toLocaleString(undefined, {
+                maximumFractionDigits: 2
+              });
+
+        const isPercent =
+          col.key === "change24" ||
+          col.key.startsWith("price_") ||
+          col.key.startsWith("volume_");
+
+        return (
+          "<td>" +
+          formatted +
+          (isPercent ? "%" : "") +
+          "</td>"
+        );
+      }).join("") +
+      "</tr>"
+    );
+  }).join("");
+
+  $("matchCount").textContent = String(latestResults.length);
+  $("checkedCount").textContent = String(checkedMarkets);
 }
 
 async function scanMarkets() {
   if (running) return;
 
   const filters = getEnabledFilters();
-  if (!filters || filters.length === 0) {
-    setScanStatus("Enable at least one technical filter before scanning.");
+
+  if (!filters) return;
+
+  if (!filters.length) {
+    setScanStatus(
+      "Enable at least one technical filter before scanning."
+    );
     return;
   }
 
   running = true;
   abortController = new AbortController();
 
-  const startButton = $("start");
-  const stopButton = $("stop");
-  if (startButton) startButton.disabled = true;
-  if (stopButton) stopButton.disabled = false;
+  const signal = abortController.signal;
+
+  $("start").disabled = true;
+  $("stop").disabled = false;
 
   latestResults = [];
   checkedMarkets = 0;
+
   renderResults();
-  setScanStatus("Loading Binance Futures markets…");
+
+  setScanStatus("Loading Binance futures markets…");
 
   try {
-    const exchangeInfo = await fetch(
-      "https://fapi.binance.com/fapi/v1/exchangeInfo",
-      {signal: abortController.signal}
+    const markets = await fetchMarket(signal);
+
+    const intervalNeeds = requirements(filters);
+
+    setScanStatus(
+      "Checking " + markets.length + " markets…"
     );
 
-    if (!exchangeInfo.ok) throw new Error("Could not load Binance market list.");
-    const exchangeData = await exchangeInfo.json();
+    await worker(
+      markets,
+      5,
+      async market => {
+        if (signal.aborted) return;
 
-    let markets = exchangeData.symbols.filter(s =>
-      s.status === "TRADING" &&
-      s.contractType === "PERPETUAL" &&
-      s.quoteAsset === "USDT"
-    );
-
-    const search = ($("search")?.value || "").trim().toUpperCase();
-    if (search) markets = markets.filter(s => s.symbol.includes(search));
-
-    const contract = $("contract")?.value;
-    if (contract && contract !== "all") {
-      markets = markets.filter(s => s.contractType === contract);
-    }
-
-    const tickerResponse = await fetch(
-      "https://fapi.binance.com/fapi/v1/ticker/24hr",
-      {signal: abortController.signal}
-    );
-
-    if (!tickerResponse.ok) throw new Error("Could not load 24-hour market data.");
-    const tickers = await tickerResponse.json();
-    const tickerMap = new Map(tickers.map(t => [t.symbol, t]));
-
-    markets = markets.filter(m => {
-      const t = tickerMap.get(m.symbol);
-      if (!t) return false;
-
-      const minVolume = Number($("minVolume")?.value || 0);
-      return Number(t.quoteVolume) >= minVolume;
-    });
-
-    const direction = $("priceDirection")?.value;
-    if (direction === "gainers") {
-      markets = markets.filter(m => Number(tickerMap.get(m.symbol)?.priceChangePercent) > 0);
-    } else if (direction === "losers") {
-      markets = markets.filter(m => Number(tickerMap.get(m.symbol)?.priceChangePercent) < 0);
-    }
-
-    setScanStatus(`Scanning ${markets.length} USDT perpetual markets…`);
-
-    const results = [];
-    const signal = abortController.signal;
-
-    await worker(markets, 5, async market => {
-      if (signal.aborted) return;
-
-      try {
-        const ticker = tickerMap.get(market.symbol);
-        const row = await analyzePair(market.symbol, ticker, signal);
+        const row = await analyzePair(
+          market,
+          filters,
+          intervalNeeds,
+          signal
+        );
 
         checkedMarkets++;
 
-        if (row) results.push(row);
-        latestResults = [...results];
-        renderResults();
+        if (row) {
+          row.symbol = market.symbol;
 
-        setScanStatus(
-          `Scanned ${checkedMarkets} / ${markets.length} markets · ${results.length} matches`
-        );
-      } catch (error) {
-        if (error.name !== "AbortError") {
-          console.warn("Skipped market:", market.symbol, error.message);
+          row.change24 =
+            Number(market.ticker.priceChangePercent);
+
+          row.quoteVolume =
+            Number(market.ticker.quoteVolume);
+
+          latestResults.push(row);
         }
-      }
-    }, signal);
+
+        $("checkedCount").textContent =
+          String(checkedMarkets);
+
+        $("matchCount").textContent =
+          String(latestResults.length);
+
+        renderResults();
+      },
+      signal
+    );
 
     if (!signal.aborted) {
-      latestResults = results;
-      renderResults();
-      setScanStatus(`Scan complete · ${checkedMarkets} markets checked · ${results.length} matches`);
+      $("lastScan").textContent =
+        new Date().toLocaleTimeString();
+
+      setScanStatus(
+        "Scan complete. " +
+        latestResults.length +
+        " matches from " +
+        checkedMarkets +
+        " markets."
+      );
     }
+
   } catch (error) {
-    if (error.name !== "AbortError") {
-      console.error(error);
-      setScanStatus("Scan error: " + error.message);
-    } else {
-      setScanStatus("Scan stopped.");
+    if (!signal.aborted) {
+      setScanStatus(
+        "Scan error: " +
+        (error.message || String(error))
+      );
     }
+
   } finally {
     running = false;
     abortController = null;
 
-    if (startButton) startButton.disabled = false;
-    if (stopButton) stopButton.disabled = true;
+    $("start").disabled = false;
+    $("stop").disabled = true;
+
+    if (!signal.aborted) {
+      clearTimeout(repeatTimer);
+
+      repeatTimer = setTimeout(
+        () => scanMarkets(),
+        15000
+      );
+    }
   }
 }
 
 function stopScan() {
-  if (abortController) abortController.abort();
+  clearTimeout(repeatTimer);
+  repeatTimer = null;
+
+  if (abortController) {
+    abortController.abort();
+    setScanStatus("Stopping scanner…");
+  }
 }
 
-function resetScanFilters() {
-  document.querySelectorAll(
-    '[data-key][data-bound], [data-key][type="checkbox"]'
-  ).forEach(input => {
-    if (input.type === "checkbox") {
-      input.checked = false;
-    } else {
-      input.value = "";
-    }
-  });
-
+function clearResults() {
   latestResults = [];
+  checkedMarkets = 0;
+
   renderResults();
-  setScanStatus("Filters reset. Select your filters and start a scan.");
+
+  $("lastScan").textContent = "—";
+
+  setScanStatus(
+    "Results cleared. Your filters are unchanged."
+  );
 }
 
 function initializeScanner() {
   loadPrefs();
-
-  try {
-    const savedSort = JSON.parse(localStorage.getItem(sortPrefsKey) || "null");
-    if (savedSort && typeof savedSort.key === "string") {
-      sortKey = savedSort.key;
-      sortDirection = savedSort.direction === 1 ? 1 : -1;
-    }
-  } catch (_) {}
-
   renderColumnControls();
   renderResults();
 
-  $("start")?.addEventListener("click", scanMarkets);
-  $("stop")?.addEventListener("click", stopScan);
-  $("reset")?.addEventListener("click", resetScanFilters);
+  $("start").addEventListener(
+    "click",
+    () => {
+      clearTimeout(repeatTimer);
+      scanMarkets();
+    }
+  );
+
+  $("stop").addEventListener(
+    "click",
+    stopScan
+  );
+
+  $("clear").addEventListener(
+    "click",
+    clearResults
+  );
 
   const toggle = $("toggleFilters");
-  const filterArea = $("technicalFilters");
 
-  toggle?.addEventListener("click", () => {
-    if (!filterArea) return;
-    const hidden = filterArea.style.display === "none";
-    filterArea.style.display = hidden ? "" : "none";
-    toggle.textContent = hidden ? "Hide technical filters" : "Show technical filters";
-  });
+  toggle.addEventListener(
+    "click",
+    () => {
+      const groups = $("filterGroups");
 
-  setScanStatus("Ready. Choose filters, then start scanning.");
+      const hidden =
+        groups.style.display === "none";
+
+      groups.style.display =
+        hidden ? "" : "none";
+
+      toggle.textContent =
+        hidden
+          ? "Hide technical filters"
+          : "Show technical filters";
+    }
+  );
+
+  $("stop").disabled = true;
+
+  setScanStatus(
+    "Ready. Choose filters, then start scanning."
+  );
 }
 
 initializeScanner();
+
+</script>
+</body>
+</html>
