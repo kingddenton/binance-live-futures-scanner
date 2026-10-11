@@ -2,98 +2,90 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Binance Futures — CoinGlass Style Filters</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Binance RSI Scanner</title>
 <style>
-:root{color-scheme:dark;--bg:#0b0e14;--panel:#131923;--line:#273142;--muted:#93a0b4;--text:#e9eef7;--green:#20c997;--red:#ff6377;--blue:#5798ff}
-*{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--text);font:14px Arial,sans-serif}
-main{max-width:1500px;margin:auto;padding:18px}
-h1{font-size:23px;margin:0 0 7px}
-h2{font-size:16px;margin:0 0 14px}
-p,.muted{color:var(--muted);line-height:1.5}
-.top{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:18px}
-.panel{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px;margin-bottom:14px}
-.filters{display:grid;grid-template-columns:repeat(auto-fit,minmax(290px,1fr));gap:12px}
-.group{border:1px solid var(--line);border-radius:9px;padding:12px;min-width:0}
-.group-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:10px}
-.group-head h2{margin:0}
-.filter-row{display:grid;grid-template-columns:72px 1fr 1fr;gap:8px;align-items:center;padding:6px 0;border-top:1px solid #222b39}
-.filter-row:first-of-type{border-top:0}
-.filter-row label{font-size:12px;color:var(--muted)}
-.filter-row input[type=number]{width:100%;min-width:0;background:#0b111b;color:var(--text);border:1px solid #354157;border-radius:6px;padding:9px}
-.filter-row input[type=checkbox]{accent-color:var(--blue);width:16px;height:16px}
-.time-label{display:flex;align-items:center;gap:6px;font-weight:bold}
-small{color:var(--muted)}
-.controls{display:flex;gap:9px;align-items:center;flex-wrap:wrap}
-button,select,input[type=text]{background:#0b111b;color:var(--text);border:1px solid #354157;border-radius:7px;padding:10px}
-button{cursor:pointer;font-weight:bold}
-button.primary{background:var(--blue);border-color:var(--blue);color:white}
-button.stop{border-color:#8c3548;color:#ff9aaa}
-button:disabled{opacity:.45;cursor:not-allowed}
-input[type=text]{min-width:180px}
-.status{padding:10px 12px;background:#0b111b;border:1px solid var(--line);border-radius:8px;margin-top:12px;overflow-wrap:anywhere}
-.stats{display:flex;gap:9px;flex-wrap:wrap;margin-bottom:12px}
-.stat{background:#0b111b;border:1px solid var(--line);padding:10px 13px;border-radius:8px}
-.stat b{display:block;font-size:18px;margin-top:4px}
-.table-wrap{overflow:auto;max-height:65vh}
-table{width:100%;border-collapse:collapse;white-space:nowrap;font-size:12px}
-th,td{padding:10px;border-bottom:1px solid var(--line);text-align:right}
-th{position:sticky;top:0;background:#192231;color:#b8c6dc;z-index:1}
-th:first-child,td:first-child{text-align:left}
-td:first-child{font-weight:bold}
-.positive{color:var(--green)}.negative{color:var(--red)}
-.tag{font-size:11px;color:var(--muted);border:1px solid var(--line);border-radius:5px;padding:4px 6px}
-.note{font-size:12px}
-@media(max-width:600px){main{padding:10px}.panel{padding:11px}.filter-row{grid-template-columns:65px 1fr 1fr}.top h1{font-size:19px}}
+:root {
+  color-scheme: dark;
+  --bg:#0b111b; --panel:#121c2a; --line:#29384b;
+  --text:#e7edf5; --muted:#9aaabd; --accent:#f0b90b;
+}
+* { box-sizing:border-box; }
+body {
+  margin:0; padding:16px; background:var(--bg);
+  color:var(--text); font:14px Arial,sans-serif;
+}
+main { max-width:1100px; margin:auto; }
+h1 { font-size:23px; }
+h2 { font-size:17px; }
+.panel {
+  background:var(--panel); border:1px solid var(--line);
+  border-radius:10px; padding:14px; margin:12px 0;
+}
+.note { color:var(--muted); line-height:1.5; }
+button, input, select {
+  font:inherit; color:var(--text); background:#0b111b;
+  border:1px solid var(--line); border-radius:6px; padding:9px;
+}
+button { cursor:pointer; }
+button.primary { background:var(--accent); color:#171717; font-weight:bold; }
+button:disabled { opacity:.5; cursor:not-allowed; }
+.controls { display:flex; flex-wrap:wrap; gap:8px; align-items:center; }
+.filters {
+  display:grid; grid-template-columns:repeat(auto-fit,minmax(270px,1fr));
+  gap:8px;
+}
+.filter {
+  display:grid; grid-template-columns:1fr 78px 78px;
+  gap:7px; align-items:center; padding:9px;
+  border:1px solid var(--line); border-radius:7px;
+}
+.filter label { display:flex; gap:7px; align-items:center; }
+.filter input[type=number] { width:100%; min-width:0; }
+.status {
+  padding:11px; margin-top:12px; border:1px solid var(--line);
+  border-radius:7px; overflow-wrap:anywhere; line-height:1.5;
+}
+.stats { display:flex; flex-wrap:wrap; gap:22px; }
+.stat { color:var(--muted); }
+.stat b { display:block; color:var(--text); font-size:20px; margin-top:5px; }
+.table-wrap { overflow-x:auto; margin-top:12px; }
+table { border-collapse:collapse; width:100%; white-space:nowrap; }
+th,td { text-align:right; padding:10px; border-bottom:1px solid var(--line); }
+th:first-child,td:first-child { text-align:left; }
+th { color:var(--muted); }
+.good { color:#31c48d; }
+.bad { color:#f87171; }
+.small { font-size:12px; }
 </style>
 </head>
 <body>
 <main>
-  <div class="top">
-    <div>
-      <h1>Binance Futures Scanner</h1>
-      <div class="muted">CoinGlass-style filters · USDT perpetual markets</div>
-    </div>
-    <span class="tag">Public market data</span>
-  </div>
+  <h1>Binance Futures RSI Scanner</h1>
+  <p class="note">RSI period 14 · USDT perpetual futures · Public Binance market data</p>
 
   <section class="panel">
     <h2>Market filters</h2>
     <div class="controls">
-      <input id="search" type="text" placeholder="Search pair, e.g. BTCUSDT">
-      <select id="direction">
-        <option value="any">Any 24h price direction</option>
-        <option value="up">24h price up</option>
-        <option value="down">24h price down</option>
-      </select>
-      <label>Min 24h quote volume ($)
-        <input id="minVolume" type="number" min="0" value="0" style="width:140px">
-      </label>
+      <label for="search">Pair search</label>
+      <input id="search" placeholder="e.g. BTC" autocomplete="off">
+      <label for="minVolume">Min 24h volume (USDT)</label>
+      <input id="minVolume" type="number" min="0" value="0" style="width:145px">
     </div>
-    <p class="note">Market filters apply alongside all enabled technical filters.</p>
+    <p class="note small">Leave pair search blank to scan all eligible USDT perpetual pairs. A higher minimum volume can reduce scan time.</p>
   </section>
 
   <section class="panel">
-    <div class="controls" style="justify-content:space-between"><h2 style="margin:0">Technical filters</h2><button id="toggleFilters" type="button">Hide filters</button></div>
-    <p class="note">Enable a timeframe and enter a minimum, maximum, or both. Every enabled condition must match (AND logic). Blank bounds are ignored.</p>
-    <div class="filters" id="filterGroups"></div>
-  </section>
-
-  <section class="panel">
-    <h2>Result columns</h2>
-    <p class="note">Choose displayed columns. Pair is always visible; this does not change your filters.</p>
-    <div class="controls" id="columnControls"></div>
-  </section>
-
-  <section class="panel">
-    <div class="controls">
+    <h2>RSI · Period 14</h2>
+    <p class="note">Enable at least one timeframe and enter a minimum, maximum, or both. If you enable multiple timeframes, a pair must satisfy every selected RSI filter.</p>
+    <div class="filters" id="rsiFilters"></div>
+    <div class="controls" style="margin-top:14px">
+      <button id="select5m">Select 5m RSI</button>
+      <button id="clearFilters">Clear RSI filters</button>
       <button id="start" class="primary">Start scanner</button>
-      <button id="stop" class="stop" disabled>Stop scanner</button>
-      <button id="clear">Clear results</button>
-      <span class="tag">Repeat: 15 seconds after each completed scan</span>
+      <button id="stop" disabled>Stop scanner</button>
     </div>
-    <div id="status" class="status">Ready. Enable at least one technical filter, then start the scanner.</div>
+    <div id="status" class="status">Ready. Enable an RSI timeframe and set its range.</div>
   </section>
 
   <section class="panel">
@@ -104,713 +96,348 @@ td:first-child{font-weight:bold}
     </div>
     <div class="table-wrap">
       <table>
-        <thead id="resultsHead"><tr><th>Pair</th><th>24h Change</th><th>24h Quote Volume</th></tr></thead>
-        <tbody id="resultsBody"><tr><td colspan="3" class="muted">No results yet.</td></tr></tbody>
+        <thead id="resultsHead">
+          <tr><th>Pair</th><th>24h Change</th><th>24h Volume (USDT)</th></tr>
+        </thead>
+        <tbody id="resultsBody">
+          <tr><td colspan="3">No results yet.</td></tr>
+        </tbody>
       </table>
     </div>
   </section>
-
-  <section class="panel">
-    <h2>Calculation notes</h2>
-    <p class="note">RSI uses Wilder's RSI, period 14, calculated from completed candles. Price change compares the close of the latest completed candle with the preceding completed candle of the same duration.</p>
-    <p class="note">Volume-change values include the still-forming current hourly candle, so the current window is an incomplete accumulation, not a forecast. RSI and price change use completed candles. The 24h RSI and price-change options follow Binance daily candle boundaries rather than rolling 24-hour calculations.</p>
-    <p class="note">Funding, open interest and liquidation filters are not implemented in this version.</p>
-  </section>
+  <p class="note small">This scanner reads public Binance endpoints; it does not place trades and requires no API key. Data access can fail if Binance is unavailable or your network blocks its API.</p>
 </main>
 
 <script>
 "use strict";
 
-const RSI_TFS = [
-  ["1m","1m"],["5m","5m"],["15m","15m"],["30m","30m"],
-  ["1h","1h"],["2h","2h"],["4h","4h"],["6h","6h"],
-  ["12h","12h"],["24h","1d"]
+const TIMEFRAMES = [
+  ["1m","1m"], ["5m","5m"], ["15m","15m"], ["30m","30m"],
+  ["1h","1h"], ["2h","2h"], ["4h","4h"], ["6h","6h"],
+  ["12h","12h"], ["24h","1d"]
 ];
-const PRICE_TFS = [
-  ["5m","5m"],["15m","15m"],["30m","30m"],
-  ["1h","1h"],["2h","2h"],["4h","4h"],["6h","6h"],
-  ["12h","12h"],["24h","1d"]
-];
-const VOLUME_TFS = [
-  ["1h",1],["2h",2],["4h",4],["6h",6],["12h",12],["24h",24]
-];
-
-const groups = [
-  {key:"rsi",title:"RSI · Period 14",items:RSI_TFS.map(([label,interval])=>({label,interval}))},
-  {key:"price",title:"Price change · %",items:PRICE_TFS.map(([label,interval])=>({label,interval}))},
-  {key:"volume",title:"Volume change · %",items:VOLUME_TFS.map(([label,hours])=>({label,hours}))}
-];
-
-const filterGroups = document.getElementById("filterGroups");
-
-for (const group of groups) {
-  const box = document.createElement("div");
-  box.className = "group";
-  const head = document.createElement("div");
-  head.className = "group-head";
-  const title = document.createElement("h2");
-  title.textContent = group.title;
-  const hint = document.createElement("small");
-  hint.textContent = group.key === "rsi" ? "0–100" : "% change";
-  head.append(title,hint);
-  box.appendChild(head);
-
-  for (const item of group.items) {
-    const row = document.createElement("div");
-    row.className = "filter-row";
-    const label = document.createElement("label");
-    label.className = "time-label";
-    const enabled = document.createElement("input");
-    enabled.type = "checkbox";
-    enabled.dataset.key = group.key;
-    enabled.dataset.label = item.label;
-    enabled.setAttribute("aria-label","Enable "+group.title+" "+item.label);
-    label.append(enabled,document.createTextNode(item.label));
-
-    const min = document.createElement("input");
-    min.type = "number";
-    min.placeholder = "Min";
-    min.step = "any";
-    min.dataset.key = group.key;
-    min.dataset.label = item.label;
-    min.dataset.bound = "min";
-    const max = document.createElement("input");
-    max.type = "number";
-    max.placeholder = "Max";
-    max.step = "any";
-    max.dataset.key = group.key;
-    max.dataset.label = item.label;
-    max.dataset.bound = "max";
-    row.append(label,min,max);
-    box.appendChild(row);
-  }
-  filterGroups.appendChild(box);
-}
 
 const $ = id => document.getElementById(id);
+const filterBox = $("rsiFilters");
+const filterControls = [];
+
 let running = false;
-let abortController = null;
-let latestResults = [];
-let checkedMarkets = 0;
-let sortKey = "quoteVolume";
-let sortDirection = -1;
-const columnPrefsKey = "cgFilterVisibleColumnsV2";
-const sortPrefsKey = "cgFilterSortV2";
-let visibleColumns = new Set(["change24","quoteVolume"]);
+let controller = null;
+let results = [];
+let checked = 0;
 
-function savePrefs() {
-  try {
-    localStorage.setItem(columnPrefsKey,JSON.stringify([...visibleColumns]));
-    localStorage.setItem(sortPrefsKey,JSON.stringify({key:sortKey,direction:sortDirection}));
-  } catch {}
+for (const [label, interval] of TIMEFRAMES) {
+  const row = document.createElement("div");
+  row.className = "filter";
+
+  const name = document.createElement("label");
+  const checkbox = document.createElement("input");
+  checkbox.type = "checkbox";
+  checkbox.checked = false;
+  name.append(checkbox, document.createTextNode("RSI " + label));
+
+  const min = document.createElement("input");
+  min.type = "number";
+  min.placeholder = "Min";
+  min.min = "0";
+  min.max = "100";
+  min.step = "any";
+  min.setAttribute("aria-label", "RSI " + label + " minimum");
+
+  const max = document.createElement("input");
+  max.type = "number";
+  max.placeholder = "Max";
+  max.min = "0";
+  max.max = "100";
+  max.step = "any";
+  max.setAttribute("aria-label", "RSI " + label + " maximum");
+
+  row.append(name, min, max);
+  filterBox.appendChild(row);
+  filterControls.push({label, interval, checkbox, min, max});
 }
-function loadPrefs() {
-  try {
-    const a = JSON.parse(localStorage.getItem(columnPrefsKey) || "null");
-    if (Array.isArray(a)) visibleColumns = new Set(a);
-  } catch {}
-  try {
-    const a = JSON.parse(localStorage.getItem(sortPrefsKey) || "null");
-    if (a && typeof a.key === "string" && (a.direction === 1 || a.direction === -1)) {
-      sortKey = a.key;
-      sortDirection = a.direction;
-    }
-  } catch {}
+
+function setStatus(message) {
+  $("status").textContent = message;
 }
-function renderColumnControls() {
-  const box = $("columnControls");
-  box.innerHTML = "";
-  const opts = [
-    {key:"change24",label:"24h Change"},
-    {key:"quoteVolume",label:"24h Quote Volume"}
-  ];
-  for (const g of groups) {
-    for (const i of g.items) {
-      opts.push({
-        key:g.key+"_"+i.label,
-        label:(g.key==="rsi"?"RSI ":g.key==="price"?"Price % ":"Volume % ")+i.label
-      });
-    }
-  }
-  for (const o of opts) {
-    const l = document.createElement("label");
-    l.style.cssText = "display:flex;gap:6px;align-items:center;padding:5px 8px;border:1px solid var(--line);border-radius:6px";
-    const c = document.createElement("input");
-    c.type = "checkbox";
-    c.checked = visibleColumns.has(o.key);
-    c.addEventListener("change",()=>{
-      if(c.checked) visibleColumns.add(o.key);
-      else visibleColumns.delete(o.key);
-      savePrefs();
-      renderResults();
-    });
-    l.append(c,document.createTextNode(o.label));
-    box.appendChild(l);
-  }
-}function activeFilters() {
+
+function getActiveFilters() {
   const active = [];
-  for (const group of groups) {
-    for (const item of group.items) {
-      const checkbox = document.querySelector(
-        `input[type="checkbox"][data-key="${group.key}"][data-label="${item.label}"]`
-      );
-      if (!checkbox || !checkbox.checked) continue;
 
-      const inputs = [...document.querySelectorAll(
-        `input[type="number"][data-key="${group.key}"][data-label="${item.label}"]`
-      )];
-      const minInput = inputs.find(x => x.dataset.bound === "min");
-      const maxInput = inputs.find(x => x.dataset.bound === "max");
-      const min = minInput.value.trim() === "" ? null : Number(minInput.value);
-      const max = maxInput.value.trim() === "" ? null : Number(maxInput.value);
+  for (const f of filterControls) {
+    if (!f.checkbox.checked) continue;
 
-      if (min === null && max === null)
-        throw new Error("Enter a minimum or maximum for " + group.title + " " + item.label + ".");
-      if ((min !== null && !Number.isFinite(min)) ||
-          (max !== null && !Number.isFinite(max)))
-        throw new Error("Invalid numeric bound for " + item.label + ".");
-      if (min !== null && max !== null && min > max)
-        throw new Error("Minimum cannot exceed maximum for " + item.label + ".");
+    const minText = f.min.value.trim();
+    const maxText = f.max.value.trim();
 
-      active.push({
-        key: group.key,
-        label: item.label,
-        interval: item.interval,
-        hours: item.hours,
-        min,
-        max
-      });
+    if (minText === "" && maxText === "") {
+      throw new Error("Enter a minimum or maximum for RSI " + f.label + ".");
     }
+
+    const min = minText === "" ? null : Number(minText);
+    const max = maxText === "" ? null : Number(maxText);
+
+    if ((min !== null && (!Number.isFinite(min) || min < 0 || min > 100)) ||
+        (max !== null && (!Number.isFinite(max) || max < 0 || max > 100))) {
+      throw new Error("RSI values must be between 0 and 100 (" + f.label + ").");
+    }
+
+    if (min !== null && max !== null && min > max) {
+      throw new Error("RSI minimum cannot exceed maximum (" + f.label + ").");
+    }
+
+    active.push({...f, min, max});
   }
+
+  if (!active.length) {
+    throw new Error("Enable at least one RSI timeframe checkbox.");
+  }
+
   return active;
-}
-
-function within(value, filter) {
-  if (!Number.isFinite(value)) return false;
-  if (filter.min !== null && value < filter.min) return false;
-  if (filter.max !== null && value > filter.max) return false;
-  return true;
-}
-
-function fmtNum(n) {
-  if (!Number.isFinite(n)) return "—";
-  return n.toLocaleString("en-US", {maximumFractionDigits: 2});
-}
-
-function fmtPct(n) {
-  if (!Number.isFinite(n)) return "—";
-  return (n > 0 ? "+" : "") + n.toFixed(2) + "%";
-}
-
-function pctClass(n) {
-  return n > 0 ? "positive" : n < 0 ? "negative" : "";
 }
 
 function closedCandles(raw) {
   const now = Date.now();
-  return raw.filter(k => Number(k[6]) <= now);
+  return raw.filter(k => Number(k[6]) < now);
 }
 
-function calcRSI(klines, period = 14) {
-  const closes = klines.map(k => Number(k[4]));
+function calcRSI(candles, period = 14) {
+  const closes = candles.map(k => Number(k[4]));
   if (closes.length < period + 1) return null;
 
-  let gain = 0, loss = 0;
+  let gain = 0;
+  let loss = 0;
+
   for (let i = 1; i <= period; i++) {
-    const d = closes[i] - closes[i - 1];
-    if (d > 0) gain += d;
-    else loss -= d;
+    const change = closes[i] - closes[i - 1];
+    if (change > 0) gain += change;
+    else loss -= change;
   }
 
   let avgGain = gain / period;
   let avgLoss = loss / period;
 
   for (let i = period + 1; i < closes.length; i++) {
-    const d = closes[i] - closes[i - 1];
-    avgGain = (avgGain * (period - 1) + Math.max(d, 0)) / period;
-    avgLoss = (avgLoss * (period - 1) + Math.max(-d, 0)) / period;
+    const change = closes[i] - closes[i - 1];
+    avgGain = (avgGain * (period - 1) + Math.max(change, 0)) / period;
+    avgLoss = (avgLoss * (period - 1) + Math.max(-change, 0)) / period;
   }
 
   if (avgLoss === 0) return avgGain === 0 ? 50 : 100;
   return 100 - 100 / (1 + avgGain / avgLoss);
 }
 
-function calcPriceChange(klines) {
-  if (klines.length < 2) return null;
-  const previous = Number(klines[klines.length - 2][4]);
-  const latest = Number(klines[klines.length - 1][4]);
-  if (!Number.isFinite(previous) || !Number.isFinite(latest) || previous === 0) return null;
-  return (latest - previous) / previous * 100;
-}
-
-function calcVolumeChange(hourly, hours) {
-  if (!hourly || hourly.length < hours * 2) return null;
-
-  const now = Date.now();
-  const last = hourly[hourly.length - 1];
-  const forming = Number(last[6]) >= now;
-  const closed = forming ? hourly.slice(0, -1) : hourly.slice();
-
-  if (closed.length < hours * 2 - 1) return null;
-
-  const current = closed.slice(-(hours - 1))
-    .reduce((sum, k) => sum + Number(k[7]), 0)
-    + (forming ? Number(last[7]) : Number(closed[closed.length - 1][7]));
-
-  const previous = closed.slice(-(hours * 2 - 1), -(hours - 1))
-    .reduce((sum, k) => sum + Number(k[7]), 0)
-    + Number(closed[closed.length - hours][7]);
-
-  if (!Number.isFinite(previous) || !Number.isFinite(current)) return null;
-  if (previous === 0) return current === 0 ? 0 : null;
-  return (current - previous) / previous * 100;
-}
-
-async function fetchKlines(symbol, interval, limit, signal, includeForming = false) {
-  const url = "https://fapi.binance.com/fapi/v1/klines?symbol="
-    + encodeURIComponent(symbol)
-    + "&interval=" + encodeURIComponent(interval)
-    + "&limit=" + limit;
-
+async function fetchJSON(url, signal) {
   const response = await fetch(url, {signal});
+
   if (!response.ok) {
-    if (response.status === 429 || response.status === 418)
-      throw new Error("Binance rate limit reached. Stop and retry later.");
-    throw new Error("Kline request failed for " + symbol + " " + interval
-      + " (HTTP " + response.status + ").");
+    if (response.status === 429 || response.status === 418) {
+      throw new Error("Binance rate limit reached. Stop scanning and retry later.");
+    }
+    throw new Error("Binance request failed (HTTP " + response.status + ").");
   }
 
-  const raw = await response.json();
-  return includeForming ? raw : closedCandles(raw);
+  return response.json();
 }
 
-async function fetchMarket(signal) {
-  const [infoRes, tickerRes] = await Promise.all([
-    fetch("https://fapi.binance.com/fapi/v1/exchangeInfo", {signal}),
-    fetch("https://fapi.binance.com/fapi/v1/ticker/24hr", {signal})
-  ]);
-
-  if (!infoRes.ok || !tickerRes.ok)
-    throw new Error("Unable to load Binance market data.");
-
+async function fetchMarkets(signal) {
   const [info, tickers] = await Promise.all([
-    infoRes.json(), tickerRes.json()
+    fetchJSON("https://fapi.binance.com/fapi/v1/exchangeInfo", signal),
+    fetchJSON("https://fapi.binance.com/fapi/v1/ticker/24hr", signal)
   ]);
 
   const tickerMap = new Map(tickers.map(t => [t.symbol, t]));
   const search = $("search").value.trim().toUpperCase();
-  const direction = $("direction").value;
-  const minVol = Math.max(0, Number($("minVolume").value) || 0);
+  const minVolume = Math.max(0, Number($("minVolume").value) || 0);
 
   return info.symbols
-    .filter(s => s.status === "TRADING" &&
-      s.contractType === "PERPETUAL" && s.quoteAsset === "USDT")
-    .map(s => ({symbol: s.symbol, ticker: tickerMap.get(s.symbol)}))
-    .filter(x => {
-      if (!x.ticker) return false;
-      if (search && !x.symbol.includes(search)) return false;
-      if (Number(x.ticker.quoteVolume) < minVol) return false;
-      const change = Number(x.ticker.priceChangePercent);
-      if (direction === "up" && change <= 0) return false;
-      if (direction === "down" && change >= 0) return false;
-      return true;
-    });
+    .filter(s =>
+      s.status === "TRADING" &&
+      s.contractType === "PERPETUAL" &&
+      s.quoteAsset === "USDT"
+    )
+    .map(s => ({symbol:s.symbol, ticker:tickerMap.get(s.symbol)}))
+    .filter(m => {
+      if (!m.ticker) return false;
+      if (search && !m.symbol.includes(search)) return false;
+      return Number(m.ticker.quoteVolume) >= minVolume;
+    })
+    .sort((a,b) => Number(b.ticker.quoteVolume) - Number(a.ticker.quoteVolume));
 }
 
-function requirements(filters) {
-  const intervals = new Map();
-  for (const f of filters) {
-    if (f.key === "rsi" || f.key === "price") {
-      const old = intervals.get(f.interval) || {rsi: false, price: false};
-      if (f.key === "rsi") old.rsi = true;
-      if (f.key === "price") old.price = true;
-      intervals.set(f.interval, old);
-    }
-  }
-  return intervals;
+async function fetchRSI(symbol, interval, signal) {
+  const url = "https://fapi.binance.com/fapi/v1/klines?symbol=" +
+    encodeURIComponent(symbol) +
+    "&interval=" + encodeURIComponent(interval) +
+    "&limit=100";
+
+  const candles = await fetchJSON(url, signal);
+  return calcRSI(closedCandles(candles));
 }
 
-async function analyzePair(pair, filters, intervalNeeds, signal) {
-  const values = {};
-  const jobs = [...intervalNeeds.entries()].map(async ([interval, need]) => {
-    const raw = await fetchKlines(pair.symbol, interval, 100, signal);
-    if (need.rsi) values["rsi_" + interval] = calcRSI(raw);
-    if (need.price) values["price_" + interval] = calcPriceChange(raw);
-  });
-
-  const hasVolume = filters.some(f => f.key === "volume");
-  if (hasVolume) {
-    jobs.push((async () => {
-      values.volumeHourly = await fetchKlines(pair.symbol, "1h", 50, signal, true);
-    })());
-  }
-
-  await Promise.all(jobs);
-
-  for (const f of filters) {
-    let value;
-    if (f.key === "rsi") value = values["rsi_" + f.interval];
-    else if (f.key === "price") value = values["price_" + f.interval];
-    else value = calcVolumeChange(values.volumeHourly || [], f.hours);
-
-    values[f.key + "_" + f.label] = value;
-    if (!within(value, f)) return null;
-  }
-  return values;
+function matches(value, filter) {
+  if (!Number.isFinite(value)) return false;
+  if (filter.min !== null && value < filter.min) return false;
+  if (filter.max !== null && value > filter.max) return false;
+  return true;
 }
 
-async function worker(items, count, task, signal) {
-  let next = 0;
-  const workers = Array.from(
-    {length: Math.min(count, items.length)},
-    async () => {
-      while (next < items.length && !signal.aborted) {
-        const index = next++;
-        await task(items[index], index);
-      }
-    }
-  );
-  await Promise.all(workers);
-} 
-function getEnabledFilters() {
-  try {
-    return activeFilters();
-  } catch (error) {
-    setScanStatus(error.message || "Please check the filter settings.");
-    return null;
-  }
-}
-
-let repeatTimer = null;
-
-function renderResults() {
+function renderResults(filters) {
   const head = $("resultsHead");
   const body = $("resultsBody");
-  if (!head || !body) return;
 
   const columns = [
-    { key: "pair", label: "Pair" }
+    {key:"symbol", label:"Pair"},
+    {key:"change", label:"24h Change"},
+    {key:"volume", label:"24h Volume (USDT)"},
+    ...filters.map(f => ({key:"rsi_" + f.label, label:"RSI " + f.label}))
   ];
 
-  if (visibleColumns.has("change24")) {
-    columns.push({ key: "change24", label: "24h Change" });
+  head.innerHTML = "<tr>" + columns.map(c =>
+    "<th>" + c.label + "</th>"
+  ).join("") + "</tr>";
+
+  if (!results.length) {
+    body.innerHTML = '<tr><td colspan="' + columns.length +
+      '">No matching pairs yet.</td></tr>';
+  } else {
+    body.innerHTML = results.map(row =>
+      "<tr>" + columns.map(c => {
+        const value = row[c.key];
+        if (c.key === "symbol") return "<td><strong>" + value + "</strong></td>";
+        if (!Number.isFinite(value)) return "<td>—</td>";
+        const formatted = c.key === "volume"
+          ? value.toLocaleString(undefined, {maximumFractionDigits:0})
+          : value.toFixed(2) + (c.key === "change" ? "%" : "");
+        const cls = c.key === "change" && value > 0 ? "good" :
+                    c.key === "change" && value < 0 ? "bad" : "";
+        return '<td class="' + cls + '">' + formatted + "</td>";
+      }).join("") + "</tr>"
+    ).join("");
   }
 
-  if (visibleColumns.has("quoteVolume")) {
-    columns.push({ key: "quoteVolume", label: "24h Volume" });
-  }
-
-  for (const key of visibleColumns) {
-    if (key.startsWith("rsi_")) {
-      columns.push({
-        key,
-        label: "RSI " + key.slice(4)
-      });
-    } else if (key.startsWith("price_")) {
-      columns.push({
-        key,
-        label: "Price Change " + key.slice(6) + " %"
-      });
-    } else if (key.startsWith("volume_")) {
-      columns.push({
-        key,
-        label: "Volume Change " + key.slice(7) + " %"
-      });
-    }
-  }
-
-  head.innerHTML =
-    "<tr>" +
-    columns.map(col => {
-      if (col.key === "pair") {
-        return "<th>" + col.label + "</th>";
-      }
-
-      return (
-        '<th data-sort="' +
-        col.key +
-        '" style="cursor:pointer">' +
-        col.label +
-        (sortKey === col.key
-          ? (sortDirection === 1 ? " ▲" : " ▼")
-          : "") +
-        "</th>"
-      );
-    }).join("") +
-    "</tr>";
-
-  head.querySelectorAll("[data-sort]").forEach(th => {
-    th.addEventListener("click", () => {
-      const key = th.getAttribute("data-sort");
-
-      if (sortKey === key) {
-        sortDirection *= -1;
-      } else {
-        sortKey = key;
-        sortDirection = key === "quoteVolume" ? -1 : 1;
-      }
-
-      savePrefs();
-      renderResults();
-    });
-  });
-
-  const sorted = [...latestResults].sort((a, b) => {
-    const av = Number(a[sortKey]);
-    const bv = Number(b[sortKey]);
-
-    if (Number.isFinite(av) && Number.isFinite(bv)) {
-      return (av - bv) * sortDirection;
-    }
-
-    return String(a[sortKey] ?? "")
-      .localeCompare(String(b[sortKey] ?? "")) * sortDirection;
-  });
-
-  body.innerHTML = sorted.map(row => {
-    return (
-      "<tr>" +
-      columns.map(col => {
-        const value = row[col.key];
-
-        if (col.key === "pair") {
-          return (
-            "<td><strong>" +
-            String(value ?? "") +
-            "</strong></td>"
-          );
-        }
-
-        if (
-          value === null ||
-          value === undefined ||
-          value === "" ||
-          !Number.isFinite(Number(value))
-        ) {
-          return "<td>—</td>";
-        }
-
-        const n = Number(value);
-
-        const formatted =
-          col.key === "quoteVolume"
-            ? n.toLocaleString(undefined, {
-                maximumFractionDigits: 0
-              })
-            : n.toLocaleString(undefined, {
-                maximumFractionDigits: 2
-              });
-
-        const isPercent =
-          col.key === "change24" ||
-          col.key.startsWith("price_") ||
-          col.key.startsWith("volume_");
-
-        return (
-          "<td>" +
-          formatted +
-          (isPercent ? "%" : "") +
-          "</td>"
-        );
-      }).join("") +
-      "</tr>"
-    );
-  }).join("");
-
-  $("matchCount").textContent = String(latestResults.length);
-  $("checkedCount").textContent = String(checkedMarkets);
+  $("matchCount").textContent = String(results.length);
+  $("checkedCount").textContent = String(checked);
 }
 
-async function scanMarkets() {
+async function scan() {
   if (running) return;
 
-  const filters = getEnabledFilters();
-
-  if (!filters) return;
-
-  if (!filters.length) {
-    setScanStatus(
-      "Enable at least one technical filter before scanning."
-    );
+  let filters;
+  try {
+    filters = getActiveFilters();
+  } catch (error) {
+    setStatus(error.message);
     return;
   }
 
   running = true;
-  abortController = new AbortController();
-
-  const signal = abortController.signal;
+  controller = new AbortController();
+  const signal = controller.signal;
 
   $("start").disabled = true;
   $("stop").disabled = false;
-
-  latestResults = [];
-  checkedMarkets = 0;
-
-  renderResults();
-
-  setScanStatus("Loading Binance futures markets…");
+  results = [];
+  checked = 0;
+  renderResults(filters);
+  setStatus("Connecting to Binance Futures…");
 
   try {
-    const markets = await fetchMarket(signal);
+    const markets = await fetchMarkets(signal);
 
-    const intervalNeeds = requirements(filters);
-
-    setScanStatus(
-      "Checking " + markets.length + " markets…"
-    );
-
-    await worker(
-      markets,
-      5,
-      async market => {
-        if (signal.aborted) return;
-
-        const row = await analyzePair(
-          market,
-          filters,
-          intervalNeeds,
-          signal
-        );
-
-        checkedMarkets++;
-
-        if (row) {
-          row.symbol = market.symbol;
-
-          row.change24 =
-            Number(market.ticker.priceChangePercent);
-
-          row.quoteVolume =
-            Number(market.ticker.quoteVolume);
-
-          latestResults.push(row);
-        }
-
-        $("checkedCount").textContent =
-          String(checkedMarkets);
-
-        $("matchCount").textContent =
-          String(latestResults.length);
-
-        renderResults();
-      },
-      signal
-    );
-
-    if (!signal.aborted) {
-      $("lastScan").textContent =
-        new Date().toLocaleTimeString();
-
-      setScanStatus(
-        "Scan complete. " +
-        latestResults.length +
-        " matches from " +
-        checkedMarkets +
-        " markets."
-      );
+    if (!markets.length) {
+      throw new Error("No markets found. Check your pair search and minimum volume.");
     }
 
+    setStatus("Loaded " + markets.length + " markets. Starting RSI scan…");
+
+    let next = 0;
+    const workerCount = Math.min(4, markets.length);
+
+    async function worker() {
+      while (!signal.aborted) {
+        const index = next++;
+        if (index >= markets.length) return;
+
+        const market = markets[index];
+
+        try {
+          const values = await Promise.all(filters.map(f =>
+            fetchRSI(market.symbol, f.interval, signal)
+          ));
+
+          checked++;
+
+          if (values.every((value, i) => matches(value, filters[i]))) {
+            const row = {
+              symbol: market.symbol,
+              change: Number(market.ticker.priceChangePercent),
+              volume: Number(market.ticker.quoteVolume)
+            };
+
+            filters.forEach((f, i) => {
+              row["rsi_" + f.label] = values[i];
+            });
+
+            results.push(row);
+          }
+
+          $("checkedCount").textContent = String(checked);
+          $("matchCount").textContent = String(results.length);
+          renderResults(filters);
+
+          if (checked % 10 === 0) {
+            setStatus("Scanning… checked " + checked + " of " +
+              markets.length + " markets; " + results.length + " matches.");
+          }
+        } catch (error) {
+          if (signal.aborted) return;
+          throw error;
+        }
+      }
+    }
+
+    await Promise.all(Array.from({length:workerCount}, () => worker()));
+
+    if (!signal.aborted) {
+      $("lastScan").textContent = new Date().toLocaleTimeString();
+      setStatus("Scan complete. " + results.length +
+        " matching pairs from " + checked + " markets.");
+    }
   } catch (error) {
     if (!signal.aborted) {
-      setScanStatus(
-        "Scan error: " +
-        (error.message || String(error))
-      );
+      setStatus("Scan error: " + (error.message || String(error)));
     }
-
   } finally {
     running = false;
-    abortController = null;
-
+    controller = null;
     $("start").disabled = false;
     $("stop").disabled = true;
-
-    if (!signal.aborted) {
-      clearTimeout(repeatTimer);
-
-      repeatTimer = setTimeout(
-        () => scanMarkets(),
-        15000
-      );
-    }
+    if (signal.aborted) setStatus("Scan stopped.");
   }
 }
 
-function stopScan() {
-  clearTimeout(repeatTimer);
-  repeatTimer = null;
+$("start").addEventListener("click", scan);
 
-  if (abortController) {
-    abortController.abort();
-    setScanStatus("Stopping scanner…");
+$("stop").addEventListener("click", () => {
+  if (controller) controller.abort();
+});
+
+$("select5m").addEventListener("click", () => {
+  const f = filterControls.find(x => x.label === "5m");
+  f.checkbox.checked = true;
+  f.min.focus();
+  setStatus("5m RSI selected. Enter a minimum or maximum, then start the scanner.");
+});
+
+$("clearFilters").addEventListener("click", () => {
+  for (const f of filterControls) {
+    f.checkbox.checked = false;
+    f.min.value = "";
+    f.max.value = "";
   }
-}
-
-function clearResults() {
-  latestResults = [];
-  checkedMarkets = 0;
-
-  renderResults();
-
-  $("lastScan").textContent = "—";
-
-  setScanStatus(
-    "Results cleared. Your filters are unchanged."
-  );
-}
-
-function initializeScanner() {
-  loadPrefs();
-  renderColumnControls();
-  renderResults();
-
-  $("start").addEventListener(
-    "click",
-    () => {
-      clearTimeout(repeatTimer);
-      scanMarkets();
-    }
-  );
-
-  $("stop").addEventListener(
-    "click",
-    stopScan
-  );
-
-  $("clear").addEventListener(
-    "click",
-    clearResults
-  );
-
-  const toggle = $("toggleFilters");
-
-  toggle.addEventListener(
-    "click",
-    () => {
-      const groups = $("filterGroups");
-
-      const hidden =
-        groups.style.display === "none";
-
-      groups.style.display =
-        hidden ? "" : "none";
-
-      toggle.textContent =
-        hidden
-          ? "Hide technical filters"
-          : "Show technical filters";
-    }
-  );
-
-  $("stop").disabled = true;
-
-  setScanStatus(
-    "Ready. Choose filters, then start scanning."
-  );
-}
-
-initializeScanner();
-
+  setStatus("RSI filters cleared. Select a timeframe and enter a range.");
+});
 </script>
 </body>
 </html>
