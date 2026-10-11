@@ -1,325 +1,501 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Crypto Market Filters</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>CoinGlass-Style Filters | Live Binance RSI</title>
 <style>
-:root {
-  color-scheme: dark;
-  --bg: #101114;
-  --panel: #191b20;
-  --line: #30333b;
-  --text: #f1f2f5;
-  --muted: #969ba8;
-  --accent: #e5bd45;
-  --green: #26c994;
-  --red: #ff646d;
-}
-* { box-sizing: border-box; }
-body {
-  margin: 0;
-  background: var(--bg);
-  color: var(--text);
-  font: 14px/1.5 Arial, sans-serif;
-}
-header {
-  padding: 17px 20px;
-  border-bottom: 1px solid var(--line);
-  display: flex;
-  justify-content: space-between;
-  gap: 12px;
-  flex-wrap: wrap;
-}
-.logo { font-size: 20px; font-weight: 800; }
-.logo span { color: var(--accent); }
-main { max-width: 1150px; margin: auto; padding: 18px; }
-h2 { font-size: 17px; margin: 0 0 16px; }
-h3 { font-size: 14px; margin: 0 0 13px; }
-.panel {
-  background: var(--panel);
-  border: 1px solid var(--line);
-  border-radius: 9px;
-  padding: 17px;
-  margin-bottom: 15px;
-}
-.filters {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 15px;
-}
-.field label {
-  display: block;
-  color: var(--muted);
-  font-size: 12px;
-  margin-bottom: 6px;
-}
-input, select {
-  display: block;
-  width: 100%;
-  min-width: 0;
-  padding: 10px;
-  border: 1px solid var(--line);
-  border-radius: 6px;
-  color: var(--text);
-  background: #101216;
-  font-size: 13px;
-}
-input:focus, select:focus {
-  outline: 1px solid var(--accent);
-}
-.section-title {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 8px;
-  margin-bottom: 15px;
-}
-.tag {
-  color: var(--accent);
-  border: 1px solid #655628;
-  border-radius: 4px;
-  padding: 3px 7px;
-  font-size: 11px;
-}
-.actions {
-  display: flex;
-  gap: 10px;
-  flex-wrap: wrap;
-  margin-top: 18px;
-}
-button {
-  padding: 11px 18px;
-  border: 0;
-  border-radius: 6px;
-  font-weight: bold;
-  cursor: pointer;
-}
-.apply { background: var(--accent); color: #17140a; }
-.reset { background: #292c33; color: var(--text); }
-.summary {
-  margin-top: 14px;
-  color: var(--muted);
-  font-size: 12px;
-  overflow-wrap: anywhere;
-}
-.note { color: var(--muted); font-size: 12px; }
-@media (max-width: 700px) {
-  main { padding: 12px; }
-  .filters { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .panel { padding: 13px; }
-}
-@media (max-width: 390px) {
-  .filters { grid-template-columns: 1fr; }
-}
+:root{color-scheme:dark;--bg:#0b0e11;--panel:#15191f;--line:#292f38;--muted:#89929f;--text:#e9edf3;--green:#20c997;--red:#ff6577;--blue:#4d91ff}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font:14px Arial,sans-serif}
+header{padding:18px 16px;border-bottom:1px solid var(--line);background:#101419}
+h1{font-size:21px;margin:0 0 7px}
+h2{font-size:15px;margin:0 0 14px}
+p{color:var(--muted);line-height:1.5}
+.wrap{max-width:1100px;margin:auto;padding:16px}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:16px;margin-bottom:14px}
+.grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:13px}
+label{display:block;color:#aeb7c4;font-size:12px;margin-bottom:6px}
+input,select{width:100%;min-width:0;background:#0d1117;color:var(--text);border:1px solid #343c48;border-radius:6px;padding:10px;font-size:14px}
+input:focus,select:focus{outline:1px solid var(--blue)}
+.actions{display:flex;gap:9px;flex-wrap:wrap;margin-top:16px}
+button{border:0;border-radius:6px;padding:11px 16px;font-weight:bold;cursor:pointer}
+.primary{background:var(--green);color:#07130f}
+.secondary{background:#29313d;color:var(--text)}
+.danger{background:#512b34;color:#fff}
+.stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.stat{padding:12px;background:#0d1117;border:1px solid var(--line);border-radius:7px}
+.stat small{display:block;color:var(--muted);margin-bottom:7px}
+.stat strong{font-size:20px;overflow-wrap:anywhere}
+.progress{height:7px;background:#29313d;border-radius:10px;overflow:hidden;margin:12px 0}
+#bar{height:100%;width:0;background:var(--green);transition:width .15s}
+.status{color:var(--muted);line-height:1.5;overflow-wrap:anywhere}
+.note{font-size:12px;color:var(--muted)}
+.tablewrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;white-space:nowrap}
+th,td{text-align:left;padding:12px 10px;border-bottom:1px solid var(--line)}
+th{font-size:12px;color:var(--muted);font-weight:normal}
+td a{color:var(--blue);text-decoration:none;font-weight:bold}
+.good{color:var(--green)}.bad{color:var(--red)}
+.pill{display:inline-block;padding:4px 7px;border-radius:5px;background:#29313d;font-size:12px}
+.disabled-note{border:1px dashed #39414d;border-radius:6px;padding:10px;color:var(--muted);font-size:12px;line-height:1.5}
+@media(max-width:650px){.grid{grid-template-columns:repeat(2,minmax(0,1fr))}.wrap{padding:10px}.panel{padding:12px}.stats{gap:6px}.stat{padding:9px}.stat strong{font-size:17px}h1{font-size:19px}}
+@media(max-width:380px){.grid{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
-
 <header>
-  <div class="logo">Crypto <span>Market Filters</span></div>
-  <div class="note">Filter interface prototype</div>
+  <h1>Crypto Market Filters</h1>
+  <div class="note">Binance USDⓈ-M Futures · Live RSI scanner</div>
 </header>
 
-<main>
-  <section class="panel">
-    <div class="section-title">
-      <h2>Market Screener</h2>
-      <span class="tag">CUSTOM FILTERS</span>
+<main class="wrap">
+<section class="panel">
+  <h2>Market filters</h2>
+  <div class="grid">
+    <div><label>Exchange</label>
+      <select id="exchange"><option>Binance</option></select>
     </div>
-
-    <div class="filters">
-      <div class="field">
-        <label for="exchange">Exchange</label>
-        <select id="exchange">
-          <option>Binance USDⓈ-M Futures</option>
-          <option>Binance Spot</option>
-        </select>
-      </div>
-
-      <div class="field">
-        <label for="market">Contract type</label>
-        <select id="market">
-          <option>USDT Perpetual</option>
-          <option>All perpetual contracts</option>
-        </select>
-      </div>
-
-      <div class="field">
-        <label for="pair">Search pair</label>
-        <input id="pair" placeholder="e.g. BTCUSDT">
-      </div>
-
-      <div class="field">
-        <label for="priceDirection">24h price change</label>
-        <select id="priceDirection">
-          <option value="any">Any direction</option>
-          <option value="up">Price increasing</option>
-          <option value="down">Price decreasing</option>
-        </select>
-      </div>
-
-      <div class="field">
-        <label for="minVolume">Minimum 24h volume (USDT)</label>
-        <input id="minVolume" type="number" min="0" placeholder="e.g. 1000000">
-      </div>
-
-      <div class="field">
-        <label for="funding">Funding rate</label>
-        <select id="funding">
-          <option value="any">Any funding rate</option>
-          <option value="positive">Positive funding</option>
-          <option value="negative">Negative funding</option>
-        </select>
-      </div>
+    <div><label>Contract type</label>
+      <select id="contract"><option>USDT Perpetual</option></select>
     </div>
-  </section>
+    <div><label>Search pair</label>
+      <input id="search" placeholder="e.g. BTCUSDT">
+    </div>
+    <div><label>24h price direction</label>
+      <select id="priceDirection">
+        <option value="any">Any</option>
+        <option value="up">Price up</option>
+        <option value="down">Price down</option>
+      </select>
+    </div>
+    <div><label>Minimum 24h quote volume (USDT)</label>
+      <input id="minVolume" type="number" min="0" value="0">
+    </div>
+    <div><label>Funding rate filter</label>
+      <select id="funding"><option value="any">Any funding rate</option>
+        <option disabled>Live funding filter — coming next</option>
+      </select>
+    </div>
+    <div><label>Open Interest direction</label>
+      <select id="oiDirection"><option value="any">Any</option>
+        <option disabled>Live OI filter — coming next</option>
+      </select>
+    </div>
+    <div><label>OI change interval</label>
+      <select id="oiInterval"><option>5m</option><option>15m</option>
+        <option>1h</option><option>4h</option><option>24h</option></select>
+    </div>
+    <div><label>OI change (%)</label>
+      <input id="oiChange" type="number" placeholder="UI only">
+    </div>
+  </div>
+</section>
 
-  <section class="panel">
-    <h3>Open Interest (OI)</h3>
-    <div class="filters">
-      <div class="field">
-        <label for="oiDirection">OI movement</label>
-        <select id="oiDirection">
-          <option value="any">Any movement</option>
-          <option value="up">OI increasing</option>
-          <option value="down">OI decreasing</option>
-        </select>
-      </div>
-      <div class="field">
-        <label for="oiInterval">OI timeframe</label>
-        <select id="oiInterval">
-          <option>5m</option>
-          <option>15m</option>
-          <option>30m</option>
-          <option>1h</option>
-          <option>4h</option>
-          <option>24h</option>
-        </select>
-      </div>
-      <div class="field">
-        <label for="oiChange">Minimum OI change (%)</label>
-        <input id="oiChange" type="number" step="0.1" placeholder="e.g. 5">
-      </div>
+<section class="panel">
+  <h2>RSI filter <span class="pill">LIVE</span></h2>
+  <div class="grid">
+    <div><label>RSI timeframe</label>
+      <select id="interval">
+        <option value="5m">5 minutes</option>
+        <option value="15m">15 minutes</option>
+        <option value="30m">30 minutes</option>
+        <option value="1h">1 hour</option>
+        <option value="4h">4 hours</option>
+        <option value="1d">1 day</option>
+      </select>
     </div>
-  </section>
+    <div><label>RSI period</label>
+      <input id="period" type="number" min="2" max="100" value="14">
+    </div>
+    <div><label>RSI condition</label>
+      <select id="condition">
+        <option value="above">RSI greater than or equal to</option>
+        <option value="below">RSI less than or equal to</option>
+        <option value="between">RSI between thresholds</option>
+        <option value="extreme">Either extreme (high OR low)</option>
+      </select>
+    </div>
+    <div><label>Upper RSI threshold</label>
+      <input id="upper" type="number" min="0" max="100" value="90">
+    </div>
+    <div><label>Lower RSI threshold</label>
+      <input id="lower" type="number" min="0" max="100" value="10">
+    </div>
+  </div>
+  <p class="note">RSI is calculated using Wilder smoothing from closed candles. The current unfinished candle is excluded.</p>
+</section>
 
-  <section class="panel">
-    <h3>Relative Strength Index (RSI)</h3>
-    <div class="filters">
-      <div class="field">
-        <label for="rsiInterval">RSI timeframe</label>
-        <select id="rsiInterval">
-          <option value="5m">5 minutes</option>
-          <option value="15m">15 minutes</option>
-          <option value="30m">30 minutes</option>
-          <option value="1h">1 hour</option>
-          <option value="4h">4 hours</option>
-          <option value="1d">1 day</option>
-        </select>
-      </div>
-      <div class="field">
-        <label for="rsiPeriod">RSI period</label>
-        <input id="rsiPeriod" type="number" min="2" max="100" value="14">
-      </div>
-      <div class="field">
-        <label for="rsiCondition">RSI condition</label>
-        <select id="rsiCondition">
-          <option value="any">Any RSI value</option>
-          <option value="above">RSI greater than or equal to</option>
-          <option value="below">RSI less than or equal to</option>
-          <option value="between">RSI within a range</option>
-        </select>
-      </div>
-      <div class="field">
-        <label for="rsiMin">RSI minimum / threshold</label>
-        <input id="rsiMin" type="number" min="0" max="100" value="90">
-      </div>
-      <div class="field">
-        <label for="rsiMax">RSI maximum / upper range</label>
-        <input id="rsiMax" type="number" min="0" max="100" value="100">
-      </div>
+<section class="panel">
+  <h2>Liquidation filter</h2>
+  <div class="grid">
+    <div><label>Liquidation type</label>
+      <select id="liqType"><option>All liquidations</option><option>Long liquidations</option><option>Short liquidations</option></select>
     </div>
-  </section>
+    <div><label>Liquidation interval</label>
+      <select id="liqInterval"><option>5m</option><option>15m</option><option>1h</option><option>4h</option><option>24h</option></select>
+    </div>
+    <div><label>Minimum liquidation value (USDT)</label>
+      <input id="liqValue" type="number" min="0" placeholder="UI only">
+    </div>
+  </div>
+  <div class="disabled-note" style="margin-top:12px">
+    The other filters are interface placeholders for now. Only pair search, minimum 24h volume, price direction, and RSI are applied to scan results. OI, funding and liquidation data are not yet connected.
+  </div>
+  <div class="actions">
+    <button id="start" class="primary">Start RSI scan</button>
+    <button id="stop" class="danger" disabled>Stop scan</button>
+    <button id="reset" class="secondary">Reset filters</button>
+  </div>
+</section>
 
-  <section class="panel">
-    <h3>Liquidations</h3>
-    <div class="filters">
-      <div class="field">
-        <label for="liqDirection">Liquidation type</label>
-        <select id="liqDirection">
-          <option value="any">All liquidations</option>
-          <option value="long">Long liquidations</option>
-          <option value="short">Short liquidations</option>
-        </select>
-      </div>
-      <div class="field">
-        <label for="liqInterval">Liquidation timeframe</label>
-        <select id="liqInterval">
-          <option>5m</option>
-          <option>15m</option>
-          <option>30m</option>
-          <option>1h</option>
-          <option>4h</option>
-          <option>12h</option>
-          <option>24h</option>
-        </select>
-      </div>
-      <div class="field">
-        <label for="liqValue">Minimum liquidation value (USDT)</label>
-        <input id="liqValue" type="number" min="0" placeholder="e.g. 100000">
-      </div>
-    </div>
-  </section>
+<section class="panel">
+  <h2>Scan progress</h2>
+  <div class="stats">
+    <div class="stat"><small>Eligible pairs</small><strong id="total">—</strong></div>
+    <div class="stat"><small>Scanned</small><strong id="scanned">0</strong></div>
+    <div class="stat"><small>Matches</small><strong id="matches">0</strong></div>
+  </div>
+  <div class="progress"><div id="bar"></div></div>
+  <div id="status" class="status">Ready. Start a scan to load Binance Futures market data.</div>
+</section>
 
-  <section class="panel">
-    <div class="actions">
-      <button class="apply" id="apply">Apply filters</button>
-      <button class="reset" id="reset">Reset filters</button>
-    </div>
-    <div class="summary" id="summary">
-      Configure your filters and select Apply filters.
-    </div>
-    <p class="note">
-      Prototype only: this page currently displays and collects filter settings.
-      It does not yet fetch live OI, funding, RSI or liquidation data.
-    </p>
-  </section>
+<section class="panel">
+  <h2>Matching pairs</h2>
+  <p id="resultInfo" class="note">Results will appear here after the scan begins.</p>
+  <div class="tablewrap">
+    <table>
+      <thead><tr>
+        <th>Pair</th><th>Last price</th><th>RSI</th><th>24h change</th><th>24h volume (USDT)</th>
+      </tr></thead>
+      <tbody id="results"><tr><td colspan="5" class="status">No results yet.</td></tr></tbody>
+    </table>
+  </div>
+</section>
 </main>
 
 <script>
-const ids = [
-  "exchange", "market", "pair", "priceDirection", "minVolume",
-  "funding", "oiDirection", "oiInterval", "oiChange",
-  "rsiInterval", "rsiPeriod", "rsiCondition", "rsiMin", "rsiMax",
-  "liqDirection", "liqInterval", "liqValue"
-];
+(() => {
+  const $ = id => document.getElementById(id);
+  const API = "https://fapi.binance.com";
+  let controller = null;
+  let running = false;
+  let runId = 0;
+  let found = [];
 
-document.getElementById("apply").addEventListener("click", () => {
-  const settings = {};
-  ids.forEach(id => {
-    settings[id] = document.getElementById(id).value;
-  });
+  function number(value) {
+    const n = Number(value);
+    return Number.isFinite(n) ? n : 0;
+  }
 
-  document.getElementById("summary").textContent =
-    "Filters selected: " + JSON.stringify(settings, null, 2);
-});
+  function formatPrice(value) {
+    const n = Number(value);
+    if (!Number.isFinite(n)) return "—";
+    return n.toLocaleString("en-US", {
+      maximumFractionDigits: n >= 100 ? 2 : n >= 1 ? 4 : 8
+    });
+  }
 
-document.getElementById("reset").addEventListener("click", () => {
-  document.querySelectorAll("input").forEach(input => {
-    input.value = input.id === "rsiPeriod" ? "14" :
-                  input.id === "rsiMin" ? "90" :
-                  input.id === "rsiMax" ? "100" : "";
-  });
+  function formatVolume(value) {
+    return Number(value).toLocaleString("en-US", {
+      maximumFractionDigits: 0
+    });
+  }
 
-  document.querySelectorAll("select").forEach(select => {
-    select.selectedIndex = 0;
-  });
+  async function getJSON(url, signal) {
+    const response = await fetch(url, {signal});
+    if (!response.ok) {
+      throw new Error("Binance API returned HTTP " + response.status);
+    }
+    return response.json();
+  }
 
-  document.getElementById("summary").textContent =
-    "Filters reset. Configure your filters and select Apply filters.";
-});
+  // Wilder RSI calculated from the supplied closing prices.
+  function calculateRSI(closes, period) {
+    if (closes.length < period + 1) return null;
+
+    let gain = 0, loss = 0;
+    for (let i = 1; i <= period; i++) {
+      const change = closes[i] - closes[i - 1];
+      if (change > 0) gain += change;
+      else loss -= change;
+    }
+
+    let avgGain = gain / period;
+    let avgLoss = loss / period;
+
+    for (let i = period + 1; i < closes.length; i++) {
+      const change = closes[i] - closes[i - 1];
+      avgGain = (avgGain * (period - 1) + Math.max(change, 0)) / period;
+      avgLoss = (avgLoss * (period - 1) + Math.max(-change, 0)) / period;
+    }
+
+    if (avgGain === 0 && avgLoss === 0) return 50;
+    if (avgLoss === 0) return 100;
+    if (avgGain === 0) return 0;
+    return 100 - 100 / (1 + avgGain / avgLoss);
+  }
+
+  function matchesRSI(rsi, condition, lower, upper) {
+    if (condition === "above") return rsi >= upper;
+    if (condition === "below") return rsi <= lower;
+    if (condition === "between") return rsi >= lower && rsi <= upper;
+    return rsi >= upper || rsi <= lower;
+  }
+
+  function showResults() {
+    const tbody = $("results");
+    tbody.replaceChildren();
+
+    if (!found.length) {
+      const tr = document.createElement("tr");
+      const td = document.createElement("td");
+      td.colSpan = 5;
+      td.className = "status";
+      td.textContent = "No matching pairs found with the current filters.";
+      tr.appendChild(td);
+      tbody.appendChild(tr);
+      return;
+    }
+
+    found.sort((a, b) => {
+      const direction = $("condition").value;
+      if (direction === "below") return a.rsi - b.rsi;
+      return b.rsi - a.rsi;
+    });
+
+    for (const item of found) {
+      const tr = document.createElement("tr");
+      const pairCell = document.createElement("td");
+      const link = document.createElement("a");
+      link.href = "https://www.binance.com/en/futures/" + encodeURIComponent(item.symbol);
+      link.target = "_blank";
+      link.rel = "noopener noreferrer";
+      link.textContent = item.symbol;
+      pairCell.appendChild(link);
+
+      const price = document.createElement("td");
+      price.textContent = formatPrice(item.price);
+
+      const rsi = document.createElement("td");
+      rsi.textContent = item.rsi.toFixed(2);
+      rsi.className = item.rsi >= 70 ? "bad" : item.rsi <= 30 ? "good" : "";
+
+      const change = document.createElement("td");
+      change.textContent = item.change.toFixed(2) + "%";
+      change.className = item.change >= 0 ? "good" : "bad";
+
+      const volume = document.createElement("td");
+      volume.textContent = formatVolume(item.volume);
+
+      tr.append(pairCell, price, rsi, change, volume);
+      tbody.appendChild(tr);
+    }
+  }
+
+  function setStatus(message) {
+    $("status").textContent = message;
+  }
+
+  function setRunning(value) {
+    running = value;
+    $("start").disabled = value;
+    $("stop").disabled = !value;
+  }
+
+  async function startScan() {
+    if (running) return;
+
+    const period = number($("period").value);
+    const upper = number($("upper").value);
+    const lower = number($("lower").value);
+    const minVolume = number($("minVolume").value);
+
+    if (!Number.isInteger(period) || period < 2 || period > 100) {
+      setStatus("RSI period must be a whole number from 2 to 100.");
+      return;
+    }
+    if (upper < 0 || upper > 100 || lower < 0 || lower > 100 || lower > upper) {
+      setStatus("Check the RSI thresholds: use values from 0 to 100, with lower no greater than upper.");
+      return;
+    }
+    if (minVolume < 0) {
+      setStatus("Minimum 24h volume cannot be negative.");
+      return;
+    }
+
+    const thisRun = ++runId;
+    controller = new AbortController();
+    const signal = controller.signal;
+    setRunning(true);
+    found = [];
+    $("results").replaceChildren();
+    $("total").textContent = "—";
+    $("scanned").textContent = "0";
+    $("matches").textContent = "0";
+    $("bar").style.width = "0%";
+    $("resultInfo").textContent = "Scanning Binance USDT perpetual pairs…";
+
+    const interval = $("interval").value;
+    const condition = $("condition").value;
+    const search = $("search").value.trim().toUpperCase();
+    const priceDirection = $("priceDirection").value;
+    let scanned = 0, errors = 0;
+
+    try {
+      setStatus("Loading Binance Futures contract list and 24-hour ticker data…");
+
+      const [exchangeInfo, tickers] = await Promise.all([
+        getJSON(API + "/fapi/v1/exchangeInfo", signal),
+        getJSON(API + "/fapi/v1/ticker/24hr", signal)
+      ]);
+
+      if (thisRun !== runId) return;
+
+      const tickerMap = new Map(tickers.map(t => [t.symbol, t]));
+      const symbols = exchangeInfo.symbols.filter(s =>
+        s.status === "TRADING" &&
+        s.contractType === "PERPETUAL" &&
+        s.quoteAsset === "USDT" &&
+        tickerMap.has(s.symbol)
+      ).map(s => {
+        const t = tickerMap.get(s.symbol);
+        return {
+          symbol: s.symbol,
+          price: number(t.lastPrice),
+          change: number(t.priceChangePercent),
+          volume: number(t.quoteVolume)
+        };
+      }).filter(s =>
+        s.volume >= minVolume &&
+        (!search || s.symbol.includes(search)) &&
+        (priceDirection === "any" ||
+          (priceDirection === "up" && s.change > 0) ||
+          (priceDirection === "down" && s.change < 0))
+      );
+
+      $("total").textContent = symbols.length.toLocaleString();
+      if (!symbols.length) {
+        setStatus("No eligible pairs match the pair, volume and price filters.");
+        $("resultInfo").textContent = "No pairs to scan.";
+        return;
+      }
+
+      const workers = 4;
+      let next = 0;
+      const limit = Math.max(100, period * 3 + 5);
+
+      setStatus("Scanning " + symbols.length + " eligible pairs on the " +
+        interval + " timeframe. Keep this page open.");
+
+      async function worker() {
+        while (next < symbols.length && !signal.aborted && thisRun === runId) {
+          const index = next++;
+          const symbol = symbols[index];
+
+          try {
+            const url = API + "/fapi/v1/klines?symbol=" +
+              encodeURIComponent(symbol.symbol) + "&interval=" +
+              encodeURIComponent(interval) + "&limit=" + limit;
+
+            const candles = await getJSON(url, signal);
+            if (signal.aborted || thisRun !== runId) return;
+
+            const now = Date.now();
+            const closed = candles.filter(c => Number(c[6]) < now);
+            const closes = closed.map(c => Number(c[4]));
+            const rsi = calculateRSI(closes, period);
+
+            if (rsi !== null && matchesRSI(rsi, condition, lower, upper)) {
+              found.push({...symbol, rsi});
+            }
+          } catch (error) {
+            if (signal.aborted || thisRun !== runId) return;
+            errors++;
+          } finally {
+            if (!signal.aborted && thisRun === runId) {
+              scanned++;
+              $("scanned").textContent = scanned.toLocaleString();
+              $("matches").textContent = found.length.toLocaleString();
+              $("bar").style.width = (scanned / symbols.length * 100) + "%";
+              if (scanned % 10 === 0 || scanned === symbols.length) {
+                showResults();
+              }
+            }
+          }
+        }
+      }
+
+      await Promise.all(Array.from({length: workers}, () => worker()));
+      if (thisRun !== runId) return;
+
+      showResults();
+      $("matches").textContent = found.length.toLocaleString();
+      $("resultInfo").textContent =
+        found.length + " matching pair(s) · RSI(" + period + ") · " +
+        interval + " · completed candles only.";
+
+      if (signal.aborted) {
+        setStatus("Scan stopped. Results collected so far are shown.");
+      } else if (errors) {
+        setStatus("Scan finished: " + scanned + "/" + symbols.length +
+          " pairs processed, " + errors +
+          " request(s) failed. Some results may be missing; try again if needed.");
+      } else {
+        setStatus("Scan complete: all " + scanned +
+          " eligible pairs processed successfully.");
+      }
+    } catch (error) {
+      if (thisRun !== runId) return;
+      if (error.name === "AbortError") {
+        setStatus("Scan stopped.");
+      } else {
+        setStatus("Could not load Binance data: " + error.message +
+          ". Check your internet connection and try again.");
+      }
+    } finally {
+      if (thisRun === runId) {
+        setRunning(false);
+        controller = null;
+      }
+    }
+  }
+
+  function stopScan() {
+    if (!running || !controller) return;
+    controller.abort();
+    runId++;
+    setRunning(false);
+    controller = null;
+    setStatus("Stop requested. The scan will not continue.");
+  }
+
+  function resetFilters() {
+    if (running) stopScan();
+    $("search").value = "";
+    $("priceDirection").value = "any";
+    $("minVolume").value = "0";
+    $("interval").value = "5m";
+    $("period").value = "14";
+    $("condition").value = "above";
+    $("upper").value = "90";
+    $("lower").value = "10";
+    $("oiChange").value = "";
+    $("liqValue").value = "";
+    found = [];
+    $("total").textContent = "—";
+    $("scanned").textContent = "0";
+    $("matches").textContent = "0";
+    $("bar").style.width = "0%";
+    $("results").innerHTML = '<tr><td colspan="5" class="status">No results yet.</td></tr>';
+    $("resultInfo").textContent = "Filters reset.";
+    setStatus("Filters reset. Ready to scan.");
+  }
+
+  $("start").addEventListener("click", startScan);
+  $("stop").addEventListener("click", stopScan);
+  $("reset").addEventListener("click", resetFilters);
+})();
 </script>
 </body>
 </html>
