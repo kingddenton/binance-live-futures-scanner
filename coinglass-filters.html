@@ -3,8 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Binance Futures Scanner — RSI & Price Change</title>
-
+<title>Binance Futures Scanner — RSI, Price Change & Volume</title>
 <style>
 :root {
   color-scheme: dark;
@@ -18,260 +17,87 @@
   --green: #0ecb81;
   --red: #f6465d;
 }
-
-* {
-  box-sizing: border-box;
-}
-
+* { box-sizing: border-box; }
 body {
-  margin: 0;
-  padding: 16px;
-  background: var(--bg);
-  color: var(--text);
-  font-family: Arial, Helvetica, sans-serif;
+  margin: 0; padding: 16px; background: var(--bg);
+  color: var(--text); font-family: Arial, Helvetica, sans-serif;
 }
-
-.container {
-  max-width: 1500px;
-  margin: 0 auto;
+.container { max-width: 1500px; margin: 0 auto; }
+h1 { font-size: 25px; margin: 5px 0 8px; }
+h2 { font-size: 18px; margin: 0 0 14px; }
+.subtitle, .footer-note {
+  color: var(--muted); font-size: 13px; line-height: 1.6;
 }
-
-h1 {
-  font-size: 25px;
-  margin: 5px 0 8px;
-}
-
-h2 {
-  font-size: 18px;
-  margin: 0 0 14px;
-}
-
-.subtitle {
-  color: var(--muted);
-  font-size: 13px;
-  line-height: 1.6;
-  margin-bottom: 18px;
-}
-
+.subtitle { margin-bottom: 18px; }
 .panel {
-  background: var(--panel);
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  padding: 16px;
-  margin-bottom: 16px;
+  background: var(--panel); border: 1px solid var(--border);
+  border-radius: 10px; padding: 16px; margin-bottom: 16px;
 }
-
 .section-title {
-  color: var(--yellow);
-  font-weight: bold;
-  font-size: 16px;
-  margin-bottom: 13px;
+  color: var(--yellow); font-weight: bold;
+  font-size: 16px; margin-bottom: 13px;
 }
-
 .filter-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(235px, 1fr));
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(235px, 1fr));
   gap: 12px;
 }
-
 .filter-card {
-  background: var(--panel2);
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 12px;
+  background: var(--panel2); border: 1px solid var(--border);
+  border-radius: 8px; padding: 12px;
 }
-
 .filter-heading {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-bottom: 10px;
-  font-weight: bold;
+  display: flex; align-items: center; gap: 8px;
+  margin-bottom: 10px; font-weight: bold;
 }
-
-.filter-heading input {
-  accent-color: var(--yellow);
-  width: 17px;
-  height: 17px;
-}
-
-.range-row {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 8px;
-}
-
+.filter-heading input { accent-color: var(--yellow); width: 17px; height: 17px; }
+.range-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 label.small-label {
-  display: block;
-  font-size: 11px;
-  color: var(--muted);
-  margin-bottom: 5px;
+  display: block; font-size: 11px; color: var(--muted); margin-bottom: 5px;
 }
-
-input[type="number"],
-input[type="text"],
-select {
-  width: 100%;
-  min-width: 0;
-  padding: 10px;
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  background: #0b0e11;
-  color: var(--text);
-  font-size: 13px;
+input[type="number"], input[type="text"], select {
+  width: 100%; min-width: 0; padding: 10px;
+  border: 1px solid var(--border); border-radius: 6px;
+  background: #0b0e11; color: var(--text); font-size: 13px;
 }
-
-input:focus,
-select:focus {
-  outline: 1px solid var(--yellow);
-  border-color: var(--yellow);
-}
-
-.actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-  align-items: center;
-  margin-top: 16px;
-}
-
+input:focus, select:focus { outline: 1px solid var(--yellow); border-color: var(--yellow); }
+.actions { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-top: 16px; }
 button {
-  padding: 11px 16px;
-  border: none;
-  border-radius: 6px;
-  font-weight: bold;
-  cursor: pointer;
-  font-size: 13px;
+  padding: 11px 16px; border: none; border-radius: 6px;
+  font-weight: bold; cursor: pointer; font-size: 13px;
 }
-
-button:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.primary {
-  background: var(--yellow);
-  color: #111;
-}
-
-.secondary {
-  background: #30363d;
-  color: var(--text);
-}
-
-.status {
-  font-size: 13px;
-  color: var(--muted);
-  line-height: 1.7;
-}
-
-.status strong {
-  color: var(--text);
-}
-
-.error {
-  color: var(--red);
-}
-
-.success {
-  color: var(--green);
-}
-
-.table-wrap {
-  overflow-x: auto;
-  width: 100%;
-}
-
-table {
-  border-collapse: collapse;
-  width: 100%;
-  font-size: 12px;
-  white-space: nowrap;
-}
-
-th,
-td {
-  padding: 11px 10px;
-  text-align: right;
-  border-bottom: 1px solid var(--border);
-}
-
-th {
-  color: var(--yellow);
-  background: var(--panel2);
-  cursor: pointer;
-  position: sticky;
-  top: 0;
-}
-
-th:first-child,
-td:first-child {
-  text-align: left;
-}
-
-tbody tr:hover {
-  background: #1b222a;
-}
-
-.positive {
-  color: var(--green);
-}
-
-.negative {
-  color: var(--red);
-}
-
-.neutral {
-  color: var(--muted);
-}
-
-.pair {
-  font-weight: bold;
-  color: var(--text);
-}
-
-.empty {
-  padding: 25px;
-  text-align: center;
-  color: var(--muted);
-}
-
-.footer-note {
-  font-size: 12px;
-  line-height: 1.7;
-  color: var(--muted);
-  margin-top: 12px;
-}
-
+button:disabled { opacity: .5; cursor: not-allowed; }
+.primary { background: var(--yellow); color: #111; }
+.secondary { background: #30363d; color: var(--text); }
+.status { font-size: 13px; color: var(--muted); line-height: 1.7; }
+.status strong { color: var(--text); }
+.error { color: var(--red); }
+.success { color: var(--green); }
+.table-wrap { overflow-x: auto; width: 100%; }
+table { border-collapse: collapse; width: 100%; font-size: 12px; white-space: nowrap; }
+th, td { padding: 11px 10px; text-align: right; border-bottom: 1px solid var(--border); }
+th { color: var(--yellow); background: var(--panel2); cursor: pointer; position: sticky; top: 0; }
+th:first-child, td:first-child { text-align: left; }
+tbody tr:hover { background: #1b222a; }
+.positive { color: var(--green); }
+.negative { color: var(--red); }
+.neutral { color: var(--muted); }
+.pair { font-weight: bold; color: var(--text); }
+.empty { padding: 25px; text-align: center; color: var(--muted); }
+.footer-note { margin-top: 12px; }
 @media (max-width: 600px) {
-  body {
-    padding: 9px;
-  }
-
-  h1 {
-    font-size: 21px;
-  }
-
-  .panel {
-    padding: 11px;
-  }
-
-  .filter-grid {
-    grid-template-columns: 1fr;
-  }
+  body { padding: 9px; }
+  h1 { font-size: 21px; }
+  .panel { padding: 11px; }
+  .filter-grid { grid-template-columns: 1fr; }
 }
 </style>
 </head>
-
 <body>
 <div class="container">
-
   <h1>Binance Futures Scanner</h1>
-
   <div class="subtitle">
-    RSI(14) and Price Change filters for USDT perpetual futures.
-    Select one or more filters. A pair must satisfy every enabled filter
-    to appear in the results.
+    RSI(14), price change and 24-hour quote-volume filters for USDT perpetual futures.
+    Enable one or more filters. A pair must pass every enabled filter to appear.
   </div>
 
   <div class="panel">
@@ -282,29 +108,46 @@ tbody tr:hover {
   <div class="panel">
     <div class="section-title">2. Price Change Filters</div>
     <div id="changeFilters" class="filter-grid"></div>
-
     <div class="footer-note">
-      Price Change is expressed as a percentage. Negative values are allowed.
-      For intervals below 24 hours, the scanner compares the latest completed
-      candle close with the preceding completed candle close at that interval.
-      The 24-hour value uses Binance's rolling 24-hour change.
+      Intraday changes compare the latest completed candle close with the preceding
+      completed candle close. The 24-hour change uses Binance's rolling 24-hour ticker.
     </div>
   </div>
 
   <div class="panel">
-    <h2>3. Scanner Controls</h2>
+    <div class="section-title">3. 24-Hour Quote Volume Filter (USDT)</div>
+    <div class="filter-grid">
+      <div class="filter-card">
+        <div class="filter-heading">
+          <input type="checkbox" id="volume_enabled">
+          <label for="volume_enabled">Enable 24h volume filter</label>
+        </div>
+        <div class="range-row">
+          <div>
+            <label class="small-label" for="volume_min">Minimum volume (USDT)</label>
+            <input type="number" id="volume_min" min="0" step="any" placeholder="e.g. 1000000">
+          </div>
+          <div>
+            <label class="small-label" for="volume_max">Maximum volume (USDT)</label>
+            <input type="number" id="volume_max" min="0" step="any" placeholder="No maximum">
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="footer-note">
+      Volume uses Binance's 24-hour quote volume, denominated in USDT.
+    </div>
+  </div>
 
+  <div class="panel">
+    <h2>4. Scanner Controls</h2>
     <div class="filter-grid">
       <div>
         <label class="small-label" for="searchPair">Search pair</label>
-        <input id="searchPair" type="text"
-               placeholder="e.g. BTCUSDT">
+        <input id="searchPair" type="text" placeholder="e.g. BTCUSDT">
       </div>
-
       <div>
-        <label class="small-label" for="refreshSeconds">
-          Rescan interval
-        </label>
+        <label class="small-label" for="refreshSeconds">Rescan interval</label>
         <select id="refreshSeconds">
           <option value="30" selected>30 seconds</option>
           <option value="60">60 seconds</option>
@@ -312,26 +155,22 @@ tbody tr:hover {
           <option value="300">5 minutes</option>
         </select>
       </div>
-
       <div>
-        <label class="small-label" for="sortPreference">
-          Default sorting
-        </label>
+        <label class="small-label" for="sortPreference">Default sorting</label>
         <select id="sortPreference">
           <option value="rsi">Highest selected RSI</option>
           <option value="change">Highest selected Price Change</option>
+          <option value="volume">Highest 24h Volume</option>
           <option value="symbol">Pair name A–Z</option>
         </select>
       </div>
     </div>
-
     <div class="actions">
       <button id="startButton" class="primary">Start Scanner</button>
       <button id="stopButton" class="secondary" disabled>Stop Scanner</button>
       <button id="scanButton" class="secondary">Scan Once</button>
       <button id="clearButton" class="secondary">Clear Filters</button>
     </div>
-
     <div class="status" style="margin-top:14px">
       <div>Status: <strong id="statusText">Ready</strong></div>
       <div>USDT perpetual pairs: <strong id="pairCount">—</strong></div>
@@ -342,40 +181,28 @@ tbody tr:hover {
   </div>
 
   <div class="panel">
-    <h2>4. Matching Results</h2>
-
+    <h2>5. Matching Results</h2>
     <div class="table-wrap">
       <table>
         <thead id="tableHead"></thead>
         <tbody id="resultsBody">
-          <tr>
-            <td colspan="20" class="empty">
-              Select your filters and start the scanner.
-            </td>
-          </tr>
+          <tr><td class="empty">Select filters and start the scanner.</td></tr>
         </tbody>
       </table>
     </div>
-
     <div class="footer-note">
-      Data comes from Binance's public futures market-data endpoints.
-      No API key is required. This page does not place orders or execute trades.
-      Browser network restrictions or Binance rate limits may affect scanning.
+      Uses Binance public futures market data. No API key is required. This scanner
+      does not place orders or execute trades. Network restrictions or rate limits
+      may affect scanning.
     </div>
   </div>
-
 </div>
 
 <script>
 "use strict";
 
-/*
- * Binance Futures Scanner
- * RSI uses Wilder's RSI(14).
- * All enabled filters are combined using AND logic.
- */
-
 const BASE_URL = "https://fapi.binance.com";
+const RSI_PERIOD = 14;
 
 const RSI_INTERVALS = [
   { key: "1m", label: "1 minute", interval: "1m" },
@@ -400,7 +227,7 @@ const CHANGE_INTERVALS = [
   { key: "24h", label: "24 hours", interval: null }
 ];
 
-const RSI_PERIOD = 14;
+const $ = id => document.getElementById(id);
 
 let symbols = [];
 let running = false;
@@ -410,51 +237,39 @@ let scanTimer = null;
 let countdownTimer = null;
 let nextScanAt = null;
 let lastResults = [];
-let sortColumn = null;
-let sortDirection = -1;
 let currentColumns = [];
 
-const $ = id => document.getElementById(id);
+// Preserve the user's chosen column and direction across refreshes.
+let sortColumn = null;
+let sortDirection = -1;
 
 function createFilterCard(container, type, item) {
   const prefix = type + "_" + item.key;
-
   const card = document.createElement("div");
   card.className = "filter-card";
-
   card.innerHTML = `
     <div class="filter-heading">
       <input type="checkbox" id="${prefix}_enabled">
       <label for="${prefix}_enabled">${item.label}</label>
     </div>
-
     <div class="range-row">
       <div>
         <label class="small-label" for="${prefix}_min">Minimum</label>
         <input type="number" id="${prefix}_min"
-          placeholder="${type === "rsi" ? "0" : "-5"}"
-          step="any">
+          placeholder="${type === "rsi" ? "0" : "-5"}" step="any">
       </div>
       <div>
         <label class="small-label" for="${prefix}_max">Maximum</label>
         <input type="number" id="${prefix}_max"
-          placeholder="${type === "rsi" ? "100" : "5"}"
-          step="any">
+          placeholder="${type === "rsi" ? "100" : "5"}" step="any">
       </div>
-    </div>
-  `;
-
+    </div>`;
   container.appendChild(card);
 }
 
 function buildFilterCards() {
-  RSI_INTERVALS.forEach(item =>
-    createFilterCard($("rsiFilters"), "rsi", item)
-  );
-
-  CHANGE_INTERVALS.forEach(item =>
-    createFilterCard($("changeFilters"), "change", item)
-  );
+  RSI_INTERVALS.forEach(item => createFilterCard($("rsiFilters"), "rsi", item));
+  CHANGE_INTERVALS.forEach(item => createFilterCard($("changeFilters"), "change", item));
 }
 
 function getEnabledFilters(type, intervals) {
@@ -462,116 +277,87 @@ function getEnabledFilters(type, intervals) {
 
   for (const item of intervals) {
     const prefix = type + "_" + item.key;
-
-    if (!$(`${prefix}_enabled`).checked) {
-      continue;
-    }
+    if (!$(`${prefix}_enabled`).checked) continue;
 
     const minText = $(`${prefix}_min`).value.trim();
     const maxText = $(`${prefix}_max`).value.trim();
-
     const min = minText === "" ? null : Number(minText);
     const max = maxText === "" ? null : Number(maxText);
 
-    if (min !== null && !Number.isFinite(min)) {
-      throw new Error(`${item.label}: invalid minimum value.`);
-    }
-
-    if (max !== null && !Number.isFinite(max)) {
-      throw new Error(`${item.label}: invalid maximum value.`);
-    }
-
-    if (min !== null && max !== null && min > max) {
-      throw new Error(
-        `${item.label}: minimum cannot exceed maximum.`
-      );
-    }
+    if (min !== null && !Number.isFinite(min))
+      throw new Error(`${item.label}: invalid minimum.`);
+    if (max !== null && !Number.isFinite(max))
+      throw new Error(`${item.label}: invalid maximum.`);
+    if (min !== null && max !== null && min > max)
+      throw new Error(`${item.label}: minimum cannot exceed maximum.`);
 
     if (type === "rsi") {
-      if (min !== null && (min < 0 || min > 100)) {
+      if (min !== null && (min < 0 || min > 100))
         throw new Error(`${item.label}: RSI minimum must be 0–100.`);
-      }
-
-      if (max !== null && (max < 0 || max > 100)) {
+      if (max !== null && (max < 0 || max > 100))
         throw new Error(`${item.label}: RSI maximum must be 0–100.`);
-      }
     }
 
-    if (min === null && max === null) {
-      throw new Error(
-        `${item.label}: enter a minimum or maximum value.`
-      );
-    }
+    if (min === null && max === null)
+      throw new Error(`${item.label}: enter a minimum or maximum.`);
 
-    filters.push({
-      ...item,
-      key: item.key,
-      min,
-      max
-    });
+    filters.push({ ...item, min, max });
   }
-
   return filters;
 }
 
 function readFilters() {
+  const volumeEnabled = $("volume_enabled").checked;
+  const volumeMinText = $("volume_min").value.trim();
+  const volumeMaxText = $("volume_max").value.trim();
+  const volumeMin = volumeMinText === "" ? null : Number(volumeMinText);
+  const volumeMax = volumeMaxText === "" ? null : Number(volumeMaxText);
+
+  if (volumeEnabled) {
+    if (volumeMin !== null && (!Number.isFinite(volumeMin) || volumeMin < 0))
+      throw new Error("Volume minimum must be a non-negative number.");
+    if (volumeMax !== null && (!Number.isFinite(volumeMax) || volumeMax < 0))
+      throw new Error("Volume maximum must be a non-negative number.");
+    if (volumeMin !== null && volumeMax !== null && volumeMin > volumeMax)
+      throw new Error("Volume minimum cannot exceed maximum.");
+    if (volumeMin === null && volumeMax === null)
+      throw new Error("Enter a volume minimum or maximum.");
+  }
+
   return {
     rsi: getEnabledFilters("rsi", RSI_INTERVALS),
-    change: getEnabledFilters("change", CHANGE_INTERVALS)
+    change: getEnabledFilters("change", CHANGE_INTERVALS),
+    volume: { enabled: volumeEnabled, min: volumeMin, max: volumeMax }
   };
 }
 
 function setStatus(message, className = "") {
-  const el = $("statusText");
-  el.textContent = message;
-  el.className = className;
+  $("statusText").textContent = message;
+  $("statusText").className = className;
 }
 
 async function fetchJSON(url, signal) {
-  const response = await fetch(url, {
-    signal,
-    cache: "no-store"
-  });
-
-  if (!response.ok) {
-    throw new Error(`Binance request failed: HTTP ${response.status}`);
-  }
-
+  const response = await fetch(url, { signal, cache: "no-store" });
+  if (!response.ok) throw new Error(`Binance request failed: HTTP ${response.status}`);
   return response.json();
 }
 
 async function loadSymbols(signal) {
-  const data = await fetchJSON(
-    `${BASE_URL}/fapi/v1/exchangeInfo`,
-    signal
-  );
-
+  const data = await fetchJSON(`${BASE_URL}/fapi/v1/exchangeInfo`, signal);
   return data.symbols
-    .filter(item =>
-      item.status === "TRADING" &&
-      item.contractType === "PERPETUAL" &&
-      item.quoteAsset === "USDT"
-    )
-    .map(item => item.symbol)
-    .sort();
+    .filter(item => item.status === "TRADING" &&
+      item.contractType === "PERPETUAL" && item.quoteAsset === "USDT")
+    .map(item => item.symbol).sort();
 }
 
 function calculateRSI(closes, period = RSI_PERIOD) {
-  if (closes.length <= period) {
-    return null;
-  }
-
-  let gainSum = 0;
-  let lossSum = 0;
+  if (closes.length <= period) return null;
+  let gainSum = 0, lossSum = 0;
 
   for (let i = 1; i <= period; i++) {
     const change = closes[i] - closes[i - 1];
-
-    if (change > 0) {
-      gainSum += change;
-    } else {
-      lossSum -= change;
-    }
+    if (change > 0) gainSum += change;
+    else lossSum -= change;
   }
 
   let averageGain = gainSum / period;
@@ -581,190 +367,112 @@ function calculateRSI(closes, period = RSI_PERIOD) {
     const change = closes[i] - closes[i - 1];
     const gain = Math.max(change, 0);
     const loss = Math.max(-change, 0);
-
-    averageGain =
-      ((averageGain * (period - 1)) + gain) / period;
-
-    averageLoss =
-      ((averageLoss * (period - 1)) + loss) / period;
+    averageGain = (averageGain * (period - 1) + gain) / period;
+    averageLoss = (averageLoss * (period - 1) + loss) / period;
   }
 
-  if (averageLoss === 0) {
-    return averageGain === 0 ? 50 : 100;
-  }
-
-  const relativeStrength = averageGain / averageLoss;
-
-  return 100 - (100 / (1 + relativeStrength));
+  if (averageLoss === 0) return averageGain === 0 ? 50 : 100;
+  return 100 - 100 / (1 + averageGain / averageLoss);
 }
 
 async function fetchRSI(symbol, interval, signal) {
-  const url =
-    `${BASE_URL}/fapi/v1/klines` +
-    `?symbol=${encodeURIComponent(symbol)}` +
-    `&interval=${encodeURIComponent(interval)}` +
-    `&limit=100`;
-
+  const url = `${BASE_URL}/fapi/v1/klines?symbol=${encodeURIComponent(symbol)}` +
+    `&interval=${encodeURIComponent(interval)}&limit=100`;
   const data = await fetchJSON(url, signal);
   const now = Date.now();
-
-  // Exclude any candle that has not closed yet.
   const closed = data.filter(candle => Number(candle[6]) < now);
-
-  const closes = closed.map(candle => Number(candle[4]));
-
-  return calculateRSI(closes);
+  return calculateRSI(closed.map(candle => Number(candle[4])));
 }
 
 async function fetchPriceChange(symbol, item, signal, tickerMap) {
   if (item.key === "24h") {
     const ticker = tickerMap.get(symbol);
-
-    if (!ticker) {
-      return null;
-    }
-
-    const value = Number(ticker.priceChangePercent);
-
+    const value = ticker ? Number(ticker.priceChangePercent) : NaN;
     return Number.isFinite(value) ? value : null;
   }
 
-  /*
-   * Compare the close of the latest completed candle against
-   * the close of the preceding completed candle. This represents
-   * one interval of close-to-close percentage change.
-   */
-  const url =
-    `${BASE_URL}/fapi/v1/klines` +
-    `?symbol=${encodeURIComponent(symbol)}` +
-    `&interval=${encodeURIComponent(item.interval)}` +
-    `&limit=3`;
-
+  const url = `${BASE_URL}/fapi/v1/klines?symbol=${encodeURIComponent(symbol)}` +
+    `&interval=${encodeURIComponent(item.interval)}&limit=3`;
   const data = await fetchJSON(url, signal);
-  const now = Date.now();
-
-  const closed = data.filter(candle => Number(candle[6]) < now);
-
-  if (closed.length < 2) {
-    return null;
-  }
+  const closed = data.filter(candle => Number(candle[6]) < Date.now());
+  if (closed.length < 2) return null;
 
   const previousClose = Number(closed[closed.length - 2][4]);
   const latestClose = Number(closed[closed.length - 1][4]);
-
-  if (
-    !Number.isFinite(previousClose) ||
-    !Number.isFinite(latestClose) ||
-    previousClose === 0
-  ) {
+  if (!Number.isFinite(previousClose) || !Number.isFinite(latestClose) || previousClose === 0)
     return null;
-  }
 
   return ((latestClose - previousClose) / previousClose) * 100;
 }
 
 function passesRange(value, filter) {
-  if (value === null || !Number.isFinite(value)) {
-    return false;
-  }
-
-  if (filter.min !== null && value < filter.min) {
-    return false;
-  }
-
-  if (filter.max !== null && value > filter.max) {
-    return false;
-  }
-
+  if (value === null || !Number.isFinite(value)) return false;
+  if (filter.min !== null && value < filter.min) return false;
+  if (filter.max !== null && value > filter.max) return false;
   return true;
 }
 
 function matchesAllFilters(row, filters) {
-  for (const filter of filters.rsi) {
-    if (!passesRange(row.rsi[filter.key], filter)) {
-      return false;
-    }
-  }
+  for (const filter of filters.rsi)
+    if (!passesRange(row.rsi[filter.key], filter)) return false;
 
-  for (const filter of filters.change) {
-    if (!passesRange(row.change[filter.key], filter)) {
-      return false;
-    }
-  }
+  for (const filter of filters.change)
+    if (!passesRange(row.change[filter.key], filter)) return false;
+
+  if (filters.volume.enabled &&
+      !passesRange(row.volume, filters.volume)) return false;
 
   return true;
 }
 
 function getActiveColumns(filters) {
   const columns = [
-    { key: "symbol", label: "Pair", type: "text" },
-    { key: "price", label: "Price", type: "number" }
+    { key: "symbol", label: "Pair" },
+    { key: "price", label: "Price" }
   ];
 
-  filters.rsi.forEach(item => {
-    columns.push({
-      key: "rsi_" + item.key,
-      label: "RSI " + item.label,
-      type: "number"
-    });
-  });
+  filters.rsi.forEach(item => columns.push({
+    key: "rsi_" + item.key, label: "RSI " + item.label
+  }));
 
-  filters.change.forEach(item => {
-    columns.push({
-      key: "change_" + item.key,
-      label: "Change " + item.label,
-      type: "number"
-    });
-  });
+  filters.change.forEach(item => columns.push({
+    key: "change_" + item.key, label: "Change " + item.label
+  }));
+
+  if (filters.volume.enabled)
+    columns.push({ key: "volume", label: "24h Volume (USDT)" });
 
   return columns;
 }
 
 function getColumnValue(row, key) {
-  if (key === "symbol") {
-    return row.symbol;
-  }
-
-  if (key === "price") {
-    return row.price;
-  }
-
-  if (key.startsWith("rsi_")) {
-    return row.rsi[key.slice(4)];
-  }
-
-  if (key.startsWith("change_")) {
-    return row.change[key.slice(7)];
-  }
-
+  if (key === "symbol") return row.symbol;
+  if (key === "price") return row.price;
+  if (key === "volume") return row.volume;
+  if (key.startsWith("rsi_")) return row.rsi[key.slice(4)];
+  if (key.startsWith("change_")) return row.change[key.slice(7)];
   return null;
 }
 
 function renderTableHead(columns) {
   const head = $("tableHead");
   head.innerHTML = "";
-
   const row = document.createElement("tr");
 
   columns.forEach(column => {
     const th = document.createElement("th");
     th.textContent = column.label;
-
-    if (sortColumn === column.key) {
+    if (sortColumn === column.key)
       th.textContent += sortDirection === 1 ? " ▲" : " ▼";
-    }
 
     th.addEventListener("click", () => {
-      if (sortColumn === column.key) {
-        sortDirection *= -1;
-      } else {
+      if (sortColumn === column.key) sortDirection *= -1;
+      else {
         sortColumn = column.key;
         sortDirection = column.key === "symbol" ? 1 : -1;
       }
-
-      renderResults(lastResults, columns);
+      renderResults(lastResults, currentColumns);
     });
-
     row.appendChild(th);
   });
 
@@ -772,80 +480,63 @@ function renderTableHead(columns) {
 }
 
 function formatNumber(value, digits = 2) {
-  if (value === null || value === undefined ||
-      !Number.isFinite(value)) {
-    return "—";
+  if (value === null || value === undefined || !Number.isFinite(value)) return "—";
+  return value.toLocaleString("en-US", {
+    minimumFractionDigits: digits, maximumFractionDigits: digits
+  });
+}
+
+function chooseDefaultSort(columns) {
+  const preference = $("sortPreference").value;
+  let selected = null;
+
+  if (preference === "symbol") {
+    selected = columns.find(c => c.key === "symbol");
+  } else if (preference === "volume") {
+    selected = columns.find(c => c.key === "volume");
+  } else if (preference === "change") {
+    selected = columns.find(c => c.key.startsWith("change_"));
+  } else {
+    selected = columns.find(c => c.key.startsWith("rsi_"));
   }
 
-  return value.toLocaleString("en-US", {
-    minimumFractionDigits: digits,
-    maximumFractionDigits: digits
-  });
+  if (!selected) selected = columns[0];
+  sortColumn = selected ? selected.key : null;
+  sortDirection = sortColumn === "symbol" ? 1 : -1;
 }
 
 function renderResults(results, columns) {
   currentColumns = columns;
+  if (!columns.some(c => c.key === sortColumn)) chooseDefaultSort(columns);
   renderTableHead(columns);
 
   const body = $("resultsBody");
   body.innerHTML = "";
-
   const search = $("searchPair").value.trim().toUpperCase();
-
-  let filtered = results.filter(row =>
-    row.symbol.includes(search)
-  );
-
-  if (!sortColumn) {
-    const preference = $("sortPreference").value;
-
-    if (preference === "symbol") {
-      sortColumn = "symbol";
-      sortDirection = 1;
-    } else if (preference === "change") {
-      const selected = columns.find(c =>
-        c.key.startsWith("change_")
-      );
-
-      sortColumn = selected ? selected.key : "symbol";
-      sortDirection = selected ? -1 : 1;
-    } else {
-      const selected = columns.find(c =>
-        c.key.startsWith("rsi_")
-      );
-
-      sortColumn = selected ? selected.key : "symbol";
-      sortDirection = selected ? -1 : 1;
-    }
-  }
+  const filtered = results.filter(row => row.symbol.includes(search));
 
   filtered.sort((a, b) => {
     const av = getColumnValue(a, sortColumn);
     const bv = getColumnValue(b, sortColumn);
 
-    if (typeof av === "string" || typeof bv === "string") {
-      return String(av ?? "").localeCompare(String(bv ?? "")) *
-        sortDirection;
-    }
+    if (sortColumn === "symbol")
+      return String(av ?? "").localeCompare(String(bv ?? "")) * sortDirection;
 
     const an = Number.isFinite(av) ? av : -Infinity;
     const bn = Number.isFinite(bv) ? bv : -Infinity;
-
     return (an - bn) * sortDirection;
   });
 
   $("matchCount").textContent = filtered.length;
 
-  if (filtered.length === 0) {
+  if (!filtered.length) {
     const tr = document.createElement("tr");
     const td = document.createElement("td");
-
     td.colSpan = Math.max(columns.length, 1);
     td.className = "empty";
     td.textContent = results.length
       ? "No pairs match the search."
       : "No pairs match the enabled filters.";
-
     tr.appendChild(td);
     body.appendChild(tr);
     return;
@@ -863,57 +554,40 @@ function renderResults(results, columns) {
         td.className = "pair";
       } else if (column.key === "price") {
         td.textContent = formatNumber(value, 8);
+      } else if (column.key === "volume") {
+        td.textContent = formatNumber(value, 0);
       } else {
         td.textContent = formatNumber(value);
-
-        if (Number.isFinite(value)) {
-          td.classList.add(
-            value > 0 ? "positive" :
-            value < 0 ? "negative" : "neutral"
-          );
-        }
+        if (Number.isFinite(value))
+          td.classList.add(value > 0 ? "positive" : value < 0 ? "negative" : "neutral");
       }
 
       tr.appendChild(td);
     }
-
     body.appendChild(tr);
   }
 }
 
-async function runWithConcurrency(items, concurrency, worker) {
+async function runWithConcurrency(items, concurrency, worker, signal) {
   let index = 0;
 
   async function runWorker() {
-    while (true) {
-      if (activeController?.signal.aborted) {
-        return;
-      }
-
+    while (!signal.aborted) {
       const current = index++;
-
-      if (current >= items.length) {
-        return;
-      }
-
-      await worker(items[current], current);
+      if (current >= items.length) return;
+      await worker(items[current]);
     }
   }
 
-  const count = Math.min(concurrency, items.length);
-
-  await Promise.all(
-    Array.from({ length: count }, () => runWorker())
-  );
+  await Promise.all(Array.from(
+    { length: Math.min(concurrency, items.length) }, () => runWorker()
+  ));
 }
 
 async function performScan() {
-  if (scanning) {
-    return;
-  }
+  if (scanning) return;
 
   let filters;
-
   try {
     filters = readFilters();
   } catch (error) {
@@ -921,7 +595,7 @@ async function performScan() {
     return;
   }
 
-  if (filters.rsi.length === 0 && filters.change.length === 0) {
+  if (!filters.rsi.length && !filters.change.length && !filters.volume.enabled) {
     setStatus("Enable at least one filter first.", "error");
     return;
   }
@@ -934,41 +608,29 @@ async function performScan() {
   const signal = activeController.signal;
 
   try {
-    if (symbols.length === 0) {
+    if (!symbols.length) {
       symbols = await loadSymbols(signal);
       $("pairCount").textContent = symbols.length;
     }
 
-    const tickers = await fetchJSON(
-      `${BASE_URL}/fapi/v1/ticker/24hr`,
-      signal
-    );
-
-    const tickerMap = new Map(
-      tickers.map(ticker => [ticker.symbol, ticker])
-    );
-
-    const targetSymbols = symbols.filter(symbol =>
-      tickerMap.has(symbol)
-    );
-
+    const tickers = await fetchJSON(`${BASE_URL}/fapi/v1/ticker/24hr`, signal);
+    const tickerMap = new Map(tickers.map(ticker => [ticker.symbol, ticker]));
+    const targets = symbols.filter(symbol => tickerMap.has(symbol));
     const results = [];
     let completed = 0;
     let failures = 0;
 
-    setStatus(`Scanning ${targetSymbols.length} pairs...`);
+    setStatus(`Scanning ${targets.length} pairs...`);
 
-    await runWithConcurrency(targetSymbols, 4, async symbol => {
-      if (signal.aborted) {
-        return;
-      }
+    await runWithConcurrency(targets, 4, async symbol => {
+      if (signal.aborted) return;
 
       try {
         const ticker = tickerMap.get(symbol);
-
         const row = {
           symbol,
           price: Number(ticker.lastPrice),
+          volume: Number(ticker.quoteVolume),
           rsi: {},
           change: {}
         };
@@ -976,79 +638,54 @@ async function performScan() {
         const tasks = [];
 
         for (const item of filters.rsi) {
-          tasks.push(
-            fetchRSI(symbol, item.interval, signal)
-              .then(value => {
-                row.rsi[item.key] = value;
-              })
-          );
+          tasks.push(fetchRSI(symbol, item.interval, signal).then(value => {
+            row.rsi[item.key] = value;
+          }));
         }
 
         for (const item of filters.change) {
-          tasks.push(
-            fetchPriceChange(symbol, item, signal, tickerMap)
-              .then(value => {
-                row.change[item.key] = value;
-              })
-          );
+          tasks.push(fetchPriceChange(symbol, item, signal, tickerMap).then(value => {
+            row.change[item.key] = value;
+          }));
         }
 
         await Promise.all(tasks);
-
-        if (matchesAllFilters(row, filters)) {
-          results.push(row);
-        }
+        if (!signal.aborted && matchesAllFilters(row, filters)) results.push(row);
       } catch (error) {
-        if (error.name === "AbortError") {
-          return;
-        }
-
+        if (error.name === "AbortError") return;
         failures++;
       }
 
       completed++;
-
-      if (completed % 20 === 0) {
-        setStatus(
-          `Scanning... ${completed}/${targetSymbols.length}; ` +
-          `${results.length} matches; ${failures} request errors.`
-        );
-      }
+      if (completed % 20 === 0)
+        setStatus(`Scanning ${completed}/${targets.length}; ${results.length} matches; ${failures} request errors.`);
     });
 
-    if (signal.aborted) {
-      return;
-    }
+    if (signal.aborted) return;
 
     lastResults = results;
-
     const columns = getActiveColumns(filters);
 
-    sortColumn = null;
+    // Do not reset sortColumn or sortDirection here.
+    // This preserves the user's selected sorting after each refresh.
+    if (!columns.some(c => c.key === sortColumn)) chooseDefaultSort(columns);
     renderResults(results, columns);
 
     $("lastScan").textContent = new Date().toLocaleTimeString();
-
     setStatus(
-      `Scan complete. ${results.length} matching pairs. ` +
-      `${failures} request errors.`,
+      `Scan complete. ${results.length} matching pairs. ${failures} request errors.`,
       failures ? "error" : "success"
     );
   } catch (error) {
-    if (error.name !== "AbortError") {
-      setStatus(error.message || "Scan failed.", "error");
-    }
+    if (error.name !== "AbortError") setStatus(error.message || "Scan failed.", "error");
   } finally {
     scanning = false;
     $("scanButton").disabled = false;
 
-    if (activeController?.signal.aborted) {
+    if (activeController && activeController.signal.aborted)
       activeController = null;
-    }
 
-    if (running && !signal.aborted) {
-      scheduleNextScan();
-    }
+    if (running && !signal.aborted) scheduleNextScan();
   }
 }
 
@@ -1061,41 +698,31 @@ function scheduleNextScan() {
     return;
   }
 
-  const seconds = Number($("refreshSeconds").value);
-  nextScanAt = Date.now() + seconds * 1000;
+  nextScanAt = Date.now() + Number($("refreshSeconds").value) * 1000;
 
   function updateCountdown() {
     if (!running || nextScanAt === null) {
       $("nextScan").textContent = "—";
       return;
     }
-
-    const remaining = Math.max(
-      0,
-      Math.ceil((nextScanAt - Date.now()) / 1000)
-    );
-
-    $("nextScan").textContent = remaining + " seconds";
+    $("nextScan").textContent =
+      Math.max(0, Math.ceil((nextScanAt - Date.now()) / 1000)) + " seconds";
   }
 
   updateCountdown();
   countdownTimer = setInterval(updateCountdown, 1000);
-
-  scanTimer = setTimeout(async () => {
+  scanTimer = setTimeout(() => {
     clearInterval(countdownTimer);
-    await performScan();
-  }, seconds * 1000);
+    performScan();
+  }, Number($("refreshSeconds").value) * 1000);
 }
 
 function startScanner() {
-  if (running) {
-    return;
-  }
+  if (running) return;
 
   try {
     const filters = readFilters();
-
-    if (filters.rsi.length === 0 && filters.change.length === 0) {
+    if (!filters.rsi.length && !filters.change.length && !filters.volume.enabled) {
       setStatus("Enable at least one filter first.", "error");
       return;
     }
@@ -1107,67 +734,47 @@ function startScanner() {
   running = true;
   $("startButton").disabled = true;
   $("stopButton").disabled = false;
-
   performScan();
 }
 
 function stopScanner() {
   running = false;
-
   clearTimeout(scanTimer);
   clearInterval(countdownTimer);
-
   nextScanAt = null;
 
-  if (activeController) {
-    activeController.abort();
-  }
+  if (activeController) activeController.abort();
 
   $("startButton").disabled = false;
   $("stopButton").disabled = true;
   $("scanButton").disabled = false;
-
   $("nextScan").textContent = "—";
   setStatus("Scanner stopped.");
 }
 
 function scanOnce() {
-  if (scanning) {
-    return;
-  }
-
-  performScan();
+  if (!scanning) performScan();
 }
 
 function clearFilters() {
   stopScanner();
 
   document.querySelectorAll(
-    '#rsiFilters input[type="checkbox"], ' +
-    '#changeFilters input[type="checkbox"]'
-  ).forEach(input => {
-    input.checked = false;
-  });
+    '#rsiFilters input[type="checkbox"], #changeFilters input[type="checkbox"], #volume_enabled'
+  ).forEach(input => { input.checked = false; });
 
   document.querySelectorAll(
-    '#rsiFilters input[type="number"], ' +
-    '#changeFilters input[type="number"]'
-  ).forEach(input => {
-    input.value = "";
-  });
+    '#rsiFilters input[type="number"], #changeFilters input[type="number"], #volume_min, #volume_max'
+  ).forEach(input => { input.value = ""; });
 
   lastResults = [];
+  currentColumns = [];
+  sortColumn = null;
+  sortDirection = -1;
   $("matchCount").textContent = "0";
   $("tableHead").innerHTML = "";
-
-  $("resultsBody").innerHTML = `
-    <tr>
-      <td class="empty">
-        Select your filters and start the scanner.
-      </td>
-    </tr>
-  `;
-
+  $("resultsBody").innerHTML =
+    '<tr><td class="empty">Select filters and start the scanner.</td></tr>';
   setStatus("Filters cleared.");
 }
 
@@ -1177,27 +784,21 @@ $("scanButton").addEventListener("click", scanOnce);
 $("clearButton").addEventListener("click", clearFilters);
 
 $("searchPair").addEventListener("input", () => {
-  if (currentColumns.length) {
-    renderResults(lastResults, currentColumns);
-  }
+  if (currentColumns.length) renderResults(lastResults, currentColumns);
 });
 
 $("sortPreference").addEventListener("change", () => {
-  sortColumn = null;
-
   if (currentColumns.length) {
+    chooseDefaultSort(currentColumns);
     renderResults(lastResults, currentColumns);
   }
 });
 
 $("refreshSeconds").addEventListener("change", () => {
-  if (running && !scanning) {
-    scheduleNextScan();
-  }
+  if (running && !scanning) scheduleNextScan();
 });
 
 buildFilterCards();
 </script>
-
 </body>
 </html>
