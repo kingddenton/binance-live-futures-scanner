@@ -106,6 +106,12 @@ progress{width:100%;height:8px;margin-top:10px;accent-color:var(--yellow)}
 </section>
 
 <section class="panel">
+<h2>DEA filters — select the timeframes to apply</h2>
+<p>DEA is the MACD signal line, calculated using standard MACD settings (12, 26, 9). Values use the latest available candle, including the current forming candle. All selected filters use AND logic.</p>
+<div id="deaFilters" class="filtergrid"></div>
+</section>
+
+<section class="panel">
 <h2>Price-change filters — select the timeframes to apply</h2>
 <p>Intraday changes compare the current forming candle price with the previous candle's close. The 24h change uses Binance's 24h ticker.</p>
 <div id="changeFilters" class="filtergrid"></div>
@@ -158,7 +164,7 @@ progress{width:100%;height:8px;margin-top:10px;accent-color:var(--yellow)}
 <div class="stat"><small>Pairs selected</small><strong id="pairCount">0</strong></div>
 <div class="stat"><small>Matching results</small><strong id="matchCount">0</strong></div>
 <div class="stat"><small>Request errors</small><strong id="errorCount">0</strong></div>
-<div class="stat"><small>RSI filters enabled</small><strong id="rsiCount">1</strong></div>
+<div class="stat"><small>Indicator filters enabled</small><strong id="rsiCount">1</strong></div>
 </div>
 
 <section class="panel">
@@ -169,7 +175,7 @@ progress{width:100%;height:8px;margin-top:10px;accent-color:var(--yellow)}
 <tbody id="rows"><tr><td>Run a scan to display results.</td></tr></tbody>
 </table>
 </div>
-<p class="muted">No colour classification or special 5m RSI exclusion is applied. A pair appears when it satisfies every selected filter. Only enabled RSI, price-change and volume columns are displayed, alongside the pair and last price.</p>
+<p class="muted">No colour classification or special 5m RSI exclusion is applied. A pair appears when it satisfies every selected filter. Only enabled RSI, DEA, price-change and volume columns are displayed, alongside the pair and last price.</p>
 </section>
 </main>
 
@@ -179,6 +185,12 @@ progress{width:100%;height:8px;margin-top:10px;accent-color:var(--yellow)}
 const API='https://fapi.binance.com';
 
 const RSI_TFS=[
+ ['1m','1m'],['5m','5m'],['15m','15m'],['30m','30m'],
+ ['1h','1h'],['2h','2h'],['4h','4h'],['6h','6h'],
+ ['12h','12h'],['24h','1d']
+];
+
+const DEA_TFS=[
  ['1m','1m'],['5m','5m'],['15m','15m'],['30m','30m'],
  ['1h','1h'],['2h','2h'],['4h','4h'],['6h','6h'],
  ['12h','12h'],['24h','1d']
@@ -215,6 +227,20 @@ function buildFilters(){
    <input id="rsiMin_${label}" type="number" min="0" max="100" step="0.1" placeholder="No minimum"></div>
    <div><label for="rsiMax_${label}">Maximum</label>
    <input id="rsiMax_${label}" type="number" min="0" max="100" step="0.1" placeholder="No maximum"></div>
+  </div>
+ </div>`).join('');
+
+ $('deaFilters').innerHTML=DEA_TFS.map(([label])=>`
+ <div class="filter">
+  <div class="filtertop">
+   <input type="checkbox" id="deaOn_${label}">
+   <label for="deaOn_${label}">DEA ${label}</label>
+  </div>
+  <div class="ranges">
+   <div><label for="deaMin_${label}">Minimum</label>
+   <input id="deaMin_${label}" type="number" step="any" placeholder="No minimum"></div>
+   <div><label for="deaMax_${label}">Maximum</label>
+   <input id="deaMax_${label}" type="number" step="any" placeholder="No maximum"></div>
   </div>
  </div>`).join('');
 
@@ -297,6 +323,43 @@ function pct(n){
  return (n>0?'+':'')+n.toFixed(2)+'%';
 }
 
+function emaSeries(values,period){
+ const out=Array(values.length).fill(NaN);
+ if(values.length<period)return out;
+
+ let sum=0;
+ for(let i=0;i<period;i++)sum+=values[i];
+
+ let previous=sum/period;
+ out[period-1]=previous;
+ const alpha=2/(period+1);
+
+ for(let i=period;i<values.length;i++){
+  previous=values[i]*alpha+previous*(1-alpha);
+  out[i]=previous;
+ }
+
+ return out;
+}
+
+/* DEA: 9-period EMA signal line of the MACD(12,26) line. */
+function macdDea(closes){
+ if(closes.length<35)return NaN;
+
+ const fast=emaSeries(closes,12);
+ const slow=emaSeries(closes,26);
+ const macd=[];
+
+ for(let i=0;i<closes.length;i++){
+  if(Number.isFinite(fast[i])&&Number.isFinite(slow[i])){
+   macd.push(fast[i]-slow[i]);
+  }
+ }
+
+ const signal=emaSeries(macd,9);
+ return signal.length?signal[signal.length-1]:NaN;
+}
+
 /* Wilder RSI, using the latest available candle including the live candle. */
 function rsi(values,period){
  if(values.length<period+1)return NaN;
@@ -325,6 +388,7 @@ function rsi(values,period){
 
 function readSelectedFilters(){
  const rsiFilters=[];
+ const deaFilters=[];
  const changeFilters=[];
 
  for(const [label,interval] of RSI_TFS){
@@ -340,6 +404,21 @@ function readSelectedFilters(){
    }
 
    rsiFilters.push({label,interval,min,max});
+  }
+ }
+
+ for(const [label,interval] of DEA_TFS){
+  if(enabled('deaOn_'+label)){
+   const min=num('deaMin_'+label);
+   const max=num('deaMax_'+label);
+
+   validRange(min,max,'DEA '+label);
+
+   if(min===null&&max===null){
+    throw new Error('DEA '+label+': enter a minimum or maximum value.');
+   }
+
+   deaFilters.push({label,interval,min,max});
   }
  }
 
@@ -366,9 +445,9 @@ function readSelectedFilters(){
   throw new Error('24h volume values cannot be negative.');
  }
 
- if(!rsiFilters.length&&!changeFilters.length&&
+ if(!rsiFilters.length&&!deaFilters.length&&!changeFilters.length&&
     !enabled('useVol24')&&!enabled('useVol4')){
-  throw new Error('Enable at least one RSI, price-change, or volume filter.');
+  throw new Error('Enable at least one RSI, DEA, price-change, or volume filter.');
  }
 
  if(enabled('useVol24')&&v24min===null&&v24max===null){
@@ -381,6 +460,7 @@ function readSelectedFilters(){
 
  return {
   rsi:rsiFilters,
+  dea:deaFilters,
   change:changeFilters,
   v24min,v24max,v4min,v4max
  };
@@ -393,7 +473,8 @@ function inRange(value,min,max){
 
 function updateFilterCounts(){
  $('rsiCount').textContent=
-  RSI_TFS.filter(([label])=>enabled('rsiOn_'+label)).length;
+  RSI_TFS.filter(([label])=>enabled('rsiOn_'+label)).length+
+  DEA_TFS.filter(([label])=>enabled('deaOn_'+label)).length;
 }
 
 function render(){
@@ -401,6 +482,7 @@ function render(){
  const list=results.filter(x=>!q||x.symbol.includes(q));
 
  const selectedRsi=RSI_TFS.filter(([label])=>enabled('rsiOn_'+label));
+ const selectedDea=DEA_TFS.filter(([label])=>enabled('deaOn_'+label));
  const selectedChg=CHANGE_TFS.filter(([label])=>enabled('chgOn_'+label));
 
  const columns=[
@@ -413,6 +495,14 @@ function render(){
    label:'RSI '+label,
    key:'rsi:'+label,
    value:x=>x.rsi[label]
+  });
+ });
+
+ selectedDea.forEach(([label])=>{
+  columns.push({
+   label:'DEA '+label,
+   key:'dea:'+label,
+   value:x=>x.dea[label]
   });
  });
 
@@ -499,6 +589,11 @@ function render(){
    cells.push(v===undefined||!Number.isFinite(v)?'—':v.toFixed(2));
   });
 
+  selectedDea.forEach(([label])=>{
+   const v=x.dea[label];
+   cells.push(v===undefined||!Number.isFinite(v)?'—':v.toFixed(8));
+  });
+
   selectedChg.forEach(([label])=>{
    const v=x.change[label];
    cells.push(v===undefined||!Number.isFinite(v)?'—':pct(v));
@@ -551,6 +646,7 @@ function selectedIntervals(filters){
  const set=new Set();
 
  filters.rsi.forEach(f=>set.add(f.interval));
+ filters.dea.forEach(f=>set.add(f.interval));
 
  filters.change.forEach(f=>{
   if(f.interval!=='24h')set.add(f.interval);
@@ -643,7 +739,7 @@ async function scan(){
 
   const period=Math.max(2,Math.min(50,Number($('period').value)||14));
   const need=selectedIntervals(filters);
-  const limit=Math.max(period+30,period+5);
+  const limit=Math.max(period+30,60);
 
   updateStatus(
    `Scanning ${universe.length} pairs. Selected candle intervals: `+
@@ -658,14 +754,16 @@ async function scan(){
 
    const symbol=t.symbol;
    const rsiValues={};
+   const deaValues={};
    const changes={};
    const klineMap={};
 
    for(const interval of need){
     if(cancelled)break;
 
-    const needRsi=filters.rsi.some(f=>f.interval===interval);
-    const kLimit=needRsi?limit:3;
+    const needIndicator=filters.rsi.some(f=>f.interval===interval)||
+     filters.dea.some(f=>f.interval===interval);
+    const kLimit=needIndicator?limit:3;
 
     klineMap[interval]=await get(
      `/fapi/v1/klines?symbol=${symbol}&interval=${interval}&limit=${kLimit}`
@@ -678,6 +776,12 @@ async function scan(){
     const candles=klineMap[f.interval]||[];
     const closes=candles.map(k=>Number(k[4]));
     rsiValues[f.label]=rsi(closes,period);
+   }
+
+   for(const f of filters.dea){
+    const candles=klineMap[f.interval]||[];
+    const closes=candles.map(k=>Number(k[4]));
+    deaValues[f.label]=macdDea(closes);
    }
 
    for(const f of filters.change){
@@ -719,6 +823,15 @@ async function scan(){
    }
 
    if(match){
+    for(const f of filters.dea){
+     if(!inRange(deaValues[f.label],f.min,f.max)){
+      match=false;
+      break;
+     }
+    }
+   }
+
+   if(match){
     for(const f of filters.change){
      if(!inRange(changes[f.label],f.min,f.max)){
       match=false;
@@ -748,6 +861,7 @@ async function scan(){
      price:Number(t.lastPrice),
      quoteVol,
      rsi:rsiValues,
+     dea:deaValues,
      change:changes,
      vol4
     });
@@ -852,11 +966,13 @@ function exportCSV(){
  }
 
  const selectedRsi=RSI_TFS.filter(([label])=>enabled('rsiOn_'+label));
+ const selectedDea=DEA_TFS.filter(([label])=>enabled('deaOn_'+label));
  const selectedChg=CHANGE_TFS.filter(([label])=>enabled('chgOn_'+label));
 
  const headers=['Pair','Last price'];
 
  selectedRsi.forEach(([label])=>headers.push('RSI '+label));
+ selectedDea.forEach(([label])=>headers.push('DEA '+label));
  selectedChg.forEach(([label])=>headers.push('Change '+label+' %'));
 
  if(enabled('useVol24'))headers.push('24h quote volume USDT');
@@ -866,6 +982,7 @@ function exportCSV(){
   const row=[x.symbol,x.price];
 
   selectedRsi.forEach(([label])=>row.push(x.rsi[label]??''));
+  selectedDea.forEach(([label])=>row.push(x.dea[label]??''));
   selectedChg.forEach(([label])=>row.push(x.change[label]??''));
 
   if(enabled('useVol24'))row.push(x.quoteVol);
