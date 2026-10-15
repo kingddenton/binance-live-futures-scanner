@@ -1,1150 +1,721 @@
-
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Binance Futures Scanner — RSI, Price Change & Volume</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Binance Live Futures Scanner</title>
+
 <style>
 :root {
   color-scheme: dark;
-  --bg: #0b0e11;
-  --panel: #151a21;
-  --panel2: #1e2329;
-  --border: #30363d;
-  --text: #eaecef;
-  --muted: #848e9c;
-  --yellow: #f0b90b;
-  --green: #0ecb81;
-  --red: #f6465d;
+  --bg: #0b1220;
+  --panel: #111c2e;
+  --text: #e9eef8;
+  --muted: #9aa9c0;
+  --line: #26364d;
+  --accent: #83a2ff;
+  --green: #5de0ad;
+  --red: #ff8989;
 }
+
 * { box-sizing: border-box; }
+
 body {
   margin: 0;
-  padding: 16px;
   background: var(--bg);
   color: var(--text);
-  font-family: Arial, Helvetica, sans-serif;
+  font: 14px/1.45 system-ui, -apple-system, Segoe UI, sans-serif;
 }
-.container { max-width: 1500px; margin: 0 auto; }
-h1 { font-size: 25px; margin: 5px 0 8px; }
-h2 { font-size: 18px; margin: 0 0 14px; }
-.subtitle, .footer-note {
+
+.root { max-width: 1100px; margin: auto; padding: 16px; }
+
+.top {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.brand { font-weight: 800; font-size: 22px; }
+.brand span { color: var(--accent); }
+
+.pill, .tag {
+  border: 1px solid var(--line);
+  border-radius: 99px;
+  padding: 5px 9px;
   color: var(--muted);
-  font-size: 13px;
-  line-height: 1.6;
+  font-size: 12px;
 }
-.subtitle { margin-bottom: 18px; }
-.panel {
+
+.intro, .hint, .foot { color: var(--muted); }
+
+.notice, .panel, .stat {
   background: var(--panel);
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  padding: 16px;
-  margin-bottom: 16px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 14px;
+  margin-top: 12px;
 }
-.section-title {
-  color: var(--yellow);
-  font-weight: bold;
-  font-size: 16px;
-  margin-bottom: 13px;
-}
-.filter-grid {
+
+.notice strong { color: var(--accent); }
+
+.stats {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(235px, 1fr));
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+
+.label { font-size: 12px; color: var(--muted); }
+.value { font-size: 22px; font-weight: 800; margin-top: 4px; }
+
+.controls {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 12px;
 }
-.filter-card {
-  background: var(--panel2);
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 12px;
-}
-.filter-heading {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-bottom: 10px;
-  font-weight: bold;
-}
-.filter-heading input {
-  accent-color: var(--yellow);
-  width: 17px;
-  height: 17px;
-}
-.range-row {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 8px;
-}
-label.small-label {
+
+.field label {
   display: block;
-  font-size: 11px;
+  font-size: 12px;
   color: var(--muted);
   margin-bottom: 5px;
 }
-input[type="number"], input[type="text"], select {
+
+.field input, .field select {
   width: 100%;
-  min-width: 0;
   padding: 10px;
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  background: #0b0e11;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--bg);
   color: var(--text);
-  font-size: 13px;
 }
-input:focus, select:focus {
-  outline: 1px solid var(--yellow);
-  border-color: var(--yellow);
-}
+
 .actions {
   display: flex;
+  gap: 8px;
   flex-wrap: wrap;
-  gap: 10px;
   align-items: center;
-  margin-top: 16px;
+  margin-top: 13px;
 }
+
 button {
-  padding: 11px 16px;
-  border: none;
-  border-radius: 6px;
-  font-weight: bold;
+  border: 0;
+  border-radius: 9px;
+  padding: 10px 14px;
+  background: var(--accent);
+  color: #071021;
+  font-weight: 800;
   cursor: pointer;
+}
+
+button.secondary {
+  background: transparent;
+  color: var(--text);
+  border: 1px solid var(--line);
+}
+
+button:disabled { opacity: .5; }
+
+progress { width: 100%; height: 9px; margin-top: 10px; }
+
+.tablewrap { overflow: auto; }
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 680px;
+}
+
+th, td {
+  text-align: left;
+  padding: 10px 8px;
+  border-bottom: 1px solid var(--line);
   font-size: 13px;
 }
-button:disabled { opacity: .5; cursor: not-allowed; }
-.primary { background: var(--yellow); color: #111; }
-.secondary { background: #30363d; color: var(--text); }
-.status { font-size: 13px; color: var(--muted); line-height: 1.7; }
-.status strong { color: var(--text); }
-.error { color: var(--red); }
-.success { color: var(--green); }
-.table-wrap { overflow-x: auto; width: 100%; }
-table {
-  border-collapse: collapse;
-  width: 100%;
+
+th { color: var(--muted); }
+
+.hi { color: var(--green); font-weight: 800; }
+.lo { color: var(--red); font-weight: 800; }
+
+.status {
+  white-space: pre-wrap;
   font-size: 12px;
-  white-space: nowrap;
-}
-th, td {
-  padding: 11px 10px;
-  text-align: right;
-  border-bottom: 1px solid var(--border);
-}
-th {
-  color: var(--yellow);
-  background: var(--panel2);
-  cursor: pointer;
-  position: sticky;
-  top: 0;
-}
-th:first-child, td:first-child { text-align: left; }
-tbody tr:hover { background: #1b222a; }
-.positive { color: var(--green); }
-.negative { color: var(--red); }
-.neutral { color: var(--muted); }
-.pair { font-weight: bold; color: var(--text); }
-
-/* Three-category colour coding for the 5-minute RSI only */
-.rsi-high {
-  color: #0ecb81;
-  font-weight: bold;
-}
-.rsi-mid {
-  color: #f0b90b;
-  font-weight: bold;
-}
-.rsi-low {
-  color: #f6465d;
-  font-weight: bold;
+  color: var(--muted);
+  margin-top: 8px;
 }
 
-.empty { padding: 25px; text-align: center; color: var(--muted); }
-.footer-note { margin-top: 12px; }
-@media (max-width: 600px) {
-  body { padding: 9px; }
-  h1 { font-size: 21px; }
-  .panel { padding: 11px; }
-  .filter-grid { grid-template-columns: 1fr; }
+@media(max-width:650px) {
+  .root { padding: 12px; }
+  .stats { grid-template-columns: 1fr 1fr; }
+  .controls { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .value { font-size: 20px; }
+}
+
+@media(max-width:400px) {
+  .controls { grid-template-columns: 1fr; }
 }
 </style>
 </head>
+
 <body>
-<div class="container">
-  <h1>Binance Futures Scanner</h1>
-  <div class="subtitle">
-    RSI(14), price change and 24-hour quote-volume filters for USDT perpetual futures.
-    Enable one or more filters. A pair must pass every enabled filter to appear.
-  </div>
+<main class="root">
 
-  <div class="panel">
-    <div class="section-title">1. RSI(14) Filters</div>
-    <div id="rsiFilters" class="filter-grid"></div>
-  </div>
+<header class="top">
+  <div class="brand">Binance <span>Live Futures Scanner</span></div>
+  <span class="pill" id="badge">LIVE DATA · NOT YET CONNECTED</span>
+</header>
 
-  <div class="panel">
-    <div class="section-title">2. Price Change Filters</div>
-    <div id="changeFilters" class="filter-grid"></div>
-    <div class="footer-note">
-      Intraday changes compare the latest completed candle close with the preceding
-      completed candle close. The 24-hour change uses Binance's rolling 24-hour ticker.
-    </div>
-  </div>
+<p class="intro">
+  Scans Binance USDⓈ-M perpetual USDT pairs using public market data.
+  Designed for a mobile browser.
+</p>
 
-  <div class="panel">
-    <div class="section-title">3. 24-Hour Quote Volume Filter (USDT)</div>
-    <div class="filter-grid">
-      <div class="filter-card">
-        <div class="filter-heading">
-          <input type="checkbox" id="volume_enabled">
-          <label for="volume_enabled">Enable 24h volume filter</label>
-        </div>
-        <div class="range-row">
-          <div>
-            <label class="small-label" for="volume_min">Minimum volume (USDT)</label>
-            <input type="number" id="volume_min" min="0" step="any"
-              placeholder="e.g. 1000000">
-          </div>
-          <div>
-            <label class="small-label" for="volume_max">Maximum volume (USDT)</label>
-            <input type="number" id="volume_max" min="0" step="any"
-              placeholder="No maximum">
-          </div>
-        </div>
-      </div>
-    </div>
-    <div class="footer-note">
-      Volume uses Binance's 24-hour quote volume, denominated in USDT.
-    </div>
-  </div>
-
-  <div class="panel">
-    <h2>4. Scanner Controls</h2>
-    <div class="filter-grid">
-      <div>
-        <label class="small-label" for="searchPair">Search pair</label>
-        <input id="searchPair" type="text" placeholder="e.g. BTCUSDT">
-      </div>
-      <div>
-        <label class="small-label" for="refreshSeconds">Rescan interval</label>
-        <select id="refreshSeconds">
-          <option value="30" selected>30 seconds</option>
-          <option value="60">60 seconds</option>
-          <option value="120">2 minutes</option>
-          <option value="300">5 minutes</option>
-        </select>
-      </div>
-      <div>
-        <label class="small-label" for="sortPreference">Default sorting</label>
-        <select id="sortPreference">
-          <option value="rsi">Highest selected RSI</option>
-          <option value="change">Highest selected Price Change</option>
-          <option value="volume">Highest 24h Volume</option>
-          <option value="symbol">Pair name A–Z</option>
-        </select>
-      </div>
-    </div>
-
-    <div class="actions">
-      <button id="startButton" class="primary">Start Scanner</button>
-      <button id="stopButton" class="secondary" disabled>Stop Scanner</button>
-      <button id="scanButton" class="secondary">Scan Once</button>
-      <button id="clearButton" class="secondary">Clear Filters</button>
-    </div>
-
-    <div class="status" style="margin-top:14px">
-      <div>Status: <strong id="statusText">Ready</strong></div>
-      <div>USDT perpetual pairs: <strong id="pairCount">—</strong></div>
-      <div>Pairs matching filters: <strong id="matchCount">0</strong></div>
-      <div>Last scan: <strong id="lastScan">Never</strong></div>
-      <div>Next scan: <strong id="nextScan">—</strong></div>
-    </div>
-  </div>
-
-  <div class="panel">
-    <h2>5. Matching Results</h2>
-    <div class="table-wrap">
-      <table>
-        <thead id="tableHead"></thead>
-        <tbody id="resultsBody">
-          <tr><td class="empty">Select filters and start the scanner.</td></tr>
-        </tbody>
-      </table>
-    </div>
-    <div class="footer-note">
-      Uses Binance public futures market data. No API key is required. This scanner
-      does not place orders or execute trades. Network restrictions or rate limits
-      may affect scanning.
-    </div>
-  </div>
+<div class="notice">
+  <strong>5-minute RSI rules:</strong>
+  RSI ≥ 65 is shown in green. RSI ≤ 42 is shown in red.
+  Values strictly between 42 and 65 are excluded from the results.
+  RSI uses the current, forming 5-minute candle and may change until that candle closes.
+  This scanner does not place trades.
 </div>
 
+<section class="stats">
+  <div class="stat">
+    <div class="label">Pairs selected</div>
+    <div class="value" id="pairCount">—</div>
+  </div>
+  <div class="stat">
+    <div class="label">High RSI matches</div>
+    <div class="value" id="highCount">—</div>
+  </div>
+  <div class="stat">
+    <div class="label">Low RSI matches</div>
+    <div class="value" id="lowCount">—</div>
+  </div>
+</section>
+
+<section class="panel">
+  <h3>Scan filters</h3>
+
+  <div class="controls">
+
+    <div class="field">
+      <label for="scope">Pairs to scan</label>
+      <select id="scope">
+        <option value="50">Top 50 by 24h quote volume</option>
+        <option value="100">Top 100 by 24h quote volume</option>
+        <option value="200">Top 200 by 24h quote volume</option>
+        <option value="all">All eligible USDT perpetual pairs</option>
+      </select>
+    </div>
+
+    <div class="field">
+      <label for="side">RSI condition</label>
+      <select id="side">
+        <option value="both">Either extreme</option>
+        <option value="high">High RSI only</option>
+        <option value="low">Low RSI only</option>
+      </select>
+    </div>
+
+    <div class="field">
+      <label for="period">RSI period</label>
+      <input id="period" type="number" min="2" max="50" value="14">
+    </div>
+
+    <div class="field">
+      <label for="upper">High RSI (≥)</label>
+      <input id="upper" type="number" min="1" max="100" value="65">
+    </div>
+
+    <div class="field">
+      <label for="lower">Low RSI (≤)</label>
+      <input id="lower" type="number" min="0" max="99" value="42">
+    </div>
+
+    <div class="field">
+      <label for="minvol">Minimum 24h quote volume (USDT)</label>
+      <input id="minvol" type="number" min="0" step="1000000" value="1000000">
+    </div>
+
+    <div class="field">
+      <label for="vol4">4h quote-volume change</label>
+      <select id="vol4">
+        <option value="any">Do not filter</option>
+        <option value="0">At least 0%</option>
+        <option value="10" selected>At least +10%</option>
+      </select>
+    </div>
+
+    <div class="field">
+      <label for="sort">Sort results by</label>
+      <select id="sort">
+        <option value="extreme">Most extreme RSI first</option>
+        <option value="volume">24h quote volume, high to low</option>
+        <option value="rsi">RSI, high to low</option>
+      </select>
+    </div>
+
+    <div class="field">
+      <label for="interval">Auto-refresh</label>
+      <select id="interval">
+        <option value="off">Off</option>
+        <option value="5">Every 5 minutes</option>
+        <option value="15">Every 15 minutes</option>
+      </select>
+    </div>
+
+  </div>
+
+  <div class="actions">
+    <button id="scan">Start live scan</button>
+    <button class="secondary" id="stop">Stop / cancel</button>
+    <button class="secondary" id="csv">Export results CSV</button>
+    <span class="hint" id="last">Not scanned yet</span>
+  </div>
+
+  <progress id="progress" max="100" value="0"></progress>
+  <div id="status" class="status">Ready. Press “Start live scan”.</div>
+</section>
+
+<section class="panel">
+  <h3>
+    Matching pairs
+    <span class="tag" id="resultCount">0</span>
+  </h3>
+
+  <div class="tablewrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Pair</th>
+          <th>Last price</th>
+          <th>5m RSI(14)</th>
+          <th>4h volume change</th>
+          <th>24h quote volume</th>
+          <th>Condition</th>
+        </tr>
+      </thead>
+      <tbody id="rows">
+        <tr><td colspan="6">No scan results yet.</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p class="foot">
+    The 4h volume change compares the two latest completed 4-hour Binance
+    candle quote volumes. It is an approximation of CoinGlass filters, not
+    CoinGlass data. RSI extremes alone do not imply a trade. Verify signals
+    and risk independently.
+  </p>
+</section>
+
+</main>
+
 <script>
-"use strict";
+const API = 'https://fapi.binance.com';
 
-const BASE_URL = "https://fapi.binance.com";
-const RSI_PERIOD = 14;
-
-const RSI_INTERVALS = [
-  { key: "1m", label: "1 minute", interval: "1m" },
-  { key: "5m", label: "5 minutes", interval: "5m" },
-  { key: "15m", label: "15 minutes", interval: "15m" },
-  { key: "30m", label: "30 minutes", interval: "30m" },
-  { key: "1h", label: "1 hour", interval: "1h" },
-  { key: "2h", label: "2 hours", interval: "2h" },
-  { key: "4h", label: "4 hours", interval: "4h" },
-  { key: "6h", label: "6 hours", interval: "6h" },
-  { key: "12h", label: "12 hours", interval: "12h" },
-  { key: "24h", label: "24 hours", interval: "1d" }
-];
-
-const CHANGE_INTERVALS = [
-  { key: "1m", label: "1 minute", interval: "1m" },
-  { key: "5m", label: "5 minutes", interval: "5m" },
-  { key: "15m", label: "15 minutes", interval: "15m" },
-  { key: "1h", label: "1 hour", interval: "1h" },
-  { key: "4h", label: "4 hours", interval: "4h" },
-  { key: "12h", label: "12 hours", interval: "12h" },
-  { key: "24h", label: "24 hours", interval: null }
-];
+let cancelled = false;
+let busy = false;
+let autoTimer = null;
+let lastResults = [];
 
 const $ = id => document.getElementById(id);
 
-let symbols = [];
-let running = false;
-let scanning = false;
-let activeController = null;
-let scanTimer = null;
-let countdownTimer = null;
-let nextScanAt = null;
-let lastResults = [];
-let currentColumns = [];
-let sortColumn = null;
-let sortDirection = -1;
+const fmt = n =>
+  Number(n).toLocaleString(undefined, { maximumFractionDigits: 6 });
 
-function createFilterCard(container, type, item) {
-  const prefix = type + "_" + item.key;
-  const card = document.createElement("div");
-  card.className = "filter-card";
+const pct = n =>
+  (n > 0 ? '+' : '') + n.toFixed(2) + '%';
 
-  card.innerHTML = `
-    <div class="filter-heading">
-      <input type="checkbox" id="${prefix}_enabled">
-      <label for="${prefix}_enabled">${item.label}</label>
-    </div>
-    <div class="range-row">
-      <div>
-        <label class="small-label" for="${prefix}_min">Minimum</label>
-        <input type="number" id="${prefix}_min"
-          placeholder="${type === "rsi" ? "0" : "-5"}" step="any">
-      </div>
-      <div>
-        <label class="small-label" for="${prefix}_max">Maximum</label>
-        <input type="number" id="${prefix}_max"
-          placeholder="${type === "rsi" ? "100" : "5"}" step="any">
-      </div>
-    </div>`;
 
-  container.appendChild(card);
-}
-
-function buildFilterCards() {
-  RSI_INTERVALS.forEach(item =>
-    createFilterCard($("rsiFilters"), "rsi", item)
-  );
-
-  CHANGE_INTERVALS.forEach(item =>
-    createFilterCard($("changeFilters"), "change", item)
-  );
-}
-
-function getEnabledFilters(type, intervals) {
-  const filters = [];
-
-  for (const item of intervals) {
-    const prefix = type + "_" + item.key;
-
-    if (!$(`${prefix}_enabled`).checked) continue;
-
-    const minText = $(`${prefix}_min`).value.trim();
-    const maxText = $(`${prefix}_max`).value.trim();
-
-    const min = minText === "" ? null : Number(minText);
-    const max = maxText === "" ? null : Number(maxText);
-
-    if (min !== null && !Number.isFinite(min)) {
-      throw new Error(`${item.label}: invalid minimum.`);
-    }
-
-    if (max !== null && !Number.isFinite(max)) {
-      throw new Error(`${item.label}: invalid maximum.`);
-    }
-
-    if (min !== null && max !== null && min > max) {
-      throw new Error(`${item.label}: minimum cannot exceed maximum.`);
-    }
-
-    if (type === "rsi") {
-      if (min !== null && (min < 0 || min > 100)) {
-        throw new Error(`${item.label}: RSI minimum must be 0–100.`);
-      }
-
-      if (max !== null && (max < 0 || max > 100)) {
-        throw new Error(`${item.label}: RSI maximum must be 0–100.`);
-      }
-    }
-
-    if (min === null && max === null) {
-      throw new Error(`${item.label}: enter a minimum or maximum.`);
-    }
-
-    filters.push({ ...item, min, max });
-  }
-
-  return filters;
-}
-
-function readFilters() {
-  const volumeEnabled = $("volume_enabled").checked;
-  const volumeMinText = $("volume_min").value.trim();
-  const volumeMaxText = $("volume_max").value.trim();
-
-  const volumeMin = volumeMinText === "" ? null : Number(volumeMinText);
-  const volumeMax = volumeMaxText === "" ? null : Number(volumeMaxText);
-
-  if (volumeEnabled) {
-    if (
-      volumeMin !== null &&
-      (!Number.isFinite(volumeMin) || volumeMin < 0)
-    ) {
-      throw new Error("Volume minimum must be a non-negative number.");
-    }
-
-    if (
-      volumeMax !== null &&
-      (!Number.isFinite(volumeMax) || volumeMax < 0)
-    ) {
-      throw new Error("Volume maximum must be a non-negative number.");
-    }
-
-    if (
-      volumeMin !== null &&
-      volumeMax !== null &&
-      volumeMin > volumeMax
-    ) {
-      throw new Error("Volume minimum cannot exceed maximum.");
-    }
-
-    if (volumeMin === null && volumeMax === null) {
-      throw new Error("Enter a volume minimum or maximum.");
-    }
-  }
-
-  return {
-    rsi: getEnabledFilters("rsi", RSI_INTERVALS),
-    change: getEnabledFilters("change", CHANGE_INTERVALS),
-    volume: {
-      enabled: volumeEnabled,
-      min: volumeMin,
-      max: volumeMax
-    }
-  };
-}
-
-function setStatus(message, className = "") {
-  $("statusText").textContent = message;
-  $("statusText").className = className;
-}
-
-async function fetchJSON(url, signal) {
-  const options = { cache: "no-store" };
-
-  if (signal) {
-    options.signal = signal;
-  }
-
-  const response = await fetch(url, options);
+async function get(path) {
+  const response = await fetch(API + path, { cache: 'no-store' });
 
   if (!response.ok) {
-    throw new Error(`Binance request failed: HTTP ${response.status}`);
+    throw new Error('Binance API HTTP ' + response.status + ' for ' + path);
   }
 
   return response.json();
 }
 
-async function loadSymbols(signal) {
-  const data = await fetchJSON(
-    `${BASE_URL}/fapi/v1/exchangeInfo`,
-    signal
-  );
 
-  return data.symbols
-    .filter(item =>
-      item.status === "TRADING" &&
-      item.contractType === "PERPETUAL" &&
-      item.quoteAsset === "USDT"
-    )
-    .map(item => item.symbol)
-    .sort();
-}
+// RSI using Wilder smoothing.
+function rsi(closes, period) {
+  if (closes.length < period + 1) return NaN;
 
-function calculateRSI(closes, period = RSI_PERIOD) {
-  if (closes.length <= period) return null;
-
-  let gainSum = 0;
-  let lossSum = 0;
+  let gain = 0;
+  let loss = 0;
 
   for (let i = 1; i <= period; i++) {
-    const change = closes[i] - closes[i - 1];
+    const difference = closes[i] - closes[i - 1];
 
-    if (change > 0) {
-      gainSum += change;
+    if (difference > 0) {
+      gain += difference;
     } else {
-      lossSum -= change;
+      loss -= difference;
     }
   }
 
-  let averageGain = gainSum / period;
-  let averageLoss = lossSum / period;
+  let averageGain = gain / period;
+  let averageLoss = loss / period;
 
   for (let i = period + 1; i < closes.length; i++) {
-    const change = closes[i] - closes[i - 1];
-    const gain = Math.max(change, 0);
-    const loss = Math.max(-change, 0);
+    const difference = closes[i] - closes[i - 1];
 
     averageGain =
-      (averageGain * (period - 1) + gain) / period;
+      (averageGain * (period - 1) + Math.max(difference, 0)) / period;
 
     averageLoss =
-      (averageLoss * (period - 1) + loss) / period;
+      (averageLoss * (period - 1) + Math.max(-difference, 0)) / period;
   }
 
   if (averageLoss === 0) {
     return averageGain === 0 ? 50 : 100;
   }
 
-  return 100 - 100 / (1 + averageGain / averageLoss);
+  return 100 - (100 / (1 + averageGain / averageLoss));
 }
 
-/*
- * LIVE RSI:
- * Binance includes the currently forming candle in the klines response.
- * Its close field changes as the market price moves.
- * We therefore use all returned candles instead of filtering out the
- * currently forming candle.
- */
-async function fetchRSI(symbol, interval, signal) {
-  const url =
-    `${BASE_URL}/fapi/v1/klines?symbol=${encodeURIComponent(symbol)}` +
-    `&interval=${encodeURIComponent(interval)}&limit=100`;
 
-  const data = await fetchJSON(url, signal);
-
-  const closes = data.map(candle => Number(candle[4]));
-
-  return calculateRSI(closes);
-}
-
-async function fetchPriceChange(symbol, item, signal, tickerMap) {
-  if (item.key === "24h") {
-    const ticker = tickerMap.get(symbol);
-    const value = ticker ? Number(ticker.priceChangePercent) : NaN;
-
-    return Number.isFinite(value) ? value : null;
-  }
-
-  const url =
-    `${BASE_URL}/fapi/v1/klines?symbol=${encodeURIComponent(symbol)}` +
-    `&interval=${encodeURIComponent(item.interval)}&limit=3`;
-
-  const data = await fetchJSON(url, signal);
-
-  const closed = data.filter(
-    candle => Number(candle[6]) < Date.now()
-  );
-
-  if (closed.length < 2) return null;
-
-  const previousClose = Number(closed[closed.length - 2][4]);
-  const latestClose = Number(closed[closed.length - 1][4]);
-
-  if (
-    !Number.isFinite(previousClose) ||
-    !Number.isFinite(latestClose) ||
-    previousClose === 0
-  ) {
-    return null;
-  }
-
-  return ((latestClose - previousClose) / previousClose) * 100;
-}
-
-function passesRange(value, filter) {
-  if (value === null || !Number.isFinite(value)) return false;
-  if (filter.min !== null && value < filter.min) return false;
-  if (filter.max !== null && value > filter.max) return false;
-
-  return true;
-}
-
-function matchesAllFilters(row, filters) {
-  for (const filter of filters.rsi) {
-    if (!passesRange(row.rsi[filter.key], filter)) return false;
-  }
-
-  for (const filter of filters.change) {
-    if (!passesRange(row.change[filter.key], filter)) return false;
-  }
-
-  if (
-    filters.volume.enabled &&
-    !passesRange(row.volume, filters.volume)
-  ) {
-    return false;
-  }
-
-  return true;
-}
-
-function getActiveColumns(filters) {
-  const columns = [
-    { key: "symbol", label: "Pair" },
-    { key: "price", label: "Price" }
-  ];
-
-  filters.rsi.forEach(item => {
-    columns.push({
-      key: "rsi_" + item.key,
-      label: "RSI " + item.label
-    });
-  });
-
-  filters.change.forEach(item => {
-    columns.push({
-      key: "change_" + item.key,
-      label: "Change " + item.label
-    });
-  });
-
-  if (filters.volume.enabled) {
-    columns.push({
-      key: "volume",
-      label: "24h Volume (USDT)"
-    });
-  }
-
-  return columns;
-}
-
-function getColumnValue(row, key) {
-  if (key === "symbol") return row.symbol;
-  if (key === "price") return row.price;
-  if (key === "volume") return row.volume;
-
-  if (key.startsWith("rsi_")) {
-    return row.rsi[key.slice(4)];
-  }
-
-  if (key.startsWith("change_")) {
-    return row.change[key.slice(7)];
-  }
-
-  return null;
-}
-
-function renderTableHead(columns) {
-  const head = $("tableHead");
-  head.innerHTML = "";
-
-  const row = document.createElement("tr");
-
-  columns.forEach(column => {
-    const th = document.createElement("th");
-    th.textContent = column.label;
-
-    if (sortColumn === column.key) {
-      th.textContent += sortDirection === 1 ? " ▲" : " ▼";
-    }
-
-    th.addEventListener("click", () => {
-      if (sortColumn === column.key) {
-        sortDirection *= -1;
-      } else {
-        sortColumn = column.key;
-        sortDirection = column.key === "symbol" ? 1 : -1;
-      }
-
-      renderResults(lastResults, currentColumns);
-    });
-
-    row.appendChild(th);
-  });
-
-  head.appendChild(row);
-}
-
-function formatNumber(value, digits = 2) {
-  if (
-    value === null ||
-    value === undefined ||
-    !Number.isFinite(value)
-  ) {
-    return "—";
-  }
-
-  return value.toLocaleString("en-US", {
-    minimumFractionDigits: digits,
-    maximumFractionDigits: digits
-  });
-}
-
-function chooseDefaultSort(columns) {
-  const preference = $("sortPreference").value;
-  let selected = null;
-
-  if (preference === "symbol") {
-    selected = columns.find(c => c.key === "symbol");
-  } else if (preference === "volume") {
-    selected = columns.find(c => c.key === "volume");
-  } else if (preference === "change") {
-    selected = columns.find(c => c.key.startsWith("change_"));
-  } else {
-    selected = columns.find(c => c.key.startsWith("rsi_"));
-  }
-
-  if (!selected) selected = columns[0];
-
-  sortColumn = selected ? selected.key : null;
-  sortDirection = sortColumn === "symbol" ? 1 : -1;
-}
-
-function renderResults(results, columns) {
-  currentColumns = columns;
-
-  if (!columns.some(c => c.key === sortColumn)) {
-    chooseDefaultSort(columns);
-  }
-
-  renderTableHead(columns);
-
-  const body = $("resultsBody");
-  body.innerHTML = "";
-
-  const search = $("searchPair").value.trim().toUpperCase();
-
-  const filtered = results.filter(row =>
-    row.symbol.includes(search)
-  );
-
-  filtered.sort((a, b) => {
-    const av = getColumnValue(a, sortColumn);
-    const bv = getColumnValue(b, sortColumn);
-
-    if (sortColumn === "symbol") {
-      return String(av ?? "").localeCompare(String(bv ?? "")) *
-        sortDirection;
-    }
-
-    const an = Number.isFinite(av) ? av : -Infinity;
-    const bn = Number.isFinite(bv) ? bv : -Infinity;
-
-    return (an - bn) * sortDirection;
-  });
-
-  $("matchCount").textContent = filtered.length;
-
-  if (!filtered.length) {
-    const tr = document.createElement("tr");
-    const td = document.createElement("td");
-
-    td.colSpan = Math.max(columns.length, 1);
-    td.className = "empty";
-    td.textContent = results.length
-      ? "No pairs match the search."
-      : "No pairs match the enabled filters.";
-
-    tr.appendChild(td);
-    body.appendChild(tr);
-    return;
-  }
-
-  for (const row of filtered) {
-    const tr = document.createElement("tr");
-
-    for (const column of columns) {
-      const td = document.createElement("td");
-      const value = getColumnValue(row, column.key);
-
-      if (column.key === "symbol") {
-        td.textContent = row.symbol;
-        td.className = "pair";
-      } else if (column.key === "price") {
-        td.textContent = formatNumber(value, 8);
-      } else if (column.key === "volume") {
-        td.textContent = formatNumber(value, 0);
-      } else if (column.key === "rsi_5m") {
-        /*
-         * Only the 5-minute RSI gets the three-category colours:
-         * Green: RSI >= 65
-         * Yellow: RSI > 42 and < 65
-         * Red: RSI <= 42
-         */
-        td.textContent = formatNumber(value);
-
-        if (Number.isFinite(value)) {
-          if (value >= 65) {
-            td.classList.add("rsi-high");
-          } else if (value <= 42) {
-            td.classList.add("rsi-low");
-          } else {
-            td.classList.add("rsi-mid");
-          }
-        }
-      } else {
-        td.textContent = formatNumber(value);
-
-        if (Number.isFinite(value)) {
-          td.classList.add(
-            value > 0 ? "positive" :
-            value < 0 ? "negative" : "neutral"
-          );
-        }
-      }
-
-      tr.appendChild(td);
-    }
-
-    body.appendChild(tr);
-  }
-}
-
-async function runWithConcurrency(items, concurrency, worker, signal) {
+async function pool(items, limit, fn) {
   let index = 0;
 
-  async function runWorker() {
-    while (!signal || !signal.aborted) {
-      const current = index++;
+  const workers = Array.from({ length: limit }, async () => {
+    while (index < items.length && !cancelled) {
+      const item = items[index++];
 
-      if (current >= items.length) return;
-
-      await worker(items[current]);
+      try {
+        await fn(item, index, items.length);
+      } catch (error) {
+        // Individual pair errors are handled by the caller.
+      }
     }
-  }
+  });
 
-  await Promise.all(
-    Array.from(
-      { length: Math.min(concurrency, items.length) },
-      () => runWorker()
-    )
-  );
+  await Promise.all(workers);
 }
 
-async function performScan() {
-  if (scanning) return;
 
-  let filters;
+// Only qualifying RSI extremes are rendered.
+function render(list) {
+  const upper = +$('upper').value;
+  const lower = +$('lower').value;
 
-  try {
-    filters = readFilters();
-  } catch (error) {
-    setStatus(error.message, "error");
-    return;
-  }
+  const sorted = list.slice();
 
-  if (
-    !filters.rsi.length &&
-    !filters.change.length &&
-    !filters.volume.enabled
-  ) {
-    setStatus("Enable at least one filter first.", "error");
-    return;
-  }
-
-  scanning = true;
-  $("scanButton").disabled = true;
-  setStatus("Loading Binance market data...");
-
-  const controller = new AbortController();
-  activeController = controller;
-  const signal = controller.signal;
-
-  try {
-    if (!symbols.length) {
-      symbols = await loadSymbols(signal);
-
-      if (signal.aborted) return;
-
-      $("pairCount").textContent = symbols.length;
+  sorted.sort((a, b) => {
+    if ($('sort').value === 'volume') {
+      return b.quoteVol - a.quoteVol;
     }
 
-    const tickers = await fetchJSON(
-      `${BASE_URL}/fapi/v1/ticker/24hr`,
-      signal
-    );
+    if ($('sort').value === 'rsi') {
+      return b.rsi - a.rsi;
+    }
 
-    if (signal.aborted) return;
+    return (
+      Math.max(b.rsi - 50, 50 - b.rsi) -
+      Math.max(a.rsi - 50, 50 - a.rsi)
+    );
+  });
+
+  $('rows').innerHTML = sorted.map(item => {
+    const high = item.rsi >= upper;
+    const low = item.rsi <= lower;
+
+    // Defensive check: never display RSI values between the thresholds.
+    if (!high && !low) return '';
+
+    const rsiClass = high ? 'hi' : 'lo';
+    const condition = high ? 'RSI ≥ ' + upper : 'RSI ≤ ' + lower;
+
+    return `
+      <tr>
+        <td><strong>${item.symbol}</strong></td>
+        <td>${fmt(item.price)}</td>
+        <td class="${rsiClass}">${item.rsi.toFixed(2)}</td>
+        <td>${pct(item.volChange)}</td>
+        <td>${fmt(item.quoteVol)}</td>
+        <td>${condition}</td>
+      </tr>
+    `;
+  }).filter(Boolean).join('') ||
+  '<tr><td colspan="6">No pairs match the selected filters in this scan.</td></tr>';
+
+  $('resultCount').textContent = sorted.length;
+  $('highCount').textContent = sorted.filter(item => item.rsi >= upper).length;
+  $('lowCount').textContent = sorted.filter(item => item.rsi <= lower).length;
+
+  lastResults = sorted.slice();
+}
+
+
+async function scan() {
+  if (busy) return;
+
+  busy = true;
+  cancelled = false;
+
+  $('scan').disabled = true;
+  $('badge').textContent = 'CONNECTING TO BINANCE…';
+  $('status').textContent =
+    'Fetching eligible USDT perpetual contracts and 24h tickers…';
+  $('progress').value = 0;
+
+  let completed = 0;
+  let failures = 0;
+
+  try {
+    const [exchangeInfo, tickers] = await Promise.all([
+      get('/fapi/v1/exchangeInfo'),
+      get('/fapi/v1/ticker/24hr')
+    ]);
+
+    const validSymbols = new Set(
+      exchangeInfo.symbols
+        .filter(symbol =>
+          symbol.contractType === 'PERPETUAL' &&
+          symbol.quoteAsset === 'USDT' &&
+          symbol.status === 'TRADING'
+        )
+        .map(symbol => symbol.symbol)
+    );
 
     const tickerMap = new Map(
-      tickers.map(ticker => [ticker.symbol, ticker])
+      tickers
+        .filter(ticker => validSymbols.has(ticker.symbol))
+        .map(ticker => [ticker.symbol, ticker])
     );
 
-    const targets = symbols.filter(symbol =>
-      tickerMap.has(symbol)
-    );
+    let universe = [...tickerMap.values()]
+      .filter(ticker =>
+        Number(ticker.quoteVolume) >= +$('minvol').value
+      )
+      .sort((a, b) =>
+        Number(b.quoteVolume) - Number(a.quoteVolume)
+      );
+
+    $('pairCount').textContent = universe.length;
+
+    const scope = $('scope').value;
+
+    if (scope !== 'all') {
+      universe = universe.slice(0, +scope);
+    }
+
+    $('status').textContent =
+      `Live connection succeeded. Scanning ${universe.length} pairs with 5m candles and 4h volume…`;
 
     const results = [];
-    let completed = 0;
-    let failures = 0;
+    const period = Math.max(2, Math.min(50, +$('period').value || 14));
 
-    setStatus(`Scanning ${targets.length} pairs...`);
+    await pool(universe, 4, async (ticker, index, total) => {
+      if (cancelled) return;
 
-    await runWithConcurrency(
-      targets,
-      4,
-      async symbol => {
-        if (signal.aborted) return;
+      try {
+        const [fiveMinuteCandles, fourHourCandles] = await Promise.all([
+          get(
+            `/fapi/v1/klines?symbol=${ticker.symbol}&interval=5m&limit=${period + 60}`
+          ),
+          get(
+            `/fapi/v1/klines?symbol=${ticker.symbol}&interval=4h&limit=3`
+          )
+        ]);
 
-        try {
-          const ticker = tickerMap.get(symbol);
+        if (cancelled) return;
 
-          const row = {
-            symbol,
-            price: Number(ticker.lastPrice),
-            volume: Number(ticker.quoteVolume),
-            rsi: {},
-            change: {}
-          };
+        /*
+          LIVE RSI:
+          Do not remove the last 5-minute candle.
+          The last candle is still forming, so its close can change.
+          Including it lets the displayed RSI update with the latest
+          candle value each time the scanner fetches the data.
+        */
+        const closes = fiveMinuteCandles.map(candle => +candle[4]);
+        const currentRsi = rsi(closes, period);
 
-          const tasks = [];
+        // Keep the 4-hour volume comparison on completed candles.
+        const completedFourHourCandles = fourHourCandles.slice(0, -1);
 
-          for (const item of filters.rsi) {
-            tasks.push(
-              fetchRSI(symbol, item.interval, signal).then(value => {
-                row.rsi[item.key] = value;
-              })
-            );
-          }
-
-          for (const item of filters.change) {
-            tasks.push(
-              fetchPriceChange(
-                symbol,
-                item,
-                signal,
-                tickerMap
-              ).then(value => {
-                row.change[item.key] = value;
-              })
-            );
-          }
-
-          await Promise.all(tasks);
-
-          if (
-            !signal.aborted &&
-            matchesAllFilters(row, filters)
-          ) {
-            results.push(row);
-          }
-        } catch (error) {
-          if (error.name === "AbortError") return;
-          failures++;
+        if (
+          !Number.isFinite(currentRsi) ||
+          completedFourHourCandles.length < 2
+        ) {
+          throw new Error('Not enough candles');
         }
 
-        completed++;
+        const previousVolume =
+          +completedFourHourCandles[
+            completedFourHourCandles.length - 2
+          ][7];
 
-        if (completed % 20 === 0 && !signal.aborted) {
-          setStatus(
-            `Scanning ${completed}/${targets.length}; ` +
-            `${results.length} matches; ${failures} request errors.`
-          );
+        const latestCompletedVolume =
+          +completedFourHourCandles[
+            completedFourHourCandles.length - 1
+          ][7];
+
+        const volumeChange = previousVolume > 0
+          ? (latestCompletedVolume / previousVolume - 1) * 100
+          : 0;
+
+        const upper = +$('upper').value;
+        const lower = +$('lower').value;
+        const side = $('side').value;
+        const volumeFilter = $('vol4').value;
+
+        const isHigh = currentRsi >= upper;
+        const isLow = currentRsi <= lower;
+
+        // Exclude every RSI value between the high and low thresholds.
+        const rsiMatch =
+          side === 'high'
+            ? isHigh
+            : side === 'low'
+              ? isLow
+              : (isHigh || isLow);
+
+        const volumeMatch =
+          volumeFilter === 'any' ||
+          volumeChange >= +volumeFilter;
+
+        if (rsiMatch && volumeMatch) {
+          results.push({
+            symbol: ticker.symbol,
+            price: +ticker.lastPrice,
+            rsi: currentRsi,
+            volChange: volumeChange,
+            quoteVol: +ticker.quoteVolume
+          });
         }
-      },
-      signal
-    );
 
-    if (signal.aborted) return;
+      } catch (error) {
+        failures++;
+      }
 
-    lastResults = results;
+      completed++;
 
-    const columns = getActiveColumns(filters);
+      $('progress').value = completed / total * 100;
 
-    if (!columns.some(c => c.key === sortColumn)) {
-      chooseDefaultSort(columns);
+      $('status').textContent =
+        `Scanned ${completed}/${total}. ` +
+        `Matches so far: ${results.length}. ` +
+        `Per-pair errors: ${failures}` +
+        (cancelled ? ' — cancelled' : '');
+
+      render(results);
+    });
+
+    if (!cancelled) {
+      render(results);
+
+      $('badge').textContent = 'BINANCE LIVE DATA';
+      $('last').textContent =
+        'Last scan: ' + new Date().toLocaleTimeString();
+
+      $('status').textContent =
+        `Scan finished: ${completed}/${universe.length} pairs processed; ` +
+        `${results.length} matched; ${failures} pair requests failed. ` +
+        `RSI uses the current 5-minute candle.`;
+    } else {
+      $('badge').textContent = 'SCAN CANCELLED';
+      $('status').textContent +=
+        '\nCancelled by user. Partial results shown.';
     }
 
-    renderResults(results, columns);
-
-    $("lastScan").textContent = new Date().toLocaleTimeString();
-
-    setStatus(
-      `Scan complete. ${results.length} matching pairs. ` +
-      `${failures} request errors.`,
-      failures ? "error" : "success"
-    );
   } catch (error) {
-    if (error.name !== "AbortError" && !signal.aborted) {
-      setStatus(error.message || "Scan failed.", "error");
-    }
+    $('badge').textContent = 'CONNECTION FAILED';
+
+    $('status').textContent =
+      'Could not reach Binance public futures API. ' + error.message +
+      '\nPossible causes: no internet, API/network restriction, or browser CORS/network policy. ' +
+      'Try again after a short wait if Binance has temporarily limited requests.';
   } finally {
-    scanning = false;
-    $("scanButton").disabled = false;
+    busy = false;
+    $('scan').disabled = false;
 
-    if (activeController === controller) {
-      activeController = null;
+    if (!cancelled) {
+      $('progress').value = 100;
     }
 
-    if (running && !signal.aborted) {
-      scheduleNextScan();
-    } else if (!running) {
-      $("nextScan").textContent = "—";
-    }
+    resetAuto();
   }
 }
 
-function scheduleNextScan() {
-  clearTimeout(scanTimer);
-  clearInterval(countdownTimer);
 
-  if (!running) {
-    $("nextScan").textContent = "—";
+function resetAuto() {
+  if (autoTimer) {
+    clearInterval(autoTimer);
+    autoTimer = null;
+  }
+
+  const interval = $('interval').value;
+
+  if (interval !== 'off') {
+    autoTimer = setInterval(() => {
+      if (!busy) scan();
+    }, +interval * 60000);
+  }
+}
+
+
+$('scan').addEventListener('click', scan);
+
+$('stop').addEventListener('click', () => {
+  cancelled = true;
+  $('status').textContent += '\nCancellation requested…';
+});
+
+$('interval').addEventListener('change', resetAuto);
+
+
+// Export the currently displayed qualifying results.
+$('csv').addEventListener('click', () => {
+  if (!lastResults.length) {
+    $('status').textContent =
+      'No results to export yet. Run a scan first.';
     return;
   }
 
-  nextScanAt =
-    Date.now() + Number($("refreshSeconds").value) * 1000;
+  const upper = +$('upper').value;
 
-  function updateCountdown() {
-    if (!running || nextScanAt === null) {
-      $("nextScan").textContent = "—";
-      return;
-    }
+  const rows = [
+    [
+      'Pair',
+      'Last price',
+      '5m RSI',
+      '4h volume change %',
+      '24h quote volume USDT',
+      'Condition'
+    ],
+    ...lastResults.map(item => [
+      item.symbol,
+      item.price,
+      item.rsi,
+      item.volChange,
+      item.quoteVol,
+      item.rsi >= upper ? 'High RSI' : 'Low RSI'
+    ])
+  ];
 
-    $("nextScan").textContent =
-      Math.max(
-        0,
-        Math.ceil((nextScanAt - Date.now()) / 1000)
-      ) + " seconds";
-  }
+  const csv = rows
+    .map(row =>
+      row.map(value =>
+        '"' + String(value).replaceAll('"', '""') + '"'
+      ).join(',')
+    )
+    .join('\r\n');
 
-  updateCountdown();
-  countdownTimer = setInterval(updateCountdown, 1000);
+  const blob = new Blob([csv], { type: 'text/csv' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
 
-  scanTimer = setTimeout(() => {
-    clearInterval(countdownTimer);
-    performScan();
-  }, Number($("refreshSeconds").value) * 1000);
-}
+  link.href = url;
+  link.download = 'binance-futures-scan.csv';
+  link.click();
 
-function startScanner() {
-  if (running) return;
-
-  try {
-    const filters = readFilters();
-
-    if (
-      !filters.rsi.length &&
-      !filters.change.length &&
-      !filters.volume.enabled
-    ) {
-      setStatus("Enable at least one filter first.", "error");
-      return;
-    }
-  } catch (error) {
-    setStatus(error.message, "error");
-    return;
-  }
-
-  running = true;
-  $("startButton").disabled = true;
-  $("stopButton").disabled = false;
-
-  performScan();
-}
-
-function stopScanner() {
-  running = false;
-
-  clearTimeout(scanTimer);
-  clearInterval(countdownTimer);
-
-  nextScanAt = null;
-
-  if (activeController) {
-    activeController.abort();
-  }
-
-  $("startButton").disabled = false;
-  $("stopButton").disabled = true;
-  $("scanButton").disabled = false;
-  $("nextScan").textContent = "—";
-
-  setStatus("Scanner stopped.");
-}
-
-function scanOnce() {
-  if (!scanning) {
-    performScan();
-  }
-}
-
-function clearFilters() {
-  stopScanner();
-
-  document.querySelectorAll(
-    '#rsiFilters input[type="checkbox"], ' +
-    '#changeFilters input[type="checkbox"], ' +
-    '#volume_enabled'
-  ).forEach(input => {
-    input.checked = false;
-  });
-
-  document.querySelectorAll(
-    '#rsiFilters input[type="number"], ' +
-    '#changeFilters input[type="number"], ' +
-    '#volume_min, #volume_max'
-  ).forEach(input => {
-    input.value = "";
-  });
-
-  lastResults = [];
-  currentColumns = [];
-  sortColumn = null;
-  sortDirection = -1;
-
-  $("matchCount").textContent = "0";
-  $("tableHead").innerHTML = "";
-
-  $("resultsBody").innerHTML =
-    '<tr><td class="empty">Select filters and start the scanner.</td></tr>';
-
-  setStatus("Filters cleared.");
-}
-
-$("startButton").addEventListener("click", startScanner);
-$("stopButton").addEventListener("click", stopScanner);
-$("scanButton").addEventListener("click", scanOnce);
-$("clearButton").addEventListener("click", clearFilters);
-
-$("searchPair").addEventListener("input", () => {
-  if (currentColumns.length) {
-    renderResults(lastResults, currentColumns);
-  }
+  URL.revokeObjectURL(url);
 });
-
-$("sortPreference").addEventListener("change", () => {
-  if (currentColumns.length) {
-    chooseDefaultSort(currentColumns);
-    renderResults(lastResults, currentColumns);
-  }
-});
-
-$("refreshSeconds").addEventListener("change", () => {
-  if (running && !scanning) {
-    scheduleNextScan();
-  }
-});
-
-buildFilterCards();
 </script>
 </body>
 </html>
