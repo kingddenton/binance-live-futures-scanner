@@ -1,314 +1,191 @@
+
 <!doctype html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Binance Live Futures Scanner</title>
-
 <style>
-:root {
-  color-scheme: dark;
-  --bg: #0b1220;
-  --panel: #111c2e;
-  --text: #e9eef8;
-  --muted: #9aa9c0;
-  --line: #26364d;
-  --accent: #83a2ff;
-  --green: #5de0ad;
-  --red: #ff8989;
+:root{color-scheme:dark;--bg:#0b1220;--panel:#111c2e;--text:#e9eef8;--muted:#9aa9c0;--line:#26364d;--accent:#83a2ff;--green:#5de0ad;--red:#ff8989}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font:14px/1.45 system-ui,-apple-system,Segoe UI,sans-serif}
+.root{max-width:1100px;margin:auto;padding:16px}
+.top{display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap}
+.brand{font-weight:800;font-size:22px}
+.brand span{color:var(--accent)}
+.pill,.tag{border:1px solid var(--line);border-radius:99px;padding:5px 9px;color:var(--muted);font-size:12px}
+.intro,.hint,.foot{color:var(--muted)}
+.notice,.panel,.stat{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px;margin-top:12px}
+.notice strong{color:var(--accent)}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.label{font-size:12px;color:var(--muted)}
+.value{font-size:22px;font-weight:800;margin-top:4px}
+.controls{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.field label{display:block;font-size:12px;color:var(--muted);margin-bottom:5px}
+.field input,.field select{width:100%;padding:10px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--text)}
+.actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:13px}
+button{border:0;border-radius:9px;padding:10px 14px;background:var(--accent);color:#071021;font-weight:800;cursor:pointer}
+button.secondary{background:transparent;color:var(--text);border:1px solid var(--line)}
+button:disabled{opacity:.5}
+progress{width:100%;height:9px;margin-top:10px}
+.tablewrap{overflow:auto}
+table{width:100%;border-collapse:collapse;min-width:680px}
+th,td{text-align:left;padding:10px 8px;border-bottom:1px solid var(--line);font-size:13px}
+th{color:var(--muted)}
+.hi{color:var(--green);font-weight:800}
+.lo{color:var(--red);font-weight:800}
+.status{white-space:pre-wrap;font-size:12px;color:var(--muted);margin-top:8px}
+@media(max-width:650px){
+.root{padding:12px}
+.stats{grid-template-columns:1fr 1fr}
+.controls{grid-template-columns:repeat(2,minmax(0,1fr))}
+.value{font-size:20px}
 }
-
-* { box-sizing: border-box; }
-
-body {
-  margin: 0;
-  background: var(--bg);
-  color: var(--text);
-  font: 14px/1.45 system-ui, -apple-system, Segoe UI, sans-serif;
-}
-
-.root { max-width: 1100px; margin: auto; padding: 16px; }
-
-.top {
-  display: flex;
-  justify-content: space-between;
-  gap: 12px;
-  align-items: center;
-  flex-wrap: wrap;
-}
-
-.brand { font-weight: 800; font-size: 22px; }
-.brand span { color: var(--accent); }
-
-.pill, .tag {
-  border: 1px solid var(--line);
-  border-radius: 99px;
-  padding: 5px 9px;
-  color: var(--muted);
-  font-size: 12px;
-}
-
-.intro, .hint, .foot { color: var(--muted); }
-
-.notice, .panel, .stat {
-  background: var(--panel);
-  border: 1px solid var(--line);
-  border-radius: 14px;
-  padding: 14px;
-  margin-top: 12px;
-}
-
-.notice strong { color: var(--accent); }
-
-.stats {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 10px;
-}
-
-.label { font-size: 12px; color: var(--muted); }
-.value { font-size: 22px; font-weight: 800; margin-top: 4px; }
-
-.controls {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 12px;
-}
-
-.field label {
-  display: block;
-  font-size: 12px;
-  color: var(--muted);
-  margin-bottom: 5px;
-}
-
-.field input, .field select {
-  width: 100%;
-  padding: 10px;
-  border: 1px solid var(--line);
-  border-radius: 8px;
-  background: var(--bg);
-  color: var(--text);
-}
-
-.actions {
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
-  align-items: center;
-  margin-top: 13px;
-}
-
-button {
-  border: 0;
-  border-radius: 9px;
-  padding: 10px 14px;
-  background: var(--accent);
-  color: #071021;
-  font-weight: 800;
-  cursor: pointer;
-}
-
-button.secondary {
-  background: transparent;
-  color: var(--text);
-  border: 1px solid var(--line);
-}
-
-button:disabled { opacity: .5; }
-
-progress { width: 100%; height: 9px; margin-top: 10px; }
-
-.tablewrap { overflow: auto; }
-
-table {
-  width: 100%;
-  border-collapse: collapse;
-  min-width: 680px;
-}
-
-th, td {
-  text-align: left;
-  padding: 10px 8px;
-  border-bottom: 1px solid var(--line);
-  font-size: 13px;
-}
-
-th { color: var(--muted); }
-
-.hi { color: var(--green); font-weight: 800; }
-.lo { color: var(--red); font-weight: 800; }
-
-.status {
-  white-space: pre-wrap;
-  font-size: 12px;
-  color: var(--muted);
-  margin-top: 8px;
-}
-
-@media(max-width:650px) {
-  .root { padding: 12px; }
-  .stats { grid-template-columns: 1fr 1fr; }
-  .controls { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .value { font-size: 20px; }
-}
-
-@media(max-width:400px) {
-  .controls { grid-template-columns: 1fr; }
-}
+@media(max-width:400px){.controls{grid-template-columns:1fr}}
 </style>
 </head>
-
 <body>
 <main class="root">
 
 <header class="top">
-  <div class="brand">Binance <span>Live Futures Scanner</span></div>
-  <span class="pill" id="badge">LIVE DATA · NOT YET CONNECTED</span>
+<div class="brand">Binance <span>Live Futures Scanner</span></div>
+<span class="pill" id="badge">LIVE DATA · NOT YET CONNECTED</span>
 </header>
 
 <p class="intro">
-  Scans Binance USDⓈ-M perpetual USDT pairs using public market data.
-  Designed for a mobile browser.
+Scans Binance USDⓈ-M perpetual USDT pairs using public market data.
+Designed for a mobile browser.
 </p>
 
 <div class="notice">
-  <strong>5-minute RSI rules:</strong>
-  RSI ≥ 65 is shown in green. RSI ≤ 42 is shown in red.
-  Values strictly between 42 and 65 are excluded from the results.
-  RSI uses the current, forming 5-minute candle and may change until that candle closes.
-  This scanner does not place trades.
+<strong>Important:</strong>
+This is a browser-based scanner, not a trading bot. It does not place orders or send background alerts. It needs internet access and Binance public API access from your browser.
+<strong>RSI uses the latest live price from the currently forming 5-minute candle. RSI can change before that candle closes.</strong>
 </div>
 
 <section class="stats">
-  <div class="stat">
-    <div class="label">Pairs selected</div>
-    <div class="value" id="pairCount">—</div>
-  </div>
-  <div class="stat">
-    <div class="label">High RSI matches</div>
-    <div class="value" id="highCount">—</div>
-  </div>
-  <div class="stat">
-    <div class="label">Low RSI matches</div>
-    <div class="value" id="lowCount">—</div>
-  </div>
+<div class="stat">
+<div class="label">Pairs selected</div>
+<div class="value" id="pairCount">—</div>
+</div>
+<div class="stat">
+<div class="label">High RSI matches</div>
+<div class="value" id="highCount">—</div>
+</div>
+<div class="stat">
+<div class="label">Low RSI matches</div>
+<div class="value" id="lowCount">—</div>
+</div>
 </section>
 
 <section class="panel">
-  <h3>Scan filters</h3>
+<h3>Scan filters</h3>
 
-  <div class="controls">
+<div class="controls">
 
-    <div class="field">
-      <label for="scope">Pairs to scan</label>
-      <select id="scope">
-        <option value="50">Top 50 by 24h quote volume</option>
-        <option value="100">Top 100 by 24h quote volume</option>
-        <option value="200">Top 200 by 24h quote volume</option>
-        <option value="all">All eligible USDT perpetual pairs</option>
-      </select>
-    </div>
+<div class="field">
+<label for="scope">Pairs to scan</label>
+<select id="scope">
+<option value="50">Top 50 by 24h quote volume</option>
+<option value="100">Top 100 by 24h quote volume</option>
+<option value="200">Top 200 by 24h quote volume</option>
+<option value="all">All eligible USDT perpetual pairs</option>
+</select>
+</div>
 
-    <div class="field">
-      <label for="side">RSI condition</label>
-      <select id="side">
-        <option value="both">Either extreme</option>
-        <option value="high">High RSI only</option>
-        <option value="low">Low RSI only</option>
-      </select>
-    </div>
+<div class="field">
+<label for="side">RSI condition</label>
+<select id="side">
+<option value="both">Either extreme</option>
+<option value="high">High RSI only</option>
+<option value="low">Low RSI only</option>
+</select>
+</div>
 
-    <div class="field">
-      <label for="period">RSI period</label>
-      <input id="period" type="number" min="2" max="50" value="14">
-    </div>
+<div class="field">
+<label for="period">RSI period</label>
+<input id="period" type="number" min="2" max="50" value="14">
+</div>
 
-    <div class="field">
-      <label for="upper">High RSI (≥)</label>
-      <input id="upper" type="number" min="1" max="100" value="65">
-    </div>
+<div class="field">
+<label for="upper">High RSI (≥)</label>
+<input id="upper" type="number" min="1" max="100" value="90">
+</div>
 
-    <div class="field">
-      <label for="lower">Low RSI (≤)</label>
-      <input id="lower" type="number" min="0" max="99" value="42">
-    </div>
+<div class="field">
+<label for="lower">Low RSI (≤)</label>
+<input id="lower" type="number" min="0" max="99" value="10">
+</div>
 
-    <div class="field">
-      <label for="minvol">Minimum 24h quote volume (USDT)</label>
-      <input id="minvol" type="number" min="0" step="1000000" value="1000000">
-    </div>
+<div class="field">
+<label for="minvol">Minimum 24h quote volume (USDT)</label>
+<input id="minvol" type="number" min="0" step="1000000" value="1000000">
+</div>
 
-    <div class="field">
-      <label for="vol4">4h quote-volume change</label>
-      <select id="vol4">
-        <option value="any">Do not filter</option>
-        <option value="0">At least 0%</option>
-        <option value="10" selected>At least +10%</option>
-      </select>
-    </div>
+<div class="field">
+<label for="vol4">4h quote-volume change</label>
+<select id="vol4">
+<option value="any">Do not filter</option>
+<option value="0">At least 0%</option>
+<option value="10" selected>At least +10%</option>
+</select>
+</div>
 
-    <div class="field">
-      <label for="sort">Sort results by</label>
-      <select id="sort">
-        <option value="extreme">Most extreme RSI first</option>
-        <option value="volume">24h quote volume, high to low</option>
-        <option value="rsi">RSI, high to low</option>
-      </select>
-    </div>
+<div class="field">
+<label for="sort">Sort results by</label>
+<select id="sort">
+<option value="extreme">Most extreme RSI first</option>
+<option value="volume">24h quote volume, high to low</option>
+<option value="rsi">RSI, high to low</option>
+</select>
+</div>
 
-    <div class="field">
-      <label for="interval">Auto-refresh</label>
-      <select id="interval">
-        <option value="off">Off</option>
-        <option value="5">Every 5 minutes</option>
-        <option value="15">Every 15 minutes</option>
-      </select>
-    </div>
+<div class="field">
+<label for="interval">Auto-refresh</label>
+<select id="interval">
+<option value="off">Off</option>
+<option value="5">Every 5 minutes</option>
+<option value="15">Every 15 minutes</option>
+</select>
+</div>
 
-  </div>
+</div>
 
-  <div class="actions">
-    <button id="scan">Start live scan</button>
-    <button class="secondary" id="stop">Stop / cancel</button>
-    <button class="secondary" id="csv">Export results CSV</button>
-    <span class="hint" id="last">Not scanned yet</span>
-  </div>
+<div class="actions">
+<button id="scan">Start live scan</button>
+<button class="secondary" id="stop">Stop / cancel</button>
+<button class="secondary" id="csv">Export results CSV</button>
+<span class="hint" id="last">Not scanned yet</span>
+</div>
 
-  <progress id="progress" max="100" value="0"></progress>
-  <div id="status" class="status">Ready. Press “Start live scan”.</div>
+<progress id="progress" max="100" value="0"></progress>
+<div id="status" class="status">Ready. Press “Start live scan”.</div>
 </section>
 
 <section class="panel">
-  <h3>
-    Matching pairs
-    <span class="tag" id="resultCount">0</span>
-  </h3>
+<h3>Matching pairs <span class="tag" id="resultCount">0</span></h3>
 
-  <div class="tablewrap">
-    <table>
-      <thead>
-        <tr>
-          <th>Pair</th>
-          <th>Last price</th>
-          <th>5m RSI(14)</th>
-          <th>4h volume change</th>
-          <th>24h quote volume</th>
-          <th>Condition</th>
-        </tr>
-      </thead>
-      <tbody id="rows">
-        <tr><td colspan="6">No scan results yet.</td></tr>
-      </tbody>
-    </table>
-  </div>
+<div class="tablewrap">
+<table>
+<thead>
+<tr>
+<th>Pair</th>
+<th>Last price</th>
+<th>5m RSI(14)</th>
+<th>4h volume change</th>
+<th>24h quote volume</th>
+<th>Condition</th>
+</tr>
+</thead>
+<tbody id="rows">
+<tr><td colspan="6">No scan results yet.</td></tr>
+</tbody>
+</table>
+</div>
 
-  <p class="foot">
-    The 4h volume change compares the two latest completed 4-hour Binance
-    candle quote volumes. It is an approximation of CoinGlass filters, not
-    CoinGlass data. RSI extremes alone do not imply a trade. Verify signals
-    and risk independently.
-  </p>
+<p class="foot">
+The 4h volume change compares the two latest completed 4-hour Binance candles' quote volumes. RSI, however, includes the current forming 5-minute candle. RSI extremes alone do not imply a trade. Verify signals and risk independently.
+</p>
 </section>
 
 </main>
@@ -324,26 +201,40 @@ let lastResults = [];
 const $ = id => document.getElementById(id);
 
 const fmt = n =>
-  Number(n).toLocaleString(undefined, { maximumFractionDigits: 6 });
+  Number(n).toLocaleString(undefined, {maximumFractionDigits: 6});
 
 const pct = n =>
   (n > 0 ? '+' : '') + n.toFixed(2) + '%';
 
 
 async function get(path) {
-  const response = await fetch(API + path, { cache: 'no-store' });
+  const response = await fetch(API + path, {
+    cache: 'no-store'
+  });
 
   if (!response.ok) {
-    throw new Error('Binance API HTTP ' + response.status + ' for ' + path);
+    throw new Error(
+      'Binance API HTTP ' + response.status + ' for ' + path
+    );
   }
 
   return response.json();
 }
 
 
-// RSI using Wilder smoothing.
+/*
+ RSI(14) CALCULATION
+
+ The input must include the latest price from the CURRENT
+ FORMING candle. The final candle is deliberately NOT removed.
+
+ Binance's final kline entry is the currently forming candle.
+ Its close-price field updates as the market price changes.
+*/
 function rsi(closes, period) {
-  if (closes.length < period + 1) return NaN;
+  if (closes.length < period + 1) {
+    return NaN;
+  }
 
   let gain = 0;
   let loss = 0;
@@ -365,10 +256,12 @@ function rsi(closes, period) {
     const difference = closes[i] - closes[i - 1];
 
     averageGain =
-      (averageGain * (period - 1) + Math.max(difference, 0)) / period;
+      (averageGain * (period - 1) +
+       Math.max(difference, 0)) / period;
 
     averageLoss =
-      (averageLoss * (period - 1) + Math.max(-difference, 0)) / period;
+      (averageLoss * (period - 1) +
+       Math.max(-difference, 0)) / period;
   }
 
   if (averageLoss === 0) {
@@ -382,72 +275,66 @@ function rsi(closes, period) {
 async function pool(items, limit, fn) {
   let index = 0;
 
-  const workers = Array.from({ length: limit }, async () => {
-    while (index < items.length && !cancelled) {
-      const item = items[index++];
-
-      try {
-        await fn(item, index, items.length);
-      } catch (error) {
-        // Individual pair errors are handled by the caller.
+  const workers = Array.from(
+    {length: limit},
+    async () => {
+      while (index < items.length && !cancelled) {
+        const item = items[index++];
+        try {
+          await fn(item, index, items.length);
+        } catch (error) {
+          // Individual pair errors are counted by the scan.
+        }
       }
     }
-  });
+  );
 
   await Promise.all(workers);
 }
 
 
-// Only qualifying RSI extremes are rendered.
 function render(list) {
   const upper = +$('upper').value;
   const lower = +$('lower').value;
 
-  const sorted = list.slice();
+  list.sort((a, b) => {
+    const sort = $('sort').value;
 
-  sorted.sort((a, b) => {
-    if ($('sort').value === 'volume') {
+    if (sort === 'volume') {
       return b.quoteVol - a.quoteVol;
     }
 
-    if ($('sort').value === 'rsi') {
+    if (sort === 'rsi') {
       return b.rsi - a.rsi;
     }
 
-    return (
-      Math.max(b.rsi - 50, 50 - b.rsi) -
-      Math.max(a.rsi - 50, 50 - a.rsi)
-    );
+    return Math.max(b.rsi - 50, 50 - b.rsi) -
+           Math.max(a.rsi - 50, 50 - a.rsi);
   });
 
-  $('rows').innerHTML = sorted.map(item => {
-    const high = item.rsi >= upper;
-    const low = item.rsi <= lower;
-
-    // Defensive check: never display RSI values between the thresholds.
-    if (!high && !low) return '';
-
-    const rsiClass = high ? 'hi' : 'lo';
-    const condition = high ? 'RSI ≥ ' + upper : 'RSI ≤ ' + lower;
-
-    return `
-      <tr>
-        <td><strong>${item.symbol}</strong></td>
-        <td>${fmt(item.price)}</td>
-        <td class="${rsiClass}">${item.rsi.toFixed(2)}</td>
-        <td>${pct(item.volChange)}</td>
-        <td>${fmt(item.quoteVol)}</td>
-        <td>${condition}</td>
-      </tr>
-    `;
-  }).filter(Boolean).join('') ||
+  $('rows').innerHTML = list.map(item => `
+    <tr>
+      <td><strong>${item.symbol}</strong></td>
+      <td>${fmt(item.price)}</td>
+      <td class="${item.rsi >= upper ? 'hi' : item.rsi <= lower ? 'lo' : ''}">
+        ${item.rsi.toFixed(2)}
+      </td>
+      <td>${pct(item.volChange)}</td>
+      <td>${fmt(item.quoteVol)}</td>
+      <td>${item.rsi >= upper ? 'RSI ≥ ' + upper : 'RSI ≤ ' + lower}</td>
+    </tr>
+  `).join('') ||
   '<tr><td colspan="6">No pairs match the selected filters in this scan.</td></tr>';
 
-  $('resultCount').textContent = sorted.length;
-  $('highCount').textContent = sorted.filter(item => item.rsi >= upper).length;
-  $('lowCount').textContent = sorted.filter(item => item.rsi <= lower).length;
+  $('resultCount').textContent = list.length;
 
-  lastResults = sorted.slice();
+  $('highCount').textContent =
+    list.filter(item => item.rsi >= upper).length;
+
+  $('lowCount').textContent =
+    list.filter(item => item.rsi <= lower).length;
+
+  lastResults = list.slice();
 }
 
 
@@ -467,13 +354,13 @@ async function scan() {
   let failures = 0;
 
   try {
-    const [exchangeInfo, tickers] = await Promise.all([
+    const [info, tickers] = await Promise.all([
       get('/fapi/v1/exchangeInfo'),
       get('/fapi/v1/ticker/24hr')
     ]);
 
     const validSymbols = new Set(
-      exchangeInfo.symbols
+      info.symbols
         .filter(symbol =>
           symbol.contractType === 'PERPETUAL' &&
           symbol.quoteAsset === 'USDT' &&
@@ -505,16 +392,19 @@ async function scan() {
     }
 
     $('status').textContent =
-      `Live connection succeeded. Scanning ${universe.length} pairs with 5m candles and 4h volume…`;
+      `Live connection succeeded. Scanning ${universe.length} pairs with live 5m RSI and 4h volume…`;
 
     const results = [];
-    const period = Math.max(2, Math.min(50, +$('period').value || 14));
+    const period = Math.max(
+      2,
+      Math.min(50, +$('period').value || 14)
+    );
 
     await pool(universe, 4, async (ticker, index, total) => {
       if (cancelled) return;
 
       try {
-        const [fiveMinuteCandles, fourHourCandles] = await Promise.all([
+        const [k5, k4] = await Promise.all([
           get(
             `/fapi/v1/klines?symbol=${ticker.symbol}&interval=5m&limit=${period + 60}`
           ),
@@ -526,34 +416,28 @@ async function scan() {
         if (cancelled) return;
 
         /*
-          LIVE RSI:
-          Do not remove the last 5-minute candle.
-          The last candle is still forming, so its close can change.
-          Including it lets the displayed RSI update with the latest
-          candle value each time the scanner fetches the data.
+         LIVE RSI:
+         Use EVERY returned 5-minute candle, including the final
+         currently forming candle. Do not use slice(0, -1).
         */
-        const closes = fiveMinuteCandles.map(candle => +candle[4]);
-        const currentRsi = rsi(closes, period);
+        const closes = k5.map(candle => +candle[4]);
+        const value = rsi(closes, period);
 
-        // Keep the 4-hour volume comparison on completed candles.
-        const completedFourHourCandles = fourHourCandles.slice(0, -1);
+        /*
+         The 4h volume filter deliberately continues to use
+         completed 4-hour candles.
+        */
+        const completed4h = k4.slice(0, -1);
 
-        if (
-          !Number.isFinite(currentRsi) ||
-          completedFourHourCandles.length < 2
-        ) {
+        if (!Number.isFinite(value) || completed4h.length < 2) {
           throw new Error('Not enough candles');
         }
 
         const previousVolume =
-          +completedFourHourCandles[
-            completedFourHourCandles.length - 2
-          ][7];
+          +completed4h[completed4h.length - 2][7];
 
         const latestCompletedVolume =
-          +completedFourHourCandles[
-            completedFourHourCandles.length - 1
-          ][7];
+          +completed4h[completed4h.length - 1][7];
 
         const volumeChange = previousVolume > 0
           ? (latestCompletedVolume / previousVolume - 1) * 100
@@ -564,16 +448,12 @@ async function scan() {
         const side = $('side').value;
         const volumeFilter = $('vol4').value;
 
-        const isHigh = currentRsi >= upper;
-        const isLow = currentRsi <= lower;
-
-        // Exclude every RSI value between the high and low thresholds.
         const rsiMatch =
           side === 'high'
-            ? isHigh
+            ? value >= upper
             : side === 'low'
-              ? isLow
-              : (isHigh || isLow);
+              ? value <= lower
+              : (value >= upper || value <= lower);
 
         const volumeMatch =
           volumeFilter === 'any' ||
@@ -583,7 +463,7 @@ async function scan() {
           results.push({
             symbol: ticker.symbol,
             price: +ticker.lastPrice,
-            rsi: currentRsi,
+            rsi: value,
             volChange: volumeChange,
             quoteVol: +ticker.quoteVolume
           });
@@ -601,7 +481,7 @@ async function scan() {
         `Scanned ${completed}/${total}. ` +
         `Matches so far: ${results.length}. ` +
         `Per-pair errors: ${failures}` +
-        (cancelled ? ' — cancelled' : '');
+        `${cancelled ? ' — cancelled' : ''}`;
 
       render(results);
     });
@@ -616,7 +496,7 @@ async function scan() {
       $('status').textContent =
         `Scan finished: ${completed}/${universe.length} pairs processed; ` +
         `${results.length} matched; ${failures} pair requests failed. ` +
-        `RSI uses the current 5-minute candle.`;
+        `RSI includes the current forming 5-minute candle.`;
     } else {
       $('badge').textContent = 'SCAN CANCELLED';
       $('status').textContent +=
@@ -627,9 +507,10 @@ async function scan() {
     $('badge').textContent = 'CONNECTION FAILED';
 
     $('status').textContent =
-      'Could not reach Binance public futures API. ' + error.message +
-      '\nPossible causes: no internet, API/network restriction, or browser CORS/network policy. ' +
-      'Try again after a short wait if Binance has temporarily limited requests.';
+      'Could not reach Binance public futures API. ' +
+      error.message +
+      '\nPossible causes: no internet, API/network restriction, ' +
+      'or browser CORS/network policy. Try again when the connection is available.';
   } finally {
     busy = false;
     $('scan').disabled = false;
@@ -646,15 +527,14 @@ async function scan() {
 function resetAuto() {
   if (autoTimer) {
     clearInterval(autoTimer);
-    autoTimer = null;
   }
 
-  const interval = $('interval').value;
+  const value = $('interval').value;
 
-  if (interval !== 'off') {
+  if (value !== 'off') {
     autoTimer = setInterval(() => {
       if (!busy) scan();
-    }, +interval * 60000);
+    }, +value * 60000);
   }
 }
 
@@ -668,16 +548,12 @@ $('stop').addEventListener('click', () => {
 
 $('interval').addEventListener('change', resetAuto);
 
-
-// Export the currently displayed qualifying results.
 $('csv').addEventListener('click', () => {
   if (!lastResults.length) {
     $('status').textContent =
       'No results to export yet. Run a scan first.';
     return;
   }
-
-  const upper = +$('upper').value;
 
   const rows = [
     [
@@ -694,7 +570,7 @@ $('csv').addEventListener('click', () => {
       item.rsi,
       item.volChange,
       item.quoteVol,
-      item.rsi >= upper ? 'High RSI' : 'Low RSI'
+      item.rsi >= +$('upper').value ? 'High RSI' : 'Low RSI'
     ])
   ];
 
@@ -706,10 +582,11 @@ $('csv').addEventListener('click', () => {
     )
     .join('\r\n');
 
-  const blob = new Blob([csv], { type: 'text/csv' });
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement('a');
+  const url = URL.createObjectURL(
+    new Blob([csv], {type: 'text/csv'})
+  );
 
+  const link = document.createElement('a');
   link.href = url;
   link.download = 'binance-futures-scan.csv';
   link.click();
