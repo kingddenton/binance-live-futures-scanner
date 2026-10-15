@@ -509,19 +509,23 @@ function calculateRSI(closes, period = RSI_PERIOD) {
   return 100 - 100 / (1 + averageGain / averageLoss);
 }
 
+/*
+ * LIVE RSI:
+ * Binance includes the currently forming candle in the klines response.
+ * Its close field changes as the market price moves.
+ * We therefore use all returned candles instead of filtering out the
+ * currently forming candle.
+ */
 async function fetchRSI(symbol, interval, signal) {
   const url =
     `${BASE_URL}/fapi/v1/klines?symbol=${encodeURIComponent(symbol)}` +
     `&interval=${encodeURIComponent(interval)}&limit=100`;
 
   const data = await fetchJSON(url, signal);
-  const now = Date.now();
 
-  const closed = data.filter(candle => Number(candle[6]) < now);
+  const closes = data.map(candle => Number(candle[4]));
 
-  return calculateRSI(
-    closed.map(candle => Number(candle[4]))
-  );
+  return calculateRSI(closes);
 }
 
 async function fetchPriceChange(symbol, item, signal, tickerMap) {
