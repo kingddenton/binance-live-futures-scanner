@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -142,6 +143,21 @@ tbody tr:hover { background: #1b222a; }
 .negative { color: var(--red); }
 .neutral { color: var(--muted); }
 .pair { font-weight: bold; color: var(--text); }
+
+/* Three-category colour coding for the 5-minute RSI only */
+.rsi-high {
+  color: #0ecb81;
+  font-weight: bold;
+}
+.rsi-mid {
+  color: #f0b90b;
+  font-weight: bold;
+}
+.rsi-low {
+  color: #f6465d;
+  font-weight: bold;
+}
+
 .empty { padding: 25px; text-align: center; color: var(--muted); }
 .footer-note { margin-top: 12px; }
 @media (max-width: 600px) {
@@ -765,6 +781,24 @@ function renderResults(results, columns) {
         td.textContent = formatNumber(value, 8);
       } else if (column.key === "volume") {
         td.textContent = formatNumber(value, 0);
+      } else if (column.key === "rsi_5m") {
+        /*
+         * Only the 5-minute RSI gets the three-category colours:
+         * Green: RSI >= 65
+         * Yellow: RSI > 42 and < 65
+         * Red: RSI <= 42
+         */
+        td.textContent = formatNumber(value);
+
+        if (Number.isFinite(value)) {
+          if (value >= 65) {
+            td.classList.add("rsi-high");
+          } else if (value <= 42) {
+            td.classList.add("rsi-low");
+          } else {
+            td.classList.add("rsi-mid");
+          }
+        }
       } else {
         td.textContent = formatNumber(value);
 
