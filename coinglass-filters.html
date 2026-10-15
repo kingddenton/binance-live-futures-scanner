@@ -6,7 +6,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Binance Futures Scanner</title>
 <style>
-:root{color-scheme:dark;--bg:#0b0e11;--panel:#151a21;--line:#30363d;--text:#eaecef;--muted:#848e9c;--yellow:#f0b90b;--green:#0ecb81;--red:#f6465d}
+:root{color-scheme:dark;--bg:#0b0e11;--panel:#151a21;--line:#30363d;--text:#eaecef;--muted:#848e9c;--yellow:#f0b90b}
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--text);font:14px/1.45 system-ui,Arial,sans-serif}
 main{max-width:1250px;margin:auto;padding:14px}
@@ -32,13 +32,11 @@ button:disabled{opacity:.5}
 .stat small{display:block;color:var(--muted)}
 .stat strong{font-size:20px}
 .tablewrap{overflow:auto;margin-top:10px}
-table{border-collapse:collapse;width:100%;min-width:650px}
+table{border-collapse:collapse;width:100%;min-width:500px}
 th,td{padding:10px 9px;text-align:left;border-bottom:1px solid var(--line);white-space:nowrap}
 th{color:var(--muted);cursor:pointer;user-select:none}
 th:hover{color:var(--yellow)}
 tr:hover{background:#202833}
-.green{color:var(--green);font-weight:800}
-.red{color:var(--red);font-weight:800}
 .badge{border:1px solid var(--line);padding:5px 9px;border-radius:20px;color:var(--muted);font-size:12px}
 #status{white-space:pre-wrap;color:var(--muted);font-size:12px;margin-top:10px}
 progress{width:100%;height:8px;margin-top:10px;accent-color:var(--yellow)}
@@ -103,7 +101,7 @@ progress{width:100%;height:8px;margin-top:10px;accent-color:var(--yellow)}
 
 <section class="panel">
 <h2>RSI filters — select the timeframes to apply</h2>
-<p>All selected filters use AND logic. The 24h RSI uses Binance's 1-day candle, including its current forming candle.</p>
+<p>All selected filters use AND logic. RSI values use the latest available candle, including its current forming candle. The 24h RSI uses Binance's 1-day candle.</p>
 <div id="rsiFilters" class="filtergrid"></div>
 </section>
 
@@ -159,8 +157,8 @@ progress{width:100%;height:8px;margin-top:10px;accent-color:var(--yellow)}
 <div class="stats">
 <div class="stat"><small>Pairs selected</small><strong id="pairCount">0</strong></div>
 <div class="stat"><small>Matching results</small><strong id="matchCount">0</strong></div>
-<div class="stat"><small>Green 5m RSI</small><strong id="greenCount" class="green">0</strong></div>
-<div class="stat"><small>Red 5m RSI</small><strong id="redCount" class="red">0</strong></div>
+<div class="stat"><small>Request errors</small><strong id="errorCount">0</strong></div>
+<div class="stat"><small>RSI filters enabled</small><strong id="rsiCount">1</strong></div>
 </div>
 
 <section class="panel">
@@ -171,7 +169,7 @@ progress{width:100%;height:8px;margin-top:10px;accent-color:var(--yellow)}
 <tbody id="rows"><tr><td>Run a scan to display results.</td></tr></tbody>
 </table>
 </div>
-<p class="muted">When the 5m RSI filter is selected, only pairs with live 5m RSI strictly above 62 (green) or strictly below 43 (red) can appear. Values from 43 through 62 inclusive are excluded. If 5m RSI is not selected, this special rule is not applied.</p>
+<p class="muted">No colour classification or special 5m RSI exclusion is applied. A pair appears when it satisfies every selected filter. Only enabled RSI, price-change and volume columns are displayed, alongside the pair and last price.</p>
 </section>
 </main>
 
@@ -218,7 +216,6 @@ function buildFilters(){
    <div><label for="rsiMax_${label}">Maximum</label>
    <input id="rsiMax_${label}" type="number" min="0" max="100" step="0.1" placeholder="No maximum"></div>
   </div>
-  ${label==='5m'?'<small class="muted">Special result rule: above 62 green or below 43 red.</small>':''}
  </div>`).join('');
 
  $('changeFilters').innerHTML=CHANGE_TFS.map(([label])=>`
@@ -236,7 +233,6 @@ function buildFilters(){
  </div>`).join('');
 }
 
-/* Every request times out after 15 seconds. Stop aborts active requests. */
 async function get(path){
  const controller=new AbortController();
  let timedOut=false;
@@ -301,7 +297,7 @@ function pct(n){
  return (n>0?'+':'')+n.toFixed(2)+'%';
 }
 
-/* Wilder RSI using the latest candle close, including the live candle. */
+/* Wilder RSI, using the latest available candle including the live candle. */
 function rsi(values,period){
  if(values.length<period+1)return NaN;
 
@@ -337,6 +333,12 @@ function readSelectedFilters(){
    const max=num('rsiMax_'+label);
 
    validRange(min,max,'RSI '+label);
+
+   if(min!==null&&(min<0||min>100)||
+      max!==null&&(max<0||max>100)){
+    throw new Error('RSI '+label+': values must be between 0 and 100.');
+   }
+
    rsiFilters.push({label,interval,min,max});
   }
  }
@@ -359,13 +361,22 @@ function readSelectedFilters(){
  validRange(v24min,v24max,'24h volume');
  validRange(v4min,v4max,'4h volume change');
 
- if(
-  !rsiFilters.length&&
-  !changeFilters.length&&
-  !enabled('useVol24')&&
-  !enabled('useVol4')
- ){
+ if(enabled('useVol24')&&
+    (v24min!==null&&v24min<0||v24max!==null&&v24max<0)){
+  throw new Error('24h volume values cannot be negative.');
+ }
+
+ if(!rsiFilters.length&&!changeFilters.length&&
+    !enabled('useVol24')&&!enabled('useVol4')){
   throw new Error('Enable at least one RSI, price-change, or volume filter.');
+ }
+
+ if(enabled('useVol24')&&v24min===null&&v24max===null){
+  throw new Error('Enter a minimum or maximum for 24h quote volume.');
+ }
+
+ if(enabled('useVol4')&&v4min===null&&v4max===null){
+  throw new Error('Enter a minimum or maximum for 4h volume change.');
  }
 
  return {
@@ -380,8 +391,9 @@ function inRange(value,min,max){
  return (min===null||value>=min)&&(max===null||value<=max);
 }
 
-function rsiMatches(value,filter){
- return inRange(value,filter.min,filter.max);
+function updateFilterCounts(){
+ $('rsiCount').textContent=
+  RSI_TFS.filter(([label])=>enabled('rsiOn_'+label)).length;
 }
 
 function render(){
@@ -391,7 +403,6 @@ function render(){
  const selectedRsi=RSI_TFS.filter(([label])=>enabled('rsiOn_'+label));
  const selectedChg=CHANGE_TFS.filter(([label])=>enabled('chgOn_'+label));
 
- /* Build sortable columns from exactly the columns currently displayed. */
  const columns=[
   {label:'Pair',key:'symbol',value:x=>x.symbol},
   {label:'Last price',key:'price',value:x=>x.price}
@@ -429,29 +440,18 @@ function render(){
   });
  }
 
- columns.push({
-  label:'5m signal',
-  key:'signal',
-  value:x=>x.signal
- });
-
- /* Apply a preset only when the dropdown is using a preset. */
  const preset=$('sort').value;
 
- if(['extreme','volume','symbol','rsiup','rsidown'].includes(preset)){
-  const key={
-   extreme:'extreme',
-   volume:'quoteVol',
-   symbol:'symbol',
-   rsiup:'rsi:5m',
-   rsidown:'rsi:5m'
-  }[preset];
-
-  if(sortState.key!==key){
-   sortState.key=key;
-   sortState.direction=
-    preset==='symbol'||preset==='rsidown'?'asc':'desc';
-  }
+ if(preset==='extreme'){
+  sortState={key:'extreme',direction:'desc'};
+ }else if(preset==='volume'){
+  sortState={key:'quoteVol',direction:'desc'};
+ }else if(preset==='symbol'){
+  sortState={key:'symbol',direction:'asc'};
+ }else if(preset==='rsiup'){
+  sortState={key:'rsi:5m',direction:'desc'};
+ }else if(preset==='rsidown'){
+  sortState={key:'rsi:5m',direction:'asc'};
  }
 
  const compare=(a,b)=>{
@@ -482,12 +482,10 @@ function render(){
 
  list.sort(compare);
 
- $('thead').innerHTML='<tr>'+columns.map((c,i)=>
-  `<th data-col="${i}" data-sort-key="${c.key}">`+
-  `${c.label}`+
+ $('thead').innerHTML='<tr>'+columns.map(c=>
+  `<th data-sort-key="${c.key}">${c.label}`+
   `${sortState.key===c.key?
-    (sortState.direction==='asc'?' ▲':' ▼'):''}`+
-  `</th>`
+    (sortState.direction==='asc'?' ▲':' ▼'):''}</th>`
  ).join('')+'</tr>';
 
  $('rows').innerHTML=list.map(x=>{
@@ -498,42 +496,27 @@ function render(){
 
   selectedRsi.forEach(([label])=>{
    const v=x.rsi[label];
-   const cls=label==='5m'?
-    (v>62?'green':v<43?'red':''):'';
-
-   cells.push(
-    `<span class="${cls}">${v===undefined?'—':v.toFixed(2)}</span>`
-   );
+   cells.push(v===undefined||!Number.isFinite(v)?'—':v.toFixed(2));
   });
 
   selectedChg.forEach(([label])=>{
    const v=x.change[label];
-   cells.push(v===undefined?'—':pct(v));
+   cells.push(v===undefined||!Number.isFinite(v)?'—':pct(v));
   });
 
   if(enabled('useVol24'))cells.push(fmt(x.quoteVol));
 
   if(enabled('useVol4')){
-   cells.push(x.vol4===undefined?'—':pct(x.vol4));
+   cells.push(x.vol4===undefined||!Number.isFinite(x.vol4)?'—':pct(x.vol4));
   }
 
-  cells.push(
-   x.signal==='green'?
-    '<span class="green">GREEN · RSI > 62</span>':
-   x.signal==='red'?
-    '<span class="red">RED · RSI < 43</span>':'—'
-  );
-
   return '<tr>'+cells.map(c=>'<td>'+c+'</td>').join('')+'</tr>';
-
  }).join('')||
  `<tr><td colspan="${columns.length}">No pairs match all selected filters.</td></tr>`;
 
  $('matchCount').textContent=list.length;
- $('greenCount').textContent=list.filter(x=>x.signal==='green').length;
- $('redCount').textContent=list.filter(x=>x.signal==='red').length;
+ updateFilterCounts();
 
- /* Clicking any header sorts that column; clicking it again reverses order. */
  $('thead').querySelectorAll('th').forEach(th=>{
   th.addEventListener('click',()=>{
    const key=th.dataset.sortKey;
@@ -544,7 +527,7 @@ function render(){
    }else{
     sortState.key=key;
     sortState.direction=
-     key==='symbol'||key==='signal'?'asc':'desc';
+     key==='symbol'?'asc':'desc';
    }
 
    const dropdownPreset={
@@ -578,7 +561,6 @@ function selectedIntervals(filters){
  return [...set];
 }
 
-/* Limit concurrency and report failed pair requests instead of hiding them. */
 async function pool(items,limit,fn){
  let index=0;
 
@@ -592,6 +574,7 @@ async function pool(items,limit,fn){
     if(!cancelled){
      lastErrorCount++;
      lastErrorMessage=e?.message||String(e);
+     $('errorCount').textContent=lastErrorCount;
     }
    }
   }
@@ -623,6 +606,8 @@ async function scan(){
  $('once').disabled=true;
  $('badge').textContent='SCANNING';
  $('progress').value=0;
+ $('errorCount').textContent='0';
+
  results=[];
  render();
 
@@ -676,7 +661,6 @@ async function scan(){
    const changes={};
    const klineMap={};
 
-   /* Fetch each selected interval once per pair and reuse it. */
    for(const interval of need){
     if(cancelled)break;
 
@@ -690,7 +674,6 @@ async function scan(){
 
    if(cancelled)return;
 
-   /* RSI uses the last returned close, including the live candle. */
    for(const f of filters.rsi){
     const candles=klineMap[f.interval]||[];
     const closes=candles.map(k=>Number(k[4]));
@@ -718,7 +701,6 @@ async function scan(){
    if(enabled('useVol4')){
     const k4=klineMap['4h']||[];
 
-    /* Compare two completed 4h candles; exclude the forming candle. */
     if(k4.length>=3){
      const prev=Number(k4[k4.length-3][7]);
      const last=Number(k4[k4.length-2][7]);
@@ -730,7 +712,7 @@ async function scan(){
    let match=true;
 
    for(const f of filters.rsi){
-    if(!rsiMatches(rsiValues[f.label],f)){
+    if(!inRange(rsiValues[f.label],f.min,f.max)){
      match=false;
      break;
     }
@@ -759,17 +741,7 @@ async function scan(){
     }
    }
 
-   /* Apply the strict 5m signal rule only when 5m RSI is selected. */
-   let signal='';
-
-   if(filters.rsi.some(f=>f.label==='5m')){
-    const live5=rsiValues['5m'];
-
-    if(live5>62)signal='green';
-    else if(live5<43)signal='red';
-    else match=false;
-   }
-
+   /* No green/red classification and no special 5m RSI exclusion. */
    if(match){
     found.push({
      symbol,
@@ -777,8 +749,7 @@ async function scan(){
      quoteVol,
      rsi:rsiValues,
      change:changes,
-     vol4,
-     signal
+     vol4
     });
    }
 
@@ -788,6 +759,7 @@ async function scan(){
    $('progress').value=universe.length?
     done/universe.length*100:100;
 
+   $('errorCount').textContent=lastErrorCount;
    render();
 
    updateStatus(
@@ -867,8 +839,7 @@ function clearResults(){
 
  $('pairCount').textContent='0';
  $('matchCount').textContent='0';
- $('greenCount').textContent='0';
- $('redCount').textContent='0';
+ $('errorCount').textContent='0';
  $('progress').value=0;
 
  updateStatus('Results cleared.');
@@ -891,8 +862,6 @@ function exportCSV(){
  if(enabled('useVol24'))headers.push('24h quote volume USDT');
  if(enabled('useVol4'))headers.push('4h volume change %');
 
- headers.push('5m signal');
-
  const lines=[headers,...results.map(x=>{
   const row=[x.symbol,x.price];
 
@@ -901,8 +870,6 @@ function exportCSV(){
 
   if(enabled('useVol24'))row.push(x.quoteVol);
   if(enabled('useVol4'))row.push(x.vol4??'');
-
-  row.push(x.signal||'');
 
   return row;
  })];
@@ -924,6 +891,7 @@ function exportCSV(){
 }
 
 buildFilters();
+updateFilterCounts();
 
 $('start').addEventListener('click',()=>{
  resetAuto();
@@ -942,7 +910,6 @@ $('csv').addEventListener('click',exportCSV);
 $('refresh').addEventListener('change',resetAuto);
 $('search').addEventListener('input',render);
 
-/* Changing the preset updates sorting; refreshes do not reset it. */
 $('sort').addEventListener('change',()=>{
  const v=$('sort').value;
 
@@ -963,6 +930,14 @@ $('sort').addEventListener('change',()=>{
 
 $('scope').addEventListener('change',()=>{
  updateStatus('Pair scope changed. Start a new scan to apply it.');
+});
+
+/* Update visible columns immediately when filters are enabled or disabled. */
+document.addEventListener('change',e=>{
+ if(e.target.matches('input[type="checkbox"]')){
+  updateFilterCounts();
+  render();
+ }
 });
 </script>
 </body>
