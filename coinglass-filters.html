@@ -1,598 +1,522 @@
 
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Binance Live Futures Scanner</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Binance Futures Scanner</title>
 <style>
-:root{color-scheme:dark;--bg:#0b1220;--panel:#111c2e;--text:#e9eef8;--muted:#9aa9c0;--line:#26364d;--accent:#83a2ff;--green:#5de0ad;--red:#ff8989}
+:root{color-scheme:dark;--bg:#0b0e11;--panel:#151a21;--line:#30363d;--text:#eaecef;--muted:#848e9c;--yellow:#f0b90b;--green:#0ecb81;--red:#f6465d}
 *{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--text);font:14px/1.45 system-ui,-apple-system,Segoe UI,sans-serif}
-.root{max-width:1100px;margin:auto;padding:16px}
-.top{display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap}
-.brand{font-weight:800;font-size:22px}
-.brand span{color:var(--accent)}
-.pill,.tag{border:1px solid var(--line);border-radius:99px;padding:5px 9px;color:var(--muted);font-size:12px}
-.intro,.hint,.foot{color:var(--muted)}
-.notice,.panel,.stat{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px;margin-top:12px}
-.notice strong{color:var(--accent)}
-.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
-.label{font-size:12px;color:var(--muted)}
-.value{font-size:22px;font-weight:800;margin-top:4px}
-.controls{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
-.field label{display:block;font-size:12px;color:var(--muted);margin-bottom:5px}
-.field input,.field select{width:100%;padding:10px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--text)}
-.actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:13px}
-button{border:0;border-radius:9px;padding:10px 14px;background:var(--accent);color:#071021;font-weight:800;cursor:pointer}
+body{margin:0;background:var(--bg);color:var(--text);font:14px/1.45 system-ui,Arial,sans-serif}
+main{max-width:1250px;margin:auto;padding:14px}
+header{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+h1{font-size:21px;margin:4px 0;color:var(--yellow)}
+h2{font-size:16px;margin:0 0 12px}
+p,.muted{color:var(--muted)}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px;margin-top:12px}
+.grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.field label{display:block;color:var(--muted);font-size:12px;margin-bottom:5px}
+input,select{width:100%;min-width:0;background:var(--bg);color:var(--text);border:1px solid var(--line);border-radius:6px;padding:9px}
+button{padding:10px 13px;border:0;border-radius:6px;background:var(--yellow);color:#111;font-weight:700;cursor:pointer}
 button.secondary{background:transparent;color:var(--text);border:1px solid var(--line)}
 button:disabled{opacity:.5}
-progress{width:100%;height:9px;margin-top:10px}
-.tablewrap{overflow:auto}
-table{width:100%;border-collapse:collapse;min-width:680px}
-th,td{text-align:left;padding:10px 8px;border-bottom:1px solid var(--line);font-size:13px}
-th{color:var(--muted)}
-.hi{color:var(--green);font-weight:800}
-.lo{color:var(--red);font-weight:800}
-.status{white-space:pre-wrap;font-size:12px;color:var(--muted);margin-top:8px}
-@media(max-width:650px){
-.root{padding:12px}
-.stats{grid-template-columns:1fr 1fr}
-.controls{grid-template-columns:repeat(2,minmax(0,1fr))}
-.value{font-size:20px}
-}
-@media(max-width:400px){.controls{grid-template-columns:1fr}}
+.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;align-items:center}
+.filtergrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.filter{border:1px solid var(--line);border-radius:8px;padding:10px;min-width:0}
+.filtertop{display:flex;align-items:center;gap:8px;margin-bottom:8px;font-weight:700}
+.filtertop input{width:auto;accent-color:var(--yellow)}
+.ranges{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:12px}
+.stat{background:var(--panel);border:1px solid var(--line);padding:10px;border-radius:8px}
+.stat small{display:block;color:var(--muted)}
+.stat strong{font-size:20px}
+.tablewrap{overflow:auto;margin-top:10px}
+table{border-collapse:collapse;width:100%;min-width:650px}
+th,td{padding:10px 9px;text-align:left;border-bottom:1px solid var(--line);white-space:nowrap}
+th{color:var(--muted);cursor:pointer}
+tr:hover{background:#202833}
+.green{color:var(--green);font-weight:800}
+.red{color:var(--red);font-weight:800}
+.badge{border:1px solid var(--line);padding:5px 9px;border-radius:20px;color:var(--muted);font-size:12px}
+#status{white-space:pre-wrap;color:var(--muted);font-size:12px;margin-top:10px}
+progress{width:100%;height:8px;margin-top:10px;accent-color:var(--yellow)}
+#search{max-width:250px}
+@media(max-width:650px){main{padding:9px}.grid{grid-template-columns:repeat(2,minmax(0,1fr))}.filtergrid{grid-template-columns:1fr}.stats{grid-template-columns:repeat(2,1fr)}h1{font-size:18px}}
 </style>
 </head>
 <body>
-<main class="root">
-
-<header class="top">
-<div class="brand">Binance <span>Live Futures Scanner</span></div>
-<span class="pill" id="badge">LIVE DATA · NOT YET CONNECTED</span>
+<main>
+<header>
+<h1>BINANCE FUTURES SCANNER</h1>
+<span id="badge" class="badge">READY</span>
 </header>
+<p>Public Binance USDⓈ-M perpetual market data. Scanner only — it does not place trades.</p>
 
-<p class="intro">
-Scans Binance USDⓈ-M perpetual USDT pairs using public market data.
-Designed for a mobile browser.
-</p>
-
-<div class="notice">
-<strong>Important:</strong>
-This is a browser-based scanner, not a trading bot. It does not place orders or send background alerts. It needs internet access and Binance public API access from your browser.
-<strong>RSI uses the latest live price from the currently forming 5-minute candle. RSI can change before that candle closes.</strong>
-</div>
-
-<section class="stats">
-<div class="stat">
-<div class="label">Pairs selected</div>
-<div class="value" id="pairCount">—</div>
-</div>
-<div class="stat">
-<div class="label">High RSI matches</div>
-<div class="value" id="highCount">—</div>
-</div>
-<div class="stat">
-<div class="label">Low RSI matches</div>
-<div class="value" id="lowCount">—</div>
+<section class="panel">
+<h2>Scan settings</h2>
+<div class="grid">
+<div class="field"><label for="scope">Pairs to scan</label>
+<select id="scope">
+<option value="50">Top 50 by 24h volume</option>
+<option value="100" selected>Top 100 by 24h volume</option>
+<option value="200">Top 200 by 24h volume</option>
+<option value="all">All eligible pairs</option>
+</select></div>
+<div class="field"><label for="period">RSI period</label><input id="period" type="number" min="2" max="50" value="14"></div>
+<div class="field"><label for="refresh">Auto-refresh</label>
+<select id="refresh">
+<option value="0">Off</option>
+<option value="30">Every 30 seconds</option>
+<option value="60">Every 60 seconds</option>
+<option value="120">Every 120 seconds</option>
+<option value="300">Every 300 seconds</option>
+</select></div>
+<div class="field"><label for="sort">Sort results</label>
+<select id="sort">
+<option value="extreme">Most extreme 5m RSI first</option>
+<option value="volume">24h quote volume: high to low</option>
+<option value="symbol">Pair: A–Z</option>
+<option value="rsiup">5m RSI: high to low</option>
+<option value="rsidown">5m RSI: low to high</option>
+</select></div>
+<div class="field"><label for="search">Search pair</label><input id="search" placeholder="e.g. BTCUSDT"></div>
+<div class="field"><label for="minvol">Minimum 24h quote volume (USDT)</label><input id="minvol" type="number" min="0" value="0"></div>
 </div>
 </section>
 
 <section class="panel">
-<h3>Scan filters</h3>
+<h2>RSI filters — select the timeframes to apply</h2>
+<p>All selected filters are combined using AND logic. The 24h RSI uses Binance's 1-day candle, including its current forming candle.</p>
+<div id="rsiFilters" class="filtergrid"></div>
+</section>
 
-<div class="controls">
+<section class="panel">
+<h2>Price-change filters — select the timeframes to apply</h2>
+<p>Intraday changes compare the current forming candle price with the previous candle's close. The 24h change uses Binance's 24h ticker.</p>
+<div id="changeFilters" class="filtergrid"></div>
+</section>
 
-<div class="field">
-<label for="scope">Pairs to scan</label>
-<select id="scope">
-<option value="50">Top 50 by 24h quote volume</option>
-<option value="100">Top 100 by 24h quote volume</option>
-<option value="200">Top 200 by 24h quote volume</option>
-<option value="all">All eligible USDT perpetual pairs</option>
-</select>
+<section class="panel">
+<h2>Volume filters</h2>
+<div class="filtergrid">
+<div class="filter">
+<div class="filtertop"><input id="useVol24" type="checkbox"><label for="useVol24">24h quote volume (USDT)</label></div>
+<div class="ranges">
+<div><label for="vol24min">Minimum</label><input id="vol24min" type="number" min="0" placeholder="No minimum"></div>
+<div><label for="vol24max">Maximum</label><input id="vol24max" type="number" min="0" placeholder="No maximum"></div>
 </div>
-
-<div class="field">
-<label for="side">RSI condition</label>
-<select id="side">
-<option value="both">Either extreme</option>
-<option value="high">High RSI only</option>
-<option value="low">Low RSI only</option>
-</select>
 </div>
-
-<div class="field">
-<label for="period">RSI period</label>
-<input id="period" type="number" min="2" max="50" value="14">
+<div class="filter">
+<div class="filtertop"><input id="useVol4" type="checkbox"><label for="useVol4">4h candle quote-volume change</label></div>
+<div class="ranges">
+<div><label for="vol4min">Minimum %</label><input id="vol4min" type="number" step="0.1" placeholder="No minimum"></div>
+<div><label for="vol4max">Maximum %</label><input id="vol4max" type="number" step="0.1" placeholder="No maximum"></div>
 </div>
-
-<div class="field">
-<label for="upper">High RSI (≥)</label>
-<input id="upper" type="number" min="1" max="100" value="90">
+<p class="muted">Compares the latest completed 4h candle's quote volume with the preceding completed 4h candle.</p>
 </div>
-
-<div class="field">
-<label for="lower">Low RSI (≤)</label>
-<input id="lower" type="number" min="0" max="99" value="10">
 </div>
-
-<div class="field">
-<label for="minvol">Minimum 24h quote volume (USDT)</label>
-<input id="minvol" type="number" min="0" step="1000000" value="1000000">
-</div>
-
-<div class="field">
-<label for="vol4">4h quote-volume change</label>
-<select id="vol4">
-<option value="any">Do not filter</option>
-<option value="0">At least 0%</option>
-<option value="10" selected>At least +10%</option>
-</select>
-</div>
-
-<div class="field">
-<label for="sort">Sort results by</label>
-<select id="sort">
-<option value="extreme">Most extreme RSI first</option>
-<option value="volume">24h quote volume, high to low</option>
-<option value="rsi">RSI, high to low</option>
-</select>
-</div>
-
-<div class="field">
-<label for="interval">Auto-refresh</label>
-<select id="interval">
-<option value="off">Off</option>
-<option value="5">Every 5 minutes</option>
-<option value="15">Every 15 minutes</option>
-</select>
-</div>
-
-</div>
+</section>
 
 <div class="actions">
-<button id="scan">Start live scan</button>
-<button class="secondary" id="stop">Stop / cancel</button>
-<button class="secondary" id="csv">Export results CSV</button>
-<span class="hint" id="last">Not scanned yet</span>
+<button id="start">Start scanning</button>
+<button id="once" class="secondary">Scan once</button>
+<button id="stop" class="secondary">Stop</button>
+<button id="clear" class="secondary">Clear results</button>
+<button id="csv" class="secondary">Export CSV</button>
 </div>
-
 <progress id="progress" max="100" value="0"></progress>
-<div id="status" class="status">Ready. Press “Start live scan”.</div>
-</section>
+<div id="status">Ready. Select your filters and start scanning.</div>
+
+<div class="stats">
+<div class="stat"><small>Pairs selected</small><strong id="pairCount">0</strong></div>
+<div class="stat"><small>Matching results</small><strong id="matchCount">0</strong></div>
+<div class="stat"><small>Green 5m RSI</small><strong id="greenCount" class="green">0</strong></div>
+<div class="stat"><small>Red 5m RSI</small><strong id="redCount" class="red">0</strong></div>
+</div>
 
 <section class="panel">
-<h3>Matching pairs <span class="tag" id="resultCount">0</span></h3>
-
+<h2>Matching pairs</h2>
 <div class="tablewrap">
 <table>
-<thead>
-<tr>
-<th>Pair</th>
-<th>Last price</th>
-<th>5m RSI(14)</th>
-<th>4h volume change</th>
-<th>24h quote volume</th>
-<th>Condition</th>
-</tr>
-</thead>
-<tbody id="rows">
-<tr><td colspan="6">No scan results yet.</td></tr>
-</tbody>
+<thead id="thead"></thead>
+<tbody id="rows"><tr><td>Run a scan to display results.</td></tr></tbody>
 </table>
 </div>
-
-<p class="foot">
-The 4h volume change compares the two latest completed 4-hour Binance candles' quote volumes. RSI, however, includes the current forming 5-minute candle. RSI extremes alone do not imply a trade. Verify signals and risk independently.
-</p>
+<p class="muted">When the 5m RSI filter is selected, only pairs with live 5m RSI strictly above 62 (green) or strictly below 43 (red) can appear. Values from 43 through 62, inclusive, are excluded. If 5m RSI is not selected, this special rule is not applied.</p>
 </section>
-
 </main>
 
 <script>
-const API = 'https://fapi.binance.com';
+'use strict';
 
-let cancelled = false;
-let busy = false;
-let autoTimer = null;
-let lastResults = [];
+const API='https://fapi.binance.com';
+const RSI_TFS=[
+ ['1m','1m'],['5m','5m'],['15m','15m'],['30m','30m'],
+ ['1h','1h'],['2h','2h'],['4h','4h'],['6h','6h'],
+ ['12h','12h'],['24h','1d']
+];
+const CHANGE_TFS=[
+ ['1m','1m'],['5m','5m'],['15m','15m'],['30m','30m'],
+ ['1h','1h'],['2h','2h'],['4h','4h'],['6h','6h'],
+ ['12h','12h'],['24h','24h']
+];
+const $=id=>document.getElementById(id);
+let busy=false,cancelled=false,autoTimer=null,results=[],lastErrorCount=0;
+let scanId=0;
 
-const $ = id => document.getElementById(id);
+function buildFilters(){
+ $('rsiFilters').innerHTML=RSI_TFS.map(([label])=>`
+ <div class="filter">
+  <div class="filtertop">
+   <input type="checkbox" id="rsiOn_${label}" ${label==='5m'?'checked':''}>
+   <label for="rsiOn_${label}">RSI ${label}</label>
+  </div>
+  <div class="ranges">
+   <div><label for="rsiMin_${label}">Minimum</label><input id="rsiMin_${label}" type="number" min="0" max="100" step="0.1" placeholder="No minimum"></div>
+   <div><label for="rsiMax_${label}">Maximum</label><input id="rsiMax_${label}" type="number" min="0" max="100" step="0.1" placeholder="No maximum"></div>
+  </div>
+  ${label==='5m'?'<small class="muted">Special result rule: above 62 green or below 43 red.</small>':''}
+ </div>`).join('');
 
-const fmt = n =>
-  Number(n).toLocaleString(undefined, {maximumFractionDigits: 6});
+ $('changeFilters').innerHTML=CHANGE_TFS.map(([label])=>`
+ <div class="filter">
+  <div class="filtertop">
+   <input type="checkbox" id="chgOn_${label}">
+   <label for="chgOn_${label}">Price change ${label}</label>
+  </div>
+  <div class="ranges">
+   <div><label for="chgMin_${label}">Minimum %</label><input id="chgMin_${label}" type="number" step="0.1" placeholder="No minimum"></div>
+   <div><label for="chgMax_${label}">Maximum %</label><input id="chgMax_${label}" type="number" step="0.1" placeholder="No maximum"></div>
+  </div>
+ </div>`).join('');
+}
 
-const pct = n =>
-  (n > 0 ? '+' : '') + n.toFixed(2) + '%';
+async function get(path){
+ const response=await fetch(API+path,{cache:'no-store'});
+ if(!response.ok)throw new Error('Binance HTTP '+response.status);
+ return response.json();
+}
+function num(id){const v=$(id).value.trim();return v===''?null:Number(v);}
+function enabled(id){return $(id).checked;}
+function validRange(min,max,label){
+ if(min!==null&&max!==null&&min>max)throw new Error(label+': minimum cannot exceed maximum.');
+}
+function fmt(n){
+ if(!Number.isFinite(n))return '—';
+ return Number(n).toLocaleString(undefined,{maximumFractionDigits:8});
+}
+function pct(n){return (n>0?'+':'')+n.toFixed(2)+'%';}
+function rsi(values,period){
+ if(values.length<period+1)return NaN;
+ let gains=0,losses=0;
+ for(let i=1;i<=period;i++){
+  const d=values[i]-values[i-1];
+  if(d>0)gains+=d;else losses-=d;
+ }
+ let avgGain=gains/period,avgLoss=losses/period;
+ for(let i=period+1;i<values.length;i++){
+  const d=values[i]-values[i-1];
+  avgGain=(avgGain*(period-1)+Math.max(d,0))/period;
+  avgLoss=(avgLoss*(period-1)+Math.max(-d,0))/period;
+ }
+ if(avgLoss===0)return avgGain===0?50:100;
+ return 100-(100/(1+avgGain/avgLoss));
+}
+function readSelectedFilters(){
+ const rsi=[],change=[];
+ for(const [label,interval] of RSI_TFS){
+  if(enabled('rsiOn_'+label)){
+   const min=num('rsiMin_'+label),max=num('rsiMax_'+label);
+   validRange(min,max,'RSI '+label);
+   rsi.push({label,interval,min,max});
+  }
+ }
+ for(const [label,interval] of CHANGE_TFS){
+  if(enabled('chgOn_'+label)){
+   const min=num('chgMin_'+label),max=num('chgMax_'+label);
+   validRange(min,max,'Price change '+label);
+   change.push({label,interval,min,max});
+  }
+ }
+ const v24min=enabled('useVol24')?num('vol24min'):null;
+ const v24max=enabled('useVol24')?num('vol24max'):null;
+ const v4min=enabled('useVol4')?num('vol4min'):null;
+ const v4max=enabled('useVol4')?num('vol4max'):null;
+ validRange(v24min,v24max,'24h volume');
+ validRange(v4min,v4max,'4h volume change');
+ if(!rsi.length&&!change.length&&!enabled('useVol24')&&!enabled('useVol4')){
+  throw new Error('Enable at least one RSI, price-change, or volume filter.');
+ }
+ return {rsi,change,v24min,v24max,v4min,v4max};
+}
+function inRange(value,min,max){
+ if(!Number.isFinite(value))return false;
+ return (min===null||value>=min)&&(max===null||value<=max);
+}
+function rsiMatches(value,filter){
+ return inRange(value,filter.min,filter.max);
+}
+function render(){
+ const q=$('search').value.trim().toUpperCase();
+ const list=results.filter(x=>!q||x.symbol.includes(q));
+ const sort=$('sort').value;
+ if(sort==='volume')list.sort((a,b)=>b.quoteVol-a.quoteVol);
+ else if(sort==='symbol')list.sort((a,b)=>a.symbol.localeCompare(b.symbol));
+ else if(sort==='rsiup')list.sort((a,b)=>(b.rsi['5m']??-1)-(a.rsi['5m']??-1));
+ else if(sort==='rsidown')list.sort((a,b)=>(a.rsi['5m']??101)-(b.rsi['5m']??101));
+ else list.sort((a,b)=>Math.abs((b.rsi['5m']??50)-50)-Math.abs((a.rsi['5m']??50)-50));
 
+ const selectedRsi=RSI_TFS.filter(([label])=>enabled('rsiOn_'+label));
+ const selectedChg=CHANGE_TFS.filter(([label])=>enabled('chgOn_'+label));
+ const headers=['Pair','Last price'];
+ selectedRsi.forEach(([label])=>headers.push('RSI '+label));
+ selectedChg.forEach(([label])=>headers.push('Change '+label));
+ if(enabled('useVol24'))headers.push('24h quote volume');
+ if(enabled('useVol4'))headers.push('4h volume change');
+ headers.push('5m signal');
 
-async function get(path) {
-  const response = await fetch(API + path, {
-    cache: 'no-store'
+ $('thead').innerHTML='<tr>'+headers.map((h,i)=>`<th data-col="${i}">${h}</th>`).join('')+'</tr>';
+ $('rows').innerHTML=list.map(x=>{
+  const cells=[`<strong>${x.symbol}</strong>`,fmt(x.price)];
+  selectedRsi.forEach(([label])=>{
+   const v=x.rsi[label];
+   const cls=label==='5m'?(v>62?'green':v<43?'red':''):'';
+   cells.push(`<span class="${cls}">${v===undefined?'—':v.toFixed(2)}</span>`);
+  });
+  selectedChg.forEach(([label])=>{
+   const v=x.change[label];
+   cells.push(v===undefined?'—':pct(v));
+  });
+  if(enabled('useVol24'))cells.push(fmt(x.quoteVol));
+  if(enabled('useVol4'))cells.push(x.vol4===undefined?'—':pct(x.vol4));
+  cells.push(x.signal==='green'?'<span class="green">GREEN · RSI > 62</span>':
+             x.signal==='red'?'<span class="red">RED · RSI < 43</span>':'—');
+  return '<tr>'+cells.map(c=>'<td>'+c+'</td>').join('')+'</tr>';
+ }).join('')||`<tr><td colspan="${headers.length}">No pairs match all selected filters.</td></tr>`;
+
+ $('matchCount').textContent=list.length;
+ $('greenCount').textContent=list.filter(x=>x.signal==='green').length;
+ $('redCount').textContent=list.filter(x=>x.signal==='red').length;
+ $('thead').querySelectorAll('th').forEach(th=>th.addEventListener('click',()=>{
+  const col=Number(th.dataset.col);
+  const rsiIndex=selectedRsi.findIndex(([label])=>label==='5m');
+  if(col===0)$('sort').value='symbol';
+  else if(rsiIndex>=0&&col===2+rsiIndex)$('sort').value='rsiup';
+  else if(col===1)$('sort').value='volume';
+  render();
+ }));
+}
+function updateStatus(text){$('status').textContent=text;}
+function selectedIntervals(filters){
+ const set=new Set();
+ filters.rsi.forEach(f=>set.add(f.interval));
+ filters.change.forEach(f=>{if(f.interval!=='24h')set.add(f.interval);});
+ if(enabled('useVol4'))set.add('4h');
+ return [...set];
+}
+async function pool(items,limit,fn){
+ let index=0;
+ const workers=Array.from({length:limit},async()=>{
+  while(index<items.length&&!cancelled){
+   const current=items[index++];
+   try{await fn(current,index,items.length);}
+   catch(e){lastErrorCount++;}
+  }
+ });
+ await Promise.all(workers);
+}
+async function scan(){
+ if(busy)return;
+ let filters;
+ try{
+  filters=readSelectedFilters();
+  const period=Math.max(2,Math.min(50,Number($('period').value)||14));
+  if(filters.rsi.some(f=>f.label==='5m')&&period<2)throw new Error('RSI period must be at least 2.');
+ }catch(e){updateStatus(e.message);return;}
+
+ busy=true;cancelled=false;lastErrorCount=0;
+ const thisScan=++scanId;
+ $('start').disabled=true;$('once').disabled=true;
+ $('badge').textContent='SCANNING';
+ $('progress').value=0;results=[];render();
+ try{
+  updateStatus('Fetching Binance futures contracts and 24h tickers…');
+  const [info,tickers]=await Promise.all([
+   get('/fapi/v1/exchangeInfo'),
+   get('/fapi/v1/ticker/24hr')
+  ]);
+  if(cancelled||thisScan!==scanId)return;
+  const valid=new Set(info.symbols.filter(s=>
+   s.status==='TRADING'&&s.contractType==='PERPETUAL'&&s.quoteAsset==='USDT'
+  ).map(s=>s.symbol));
+  const tickerMap=new Map(tickers.filter(t=>valid.has(t.symbol)).map(t=>[t.symbol,t]));
+  let universe=[...tickerMap.values()]
+   .filter(t=>Number(t.quoteVolume)>=Number($('minvol').value||0))
+   .sort((a,b)=>Number(b.quoteVolume)-Number(a.quoteVolume));
+  if($('scope').value!=='all')universe=universe.slice(0,Number($('scope').value));
+  $('pairCount').textContent=universe.length;
+
+  const period=Math.max(2,Math.min(50,Number($('period').value)||14));
+  const need=selectedIntervals(filters);
+  const limit=Math.min(1500,Math.max(period+5,period+30));
+  updateStatus(`Scanning ${universe.length} pairs. Selected candle intervals: ${need.join(', ')||'none'}.`);
+  let done=0;
+  const found=[];
+  await pool(universe,3,async(t)=>{
+   if(cancelled||thisScan!==scanId)return;
+   const symbol=t.symbol;
+   const rsiValues={},changes={};
+   const klineMap={};
+
+   // Fetch each selected interval once per pair and reuse it for RSI/change.
+   for(const interval of need){
+    if(cancelled)break;
+    const needRsi=filters.rsi.some(f=>f.interval===interval);
+    const kLimit=needRsi?limit:3;
+    klineMap[interval]=await get(`/fapi/v1/klines?symbol=${symbol}&interval=${interval}&limit=${kLimit}`);
+   }
+   if(cancelled)return;
+
+   // IMPORTANT: use every returned close, including the final live/forming candle.
+   for(const f of filters.rsi){
+    const candles=klineMap[f.interval]||[];
+    const closes=candles.map(k=>Number(k[4]));
+    rsiValues[f.label]=rsi(closes,period);
+   }
+   for(const f of filters.change){
+    if(f.label==='24h'){
+     changes[f.label]=Number(t.priceChangePercent);
+    }else{
+     const candles=klineMap[f.interval]||[];
+     if(candles.length>=2){
+      const previousClose=Number(candles[candles.length-2][4]);
+      const currentLiveClose=Number(candles[candles.length-1][4]);
+      changes[f.label]=previousClose>0?(currentLiveClose/previousClose-1)*100:NaN;
+     }
+    }
+   }
+
+   let vol4;
+   if(enabled('useVol4')){
+    const k4=klineMap['4h']||[];
+    // Exclude the currently forming 4h candle for this completed-candle volume comparison.
+    if(k4.length>=3){
+     const prev=Number(k4[k4.length-3][7]);
+     const last=Number(k4[k4.length-2][7]);
+     vol4=prev>0?(last/prev-1)*100:NaN;
+    }
+   }
+
+   let match=true;
+   for(const f of filters.rsi){
+    const value=rsiValues[f.label];
+    if(!rsiMatches(value,f)){match=false;break;}
+   }
+   if(match){
+    for(const f of filters.change){
+     if(!inRange(changes[f.label],f.min,f.max)){match=false;break;}
+    }
+   }
+   const quoteVol=Number(t.quoteVolume);
+   if(match&&enabled('useVol24')){
+    if(!inRange(quoteVol,filters.v24min,filters.v24max))match=false;
+   }
+   if(match&&enabled('useVol4')){
+    if(!inRange(vol4,filters.v4min,filters.v4max))match=false;
+   }
+
+   // If 5m RSI is selected, it must also pass the strict green/red display rule.
+   let signal='';
+   if(filters.rsi.some(f=>f.label==='5m')){
+    const live5=rsiValues['5m'];
+    if(live5>62)signal='green';
+    else if(live5<43)signal='red';
+    else match=false;
+   }else{
+    // If 5m RSI isn't selected, the special rule does not exclude results.
+    const live5=NaN;
+    signal='';
+   }
+
+   if(match){
+    found.push({symbol,price:Number(t.lastPrice),quoteVol,rsi:rsiValues,change:changes,vol4,signal});
+   }
+   done++;
+   results=found.slice();
+   $('progress').value=done/universe.length*100;
+   render();
+   updateStatus(`Scanned ${done}/${universe.length}. Matches: ${found.length}. Request errors: ${lastErrorCount}.${cancelled?' Cancellation requested.':''}`);
   });
 
-  if (!response.ok) {
-    throw new Error(
-      'Binance API HTTP ' + response.status + ' for ' + path
-    );
+  if(!cancelled){
+   $('badge').textContent='LIVE DATA';
+   updateStatus(`Scan complete. ${done}/${universe.length} pairs processed; ${found.length} matches; ${lastErrorCount} request errors. Last update: ${new Date().toLocaleTimeString()}.`);
+  }else{
+   $('badge').textContent='STOPPED';
+   updateStatus(`Scan stopped. Partial results: ${found.length}.`);
   }
-
-  return response.json();
+ }catch(e){
+  $('badge').textContent='API ERROR';
+  updateStatus('Scan failed: '+e.message+'\nIf Binance returns HTTP 418 or 429, wait before scanning again and reduce the number of selected pairs/timeframes.');
+ }finally{
+  busy=false;$('start').disabled=false;$('once').disabled=false;
+  if(thisScan===scanId&& !cancelled)resetAuto();
+ }
 }
-
-
-/*
- RSI(14) CALCULATION
-
- The input must include the latest price from the CURRENT
- FORMING candle. The final candle is deliberately NOT removed.
-
- Binance's final kline entry is the currently forming candle.
- Its close-price field updates as the market price changes.
-*/
-function rsi(closes, period) {
-  if (closes.length < period + 1) {
-    return NaN;
-  }
-
-  let gain = 0;
-  let loss = 0;
-
-  for (let i = 1; i <= period; i++) {
-    const difference = closes[i] - closes[i - 1];
-
-    if (difference > 0) {
-      gain += difference;
-    } else {
-      loss -= difference;
-    }
-  }
-
-  let averageGain = gain / period;
-  let averageLoss = loss / period;
-
-  for (let i = period + 1; i < closes.length; i++) {
-    const difference = closes[i] - closes[i - 1];
-
-    averageGain =
-      (averageGain * (period - 1) +
-       Math.max(difference, 0)) / period;
-
-    averageLoss =
-      (averageLoss * (period - 1) +
-       Math.max(-difference, 0)) / period;
-  }
-
-  if (averageLoss === 0) {
-    return averageGain === 0 ? 50 : 100;
-  }
-
-  return 100 - (100 / (1 + averageGain / averageLoss));
+function resetAuto(){
+ if(autoTimer)clearInterval(autoTimer);
+ autoTimer=null;
+ const seconds=Number($('refresh').value);
+ if(seconds>0)autoTimer=setInterval(()=>{if(!busy)scan();},seconds*1000);
 }
-
-
-async function pool(items, limit, fn) {
-  let index = 0;
-
-  const workers = Array.from(
-    {length: limit},
-    async () => {
-      while (index < items.length && !cancelled) {
-        const item = items[index++];
-        try {
-          await fn(item, index, items.length);
-        } catch (error) {
-          // Individual pair errors are counted by the scan.
-        }
-      }
-    }
-  );
-
-  await Promise.all(workers);
+function stop(){
+ cancelled=true;scanId++;
+ if(autoTimer)clearInterval(autoTimer);
+ autoTimer=null;
+ $('badge').textContent='STOPPING';
+ updateStatus('Stop requested. Any request already in progress may finish before scanning stops.');
 }
-
-
-function render(list) {
-  const upper = +$('upper').value;
-  const lower = +$('lower').value;
-
-  list.sort((a, b) => {
-    const sort = $('sort').value;
-
-    if (sort === 'volume') {
-      return b.quoteVol - a.quoteVol;
-    }
-
-    if (sort === 'rsi') {
-      return b.rsi - a.rsi;
-    }
-
-    return Math.max(b.rsi - 50, 50 - b.rsi) -
-           Math.max(a.rsi - 50, 50 - a.rsi);
-  });
-
-  $('rows').innerHTML = list.map(item => `
-    <tr>
-      <td><strong>${item.symbol}</strong></td>
-      <td>${fmt(item.price)}</td>
-      <td class="${item.rsi >= upper ? 'hi' : item.rsi <= lower ? 'lo' : ''}">
-        ${item.rsi.toFixed(2)}
-      </td>
-      <td>${pct(item.volChange)}</td>
-      <td>${fmt(item.quoteVol)}</td>
-      <td>${item.rsi >= upper ? 'RSI ≥ ' + upper : 'RSI ≤ ' + lower}</td>
-    </tr>
-  `).join('') ||
-  '<tr><td colspan="6">No pairs match the selected filters in this scan.</td></tr>';
-
-  $('resultCount').textContent = list.length;
-
-  $('highCount').textContent =
-    list.filter(item => item.rsi >= upper).length;
-
-  $('lowCount').textContent =
-    list.filter(item => item.rsi <= lower).length;
-
-  lastResults = list.slice();
+function clearResults(){
+ results=[];render();
+ $('pairCount').textContent='0';$('matchCount').textContent='0';
+ $('greenCount').textContent='0';$('redCount').textContent='0';
+ $('progress').value=0;updateStatus('Results cleared.');
 }
-
-
-async function scan() {
-  if (busy) return;
-
-  busy = true;
-  cancelled = false;
-
-  $('scan').disabled = true;
-  $('badge').textContent = 'CONNECTING TO BINANCE…';
-  $('status').textContent =
-    'Fetching eligible USDT perpetual contracts and 24h tickers…';
-  $('progress').value = 0;
-
-  let completed = 0;
-  let failures = 0;
-
-  try {
-    const [info, tickers] = await Promise.all([
-      get('/fapi/v1/exchangeInfo'),
-      get('/fapi/v1/ticker/24hr')
-    ]);
-
-    const validSymbols = new Set(
-      info.symbols
-        .filter(symbol =>
-          symbol.contractType === 'PERPETUAL' &&
-          symbol.quoteAsset === 'USDT' &&
-          symbol.status === 'TRADING'
-        )
-        .map(symbol => symbol.symbol)
-    );
-
-    const tickerMap = new Map(
-      tickers
-        .filter(ticker => validSymbols.has(ticker.symbol))
-        .map(ticker => [ticker.symbol, ticker])
-    );
-
-    let universe = [...tickerMap.values()]
-      .filter(ticker =>
-        Number(ticker.quoteVolume) >= +$('minvol').value
-      )
-      .sort((a, b) =>
-        Number(b.quoteVolume) - Number(a.quoteVolume)
-      );
-
-    $('pairCount').textContent = universe.length;
-
-    const scope = $('scope').value;
-
-    if (scope !== 'all') {
-      universe = universe.slice(0, +scope);
-    }
-
-    $('status').textContent =
-      `Live connection succeeded. Scanning ${universe.length} pairs with live 5m RSI and 4h volume…`;
-
-    const results = [];
-    const period = Math.max(
-      2,
-      Math.min(50, +$('period').value || 14)
-    );
-
-    await pool(universe, 4, async (ticker, index, total) => {
-      if (cancelled) return;
-
-      try {
-        const [k5, k4] = await Promise.all([
-          get(
-            `/fapi/v1/klines?symbol=${ticker.symbol}&interval=5m&limit=${period + 60}`
-          ),
-          get(
-            `/fapi/v1/klines?symbol=${ticker.symbol}&interval=4h&limit=3`
-          )
-        ]);
-
-        if (cancelled) return;
-
-        /*
-         LIVE RSI:
-         Use EVERY returned 5-minute candle, including the final
-         currently forming candle. Do not use slice(0, -1).
-        */
-        const closes = k5.map(candle => +candle[4]);
-        const value = rsi(closes, period);
-
-        /*
-         The 4h volume filter deliberately continues to use
-         completed 4-hour candles.
-        */
-        const completed4h = k4.slice(0, -1);
-
-        if (!Number.isFinite(value) || completed4h.length < 2) {
-          throw new Error('Not enough candles');
-        }
-
-        const previousVolume =
-          +completed4h[completed4h.length - 2][7];
-
-        const latestCompletedVolume =
-          +completed4h[completed4h.length - 1][7];
-
-        const volumeChange = previousVolume > 0
-          ? (latestCompletedVolume / previousVolume - 1) * 100
-          : 0;
-
-        const upper = +$('upper').value;
-        const lower = +$('lower').value;
-        const side = $('side').value;
-        const volumeFilter = $('vol4').value;
-
-        const rsiMatch =
-          side === 'high'
-            ? value >= upper
-            : side === 'low'
-              ? value <= lower
-              : (value >= upper || value <= lower);
-
-        const volumeMatch =
-          volumeFilter === 'any' ||
-          volumeChange >= +volumeFilter;
-
-        if (rsiMatch && volumeMatch) {
-          results.push({
-            symbol: ticker.symbol,
-            price: +ticker.lastPrice,
-            rsi: value,
-            volChange: volumeChange,
-            quoteVol: +ticker.quoteVolume
-          });
-        }
-
-      } catch (error) {
-        failures++;
-      }
-
-      completed++;
-
-      $('progress').value = completed / total * 100;
-
-      $('status').textContent =
-        `Scanned ${completed}/${total}. ` +
-        `Matches so far: ${results.length}. ` +
-        `Per-pair errors: ${failures}` +
-        `${cancelled ? ' — cancelled' : ''}`;
-
-      render(results);
-    });
-
-    if (!cancelled) {
-      render(results);
-
-      $('badge').textContent = 'BINANCE LIVE DATA';
-      $('last').textContent =
-        'Last scan: ' + new Date().toLocaleTimeString();
-
-      $('status').textContent =
-        `Scan finished: ${completed}/${universe.length} pairs processed; ` +
-        `${results.length} matched; ${failures} pair requests failed. ` +
-        `RSI includes the current forming 5-minute candle.`;
-    } else {
-      $('badge').textContent = 'SCAN CANCELLED';
-      $('status').textContent +=
-        '\nCancelled by user. Partial results shown.';
-    }
-
-  } catch (error) {
-    $('badge').textContent = 'CONNECTION FAILED';
-
-    $('status').textContent =
-      'Could not reach Binance public futures API. ' +
-      error.message +
-      '\nPossible causes: no internet, API/network restriction, ' +
-      'or browser CORS/network policy. Try again when the connection is available.';
-  } finally {
-    busy = false;
-    $('scan').disabled = false;
-
-    if (!cancelled) {
-      $('progress').value = 100;
-    }
-
-    resetAuto();
-  }
+function exportCSV(){
+ if(!results.length){updateStatus('There are no results to export.');return;}
+ const selectedRsi=RSI_TFS.filter(([label])=>enabled('rsiOn_'+label));
+ const selectedChg=CHANGE_TFS.filter(([label])=>enabled('chgOn_'+label));
+ const headers=['Pair','Last price'];
+ selectedRsi.forEach(([l])=>headers.push('RSI '+l));
+ selectedChg.forEach(([l])=>headers.push('Change '+l+' %'));
+ if(enabled('useVol24'))headers.push('24h quote volume USDT');
+ if(enabled('useVol4'))headers.push('4h volume change %');
+ headers.push('5m signal');
+ const lines=[headers,...results.map(x=>{
+  const row=[x.symbol,x.price];
+  selectedRsi.forEach(([l])=>row.push(x.rsi[l]??''));
+  selectedChg.forEach(([l])=>row.push(x.change[l]??''));
+  if(enabled('useVol24'))row.push(x.quoteVol);
+  if(enabled('useVol4'))row.push(x.vol4??'');
+  row.push(x.signal||'');
+  return row;
+ })];
+ const csv=lines.map(row=>row.map(v=>'"'+String(v??'').replaceAll('"','""')+'"').join(',')).join('\r\n');
+ const url=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8;'}));
+ const a=document.createElement('a');a.href=url;a.download='binance-futures-scanner.csv';a.click();
+ setTimeout(()=>URL.revokeObjectURL(url),1000);
 }
-
-
-function resetAuto() {
-  if (autoTimer) {
-    clearInterval(autoTimer);
-  }
-
-  const value = $('interval').value;
-
-  if (value !== 'off') {
-    autoTimer = setInterval(() => {
-      if (!busy) scan();
-    }, +value * 60000);
-  }
-}
-
-
-$('scan').addEventListener('click', scan);
-
-$('stop').addEventListener('click', () => {
-  cancelled = true;
-  $('status').textContent += '\nCancellation requested…';
-});
-
-$('interval').addEventListener('change', resetAuto);
-
-$('csv').addEventListener('click', () => {
-  if (!lastResults.length) {
-    $('status').textContent =
-      'No results to export yet. Run a scan first.';
-    return;
-  }
-
-  const rows = [
-    [
-      'Pair',
-      'Last price',
-      '5m RSI',
-      '4h volume change %',
-      '24h quote volume USDT',
-      'Condition'
-    ],
-    ...lastResults.map(item => [
-      item.symbol,
-      item.price,
-      item.rsi,
-      item.volChange,
-      item.quoteVol,
-      item.rsi >= +$('upper').value ? 'High RSI' : 'Low RSI'
-    ])
-  ];
-
-  const csv = rows
-    .map(row =>
-      row.map(value =>
-        '"' + String(value).replaceAll('"', '""') + '"'
-      ).join(',')
-    )
-    .join('\r\n');
-
-  const url = URL.createObjectURL(
-    new Blob([csv], {type: 'text/csv'})
-  );
-
-  const link = document.createElement('a');
-  link.href = url;
-  link.download = 'binance-futures-scan.csv';
-  link.click();
-
-  URL.revokeObjectURL(url);
-});
+buildFilters();
+$('start').addEventListener('click',()=>{resetAuto();scan();});
+$('once').addEventListener('click',()=>{if(autoTimer)clearInterval(autoTimer);autoTimer=null;scan();});
+$('stop').addEventListener('click',stop);
+$('clear').addEventListener('click',clearResults);
+$('csv').addEventListener('click',exportCSV);
+$('refresh').addEventListener('change',resetAuto);
+$('search').addEventListener('input',render);
+$('sort').addEventListener('change',render);
+$('scope').addEventListener('change',()=>updateStatus('Pair scope changed. Start a new scan to apply it.'));
 </script>
 </body>
 </html>
