@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -41,6 +40,8 @@ tr:hover{background:#202833}
 #status{white-space:pre-wrap;color:var(--muted);font-size:12px;margin-top:10px}
 progress{width:100%;height:8px;margin-top:10px;accent-color:var(--yellow)}
 #search{max-width:250px}
+.tracker-detected{font-weight:700;color:var(--yellow)}
+.tracker-tracking{color:var(--text)}
 @media(max-width:650px){
  main{padding:9px}
  .grid{grid-template-columns:repeat(2,minmax(0,1fr))}
@@ -168,6 +169,32 @@ progress{width:100%;height:8px;margin-top:10px;accent-color:var(--yellow)}
 </div>
 
 <section class="panel">
+<h2>1m RSI Movement Tracker (40 → 70+)</h2>
+<p>
+Display-only tracker using RSI(14), regardless of the RSI period selected above.
+A pair is armed when 1m RSI reaches 40 or below. Its signal appears when RSI
+subsequently reaches 70 or above, remains visible while RSI stays at or above
+70, and resets when RSI drops below 70. This tracker does not affect the main
+scanner's filter logic.
+</p>
+<div class="tablewrap" style="max-height:320px;overflow:auto">
+<table style="min-width:350px">
+<thead>
+<tr>
+<th>Pair</th>
+<th>Live 1m RSI(14)</th>
+<th>Movement status</th>
+</tr>
+</thead>
+<tbody id="trackerRows">
+<tr><td colspan="3">Start a scan to monitor pairs.</td></tr>
+</tbody>
+</table>
+</div>
+<p class="muted">TRACKING means RSI has reached 40 or below and is waiting for 70. DETECTED means RSI has reached 70 after being armed. Tracking state is saved in this browser.</p>
+</section>
+
+<section class="panel">
 <h2>Matching pairs</h2>
 <div class="tablewrap">
 <table>
@@ -214,6 +241,92 @@ let scanId=0;
 
 const activeRequests=new Set();
 let sortState={key:'extreme',direction:'desc'};
+
+/* Display-only RSI movement tracker state. */
+const TRACKER_STORAGE_KEY='binanceScannerRsiMoveTrackerV1';
+let trackerStates={};
+let trackerUniverse=[];
+let trackerLastUpdated=null;
+
+try{
+ trackerStates=JSON.parse(
+  localStorage.getItem(TRACKER_STORAGE_KEY)||'{}'
+ )||{};
+}catch{
+ trackerStates={};
+}
+
+function saveTrackerStates(){
+ try{
+  localStorage.setItem(
+   TRACKER_STORAGE_KEY,
+   JSON.stringify(trackerStates)
+  );
+ }catch(e){
+  // Scanning can continue if browser storage is unavailable.
+ }
+}
+
+function updateRsiMovement(symbol,value){
+ if(!Number.isFinite(value))return;
+
+ const state=trackerStates[symbol]||{
+  armed:false,
+  detected:false,
+  rsi:null,
+  updatedAt:null
+ };
+
+ if(state.detected){
+  if(value<70){
+   state.detected=false;
+   state.armed=false;
+
+   // A reading at or below 40 can immediately arm a new movement.
+   if(value<=40)state.armed=true;
+  }
+ }else if(state.armed){
+  if(value>=70){
+   state.detected=true;
+   state.armed=false;
+  }
+ }else if(value<=40){
+  state.armed=true;
+ }
+
+ state.rsi=value;
+ state.updatedAt=Date.now();
+ trackerStates[symbol]=state;
+ trackerLastUpdated=state.updatedAt;
+ saveTrackerStates();
+}
+
+function renderRsiMovementTracker(){
+ const active=trackerUniverse
+  .map(symbol=>({symbol,state:trackerStates[symbol]}))
+  .filter(item=>
+   item.state&&(item.state.armed||item.state.detected)
+  )
+  .sort((a,b)=>{
+   if(a.state.detected!==b.state.detected){
+    return a.state.detected?-1:1;
+   }
+   return (b.state.rsi??-Infinity)-(a.state.rsi??-Infinity);
+  });
+
+ $('trackerRows').innerHTML=active.map(item=>{
+  const state=item.state;
+  const status=state.detected?'DETECTED':'TRACKING';
+  const css=state.detected?'tracker-detected':'tracker-tracking';
+
+  return `<tr>
+   <td><strong>${item.symbol}</strong></td>
+   <td>${Number.isFinite(state.rsi)?state.rsi.toFixed(2):'—'}</td>
+   <td class="${css}">${status}</td>
+  </tr>`;
+ }).join('')||
+ '<tr><td colspan="3">No active movements. Waiting for RSI ≤ 40.</td></tr>';
+}
 
 function buildFilters(){
  $('rsiFilters').innerHTML=RSI_TFS.map(([label])=>`
@@ -360,7 +473,7 @@ function macdDea(closes){
  return signal.length?signal[signal.length-1]:NaN;
 }
 
-/* Wilder RSI, using the latest available candle including the live candle. */
+/* Wilder RSI using the latest available candle, including the live candle. */
 function rsi(values,period){
  if(values.length<period+1)return NaN;
 
@@ -398,8 +511,8 @@ function readSelectedFilters(){
 
    validRange(min,max,'RSI '+label);
 
-   if(min!==null&&(min<0||min>100)||
-      max!==null&&(max<0||max>100)){
+   if((min!==null&&(min<0||min>100))||
+      (max!==null&&(max<0||max>100))){
     throw new Error('RSI '+label+': values must be between 0 and 100.');
    }
 
@@ -441,7 +554,7 @@ function readSelectedFilters(){
  validRange(v4min,v4max,'4h volume change');
 
  if(enabled('useVol24')&&
-    (v24min!==null&&v24min<0||v24max!==null&&v24max<0)){
+    ((v24min!==null&&v24min<0)||(v24max!==null&&v24max<0))){
   throw new Error('24h volume values cannot be negative.');
  }
 
@@ -621,8 +734,7 @@ function render(){
      sortState.direction==='asc'?'desc':'asc';
    }else{
     sortState.key=key;
-    sortState.direction=
-     key==='symbol'?'asc':'desc';
+    sortState.direction=key==='symbol'?'asc':'desc';
    }
 
    const dropdownPreset={
@@ -653,6 +765,9 @@ function selectedIntervals(filters){
  });
 
  if(enabled('useVol4'))set.add('4h');
+
+ // Always fetch 1m candles for the separate RSI(14) tracker.
+ set.add('1m');
 
  return [...set];
 }
@@ -737,13 +852,18 @@ async function scan(){
 
   $('pairCount').textContent=universe.length;
 
+  // Tracker observes every pair in the configured scan universe,
+  // not just pairs that pass the main filters.
+  trackerUniverse=universe.map(t=>t.symbol);
+  renderRsiMovementTracker();
+
   const period=Math.max(2,Math.min(50,Number($('period').value)||14));
   const need=selectedIntervals(filters);
   const limit=Math.max(period+30,60);
 
   updateStatus(
    `Scanning ${universe.length} pairs. Selected candle intervals: `+
-   `${need.join(', ')||'none'}.`
+   `${need.join(', ')}. The movement tracker uses 1m RSI(14).`
   );
 
   let done=0;
@@ -761,9 +881,12 @@ async function scan(){
    for(const interval of need){
     if(cancelled)break;
 
-    const needIndicator=filters.rsi.some(f=>f.interval===interval)||
+    const needIndicator=
+     filters.rsi.some(f=>f.interval===interval)||
      filters.dea.some(f=>f.interval===interval);
-    const kLimit=needIndicator?limit:3;
+
+    const kLimit=
+     (needIndicator||interval==='1m')?limit:3;
 
     klineMap[interval]=await get(
      `/fapi/v1/klines?symbol=${symbol}&interval=${interval}&limit=${kLimit}`
@@ -777,6 +900,13 @@ async function scan(){
     const closes=candles.map(k=>Number(k[4]));
     rsiValues[f.label]=rsi(closes,period);
    }
+
+   // Tracker always uses RSI(14), independent of the selected RSI period.
+   const trackerCandles=klineMap['1m']||[];
+   const trackerCloses=trackerCandles.map(k=>Number(k[4]));
+   const trackerRsi=rsi(trackerCloses,14);
+
+   updateRsiMovement(symbol,trackerRsi);
 
    for(const f of filters.dea){
     const candles=klineMap[f.interval]||[];
@@ -854,7 +984,7 @@ async function scan(){
     }
    }
 
-   /* No green/red classification and no special 5m RSI exclusion. */
+   // No green/red classification and no special 5m RSI exclusion.
    if(match){
     found.push({
      symbol,
@@ -875,6 +1005,7 @@ async function scan(){
 
    $('errorCount').textContent=lastErrorCount;
    render();
+   renderRsiMovementTracker();
 
    updateStatus(
     `Scanned ${done}/${universe.length}. `+
@@ -956,7 +1087,8 @@ function clearResults(){
  $('errorCount').textContent='0';
  $('progress').value=0;
 
- updateStatus('Results cleared.');
+ // Clearing matching results does not erase tracker history.
+ updateStatus('Matching results cleared. Tracker history retained.');
 }
 
 function exportCSV(){
@@ -1009,6 +1141,7 @@ function exportCSV(){
 
 buildFilters();
 updateFilterCounts();
+renderRsiMovementTracker();
 
 $('start').addEventListener('click',()=>{
  resetAuto();
@@ -1049,7 +1182,6 @@ $('scope').addEventListener('change',()=>{
  updateStatus('Pair scope changed. Start a new scan to apply it.');
 });
 
-/* Update visible columns immediately when filters are enabled or disabled. */
 document.addEventListener('change',e=>{
  if(e.target.matches('input[type="checkbox"]')){
   updateFilterCounts();
