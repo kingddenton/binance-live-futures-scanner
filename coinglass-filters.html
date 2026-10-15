@@ -439,10 +439,6 @@ function setStatus(message, className = "") {
   $("statusText").className = className;
 }
 
-/*
- * FIX: The signal is optional. Only add it to fetch options when provided.
- * This prevents unsafe handling of an undefined AbortSignal.
- */
 async function fetchJSON(url, signal) {
   const options = { cache: "no-store" };
 
@@ -783,10 +779,6 @@ function renderResults(results, columns) {
   }
 }
 
-/*
- * FIX: Check that signal exists before reading signal.aborted.
- * Workers stop safely when the controller is aborted.
- */
 async function runWithConcurrency(items, concurrency, worker, signal) {
   let index = 0;
 
@@ -938,7 +930,6 @@ async function performScan() {
 
     const columns = getActiveColumns(filters);
 
-    // Preserve the chosen sort column and direction across refreshes.
     if (!columns.some(c => c.key === sortColumn)) {
       chooseDefaultSort(columns);
     }
@@ -964,8 +955,6 @@ async function performScan() {
       activeController = null;
     }
 
-    // FIX: Schedule another scan only if scanning is still enabled
-    // and this scan was not cancelled.
     if (running && !signal.aborted) {
       scheduleNextScan();
     } else if (!running) {
