@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -42,6 +43,13 @@ progress{width:100%;height:8px;margin-top:10px;accent-color:var(--yellow)}
 #search{max-width:250px}
 .tracker-detected{font-weight:700;color:var(--yellow)}
 .tracker-tracking{color:var(--text)}
+.tracker-heading{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.tracker-heading h2{margin:0}
+.macd-component{border-top:1px solid var(--line);padding-top:8px;margin-top:8px}
+.macd-component:first-of-type{border-top:0;margin-top:0;padding-top:0}
+.macd-component-title{display:flex;align-items:center;gap:7px;font-weight:700;margin-bottom:7px}
+.macd-component-title input{width:auto;accent-color:var(--yellow)}
+.macd-component .ranges input{padding:7px}
 @media(max-width:650px){
  main{padding:9px}
  .grid{grid-template-columns:repeat(2,minmax(0,1fr))}
@@ -107,9 +115,9 @@ progress{width:100%;height:8px;margin-top:10px;accent-color:var(--yellow)}
 </section>
 
 <section class="panel">
-<h2>DEA filters — select the timeframes to apply</h2>
-<p>DEA is the MACD signal line, calculated using standard MACD settings (12, 26, 9). Values use the latest available candle, including the current forming candle. All selected filters use AND logic.</p>
-<div id="deaFilters" class="filtergrid"></div>
+<h2>MACD filters — select components and timeframes</h2>
+<p>Standard MACD settings: 12, 26, 9. DIF = EMA 12 − EMA 26; DEA = 9-period EMA of DIF; MACD histogram = DIF − DEA. Values use the latest available candle, including the current forming candle. Every selected component/timeframe filter uses AND logic. Negative and positive values are supported.</p>
+<div id="macdFilters" class="filtergrid"></div>
 </section>
 
 <section class="panel">
@@ -169,7 +177,11 @@ progress{width:100%;height:8px;margin-top:10px;accent-color:var(--yellow)}
 </div>
 
 <section class="panel">
+<div class="tracker-heading">
 <h2>1m RSI Movement Tracker (40 → 70+)</h2>
+<button id="trackerToggle" class="secondary" type="button" aria-expanded="true">Collapse</button>
+</div>
+<div id="trackerContent">
 <p>
 Display-only tracker using RSI(14), regardless of the RSI period selected above.
 A pair is armed when 1m RSI reaches 40 or below. Its signal appears when RSI
@@ -192,6 +204,7 @@ scanner's filter logic.
 </table>
 </div>
 <p class="muted">TRACKING means RSI has reached 40 or below and is waiting for 70. DETECTED means RSI has reached 70 after being armed. Tracking state is saved in this browser.</p>
+</div>
 </section>
 
 <section class="panel">
@@ -202,7 +215,7 @@ scanner's filter logic.
 <tbody id="rows"><tr><td>Run a scan to display results.</td></tr></tbody>
 </table>
 </div>
-<p class="muted">No colour classification or special 5m RSI exclusion is applied. A pair appears when it satisfies every selected filter. Only enabled RSI, DEA, price-change and volume columns are displayed, alongside the pair and last price.</p>
+<p class="muted">No colour classification or special 5m RSI exclusion is applied. A pair appears when it satisfies every selected filter. Only enabled RSI, DIF, DEA, MACD histogram, price-change and volume columns are displayed, alongside the pair and last price.</p>
 </section>
 </main>
 
@@ -217,7 +230,7 @@ const RSI_TFS=[
  ['12h','12h'],['24h','1d']
 ];
 
-const DEA_TFS=[
+const MACD_TFS=[
  ['1m','1m'],['5m','5m'],['15m','15m'],['30m','30m'],
  ['1h','1h'],['2h','2h'],['4h','4h'],['6h','6h'],
  ['12h','12h'],['24h','1d']
@@ -247,6 +260,7 @@ const TRACKER_STORAGE_KEY='binanceScannerRsiMoveTrackerV1';
 let trackerStates={};
 let trackerUniverse=[];
 let trackerLastUpdated=null;
+let trackerCollapsed=false;
 
 try{
  trackerStates=JSON.parse(
@@ -254,6 +268,22 @@ try{
  )||{};
 }catch{
  trackerStates={};
+}
+
+try{
+ trackerCollapsed=localStorage.getItem('binanceScannerTrackerCollapsedV1')==='1';
+}catch{
+ trackerCollapsed=false;
+}
+
+function setTrackerCollapsed(collapsed){
+ trackerCollapsed=!!collapsed;
+ $('trackerContent').hidden=trackerCollapsed;
+ $('trackerToggle').textContent=trackerCollapsed?'Expand':'Collapse';
+ $('trackerToggle').setAttribute('aria-expanded',String(!trackerCollapsed));
+ try{
+  localStorage.setItem('binanceScannerTrackerCollapsedV1',trackerCollapsed?'1':'0');
+ }catch(e){}
 }
 
 function saveTrackerStates(){
@@ -343,18 +373,22 @@ function buildFilters(){
   </div>
  </div>`).join('');
 
- $('deaFilters').innerHTML=DEA_TFS.map(([label])=>`
+ $('macdFilters').innerHTML=MACD_TFS.map(([label])=>`
  <div class="filter">
-  <div class="filtertop">
-   <input type="checkbox" id="deaOn_${label}">
-   <label for="deaOn_${label}">DEA ${label}</label>
-  </div>
-  <div class="ranges">
-   <div><label for="deaMin_${label}">Minimum</label>
-   <input id="deaMin_${label}" type="number" step="any" placeholder="No minimum"></div>
-   <div><label for="deaMax_${label}">Maximum</label>
-   <input id="deaMax_${label}" type="number" step="any" placeholder="No maximum"></div>
-  </div>
+  <div class="filtertop"><strong>${label} timeframe</strong></div>
+  ${[['dif','DIF'],['dea','DEA'],['hist','MACD']].map(([key,name])=>`
+   <div class="macd-component">
+    <div class="macd-component-title">
+     <input type="checkbox" id="macd_${key}On_${label}">
+     <label for="macd_${key}On_${label}">${name}</label>
+    </div>
+    <div class="ranges">
+     <div><label for="macd_${key}Min_${label}">Minimum</label>
+     <input id="macd_${key}Min_${label}" type="number" step="any" placeholder="No minimum"></div>
+     <div><label for="macd_${key}Max_${label}">Maximum</label>
+     <input id="macd_${key}Max_${label}" type="number" step="any" placeholder="No maximum"></div>
+    </div>
+   </div>`).join('')}
  </div>`).join('');
 
  $('changeFilters').innerHTML=CHANGE_TFS.map(([label])=>`
@@ -455,22 +489,22 @@ function emaSeries(values,period){
  return out;
 }
 
-/* DEA: 9-period EMA signal line of the MACD(12,26) line. */
-function macdDea(closes){
- if(closes.length<35)return NaN;
-
+/* Standard MACD components: DIF = EMA12 - EMA26; DEA = EMA9(DIF);
+   MACD histogram = DIF - DEA (undoubled convention). */
+function macdComponents(closes){
+ if(closes.length<35)return {dif:NaN,dea:NaN,hist:NaN};
  const fast=emaSeries(closes,12);
  const slow=emaSeries(closes,26);
- const macd=[];
-
+ const difSeries=[];
  for(let i=0;i<closes.length;i++){
   if(Number.isFinite(fast[i])&&Number.isFinite(slow[i])){
-   macd.push(fast[i]-slow[i]);
+   difSeries.push(fast[i]-slow[i]);
   }
  }
-
- const signal=emaSeries(macd,9);
- return signal.length?signal[signal.length-1]:NaN;
+ const deaSeries=emaSeries(difSeries,9);
+ const dif=difSeries.length?difSeries[difSeries.length-1]:NaN;
+ const dea=deaSeries.length?deaSeries[deaSeries.length-1]:NaN;
+ return {dif,dea,hist:dif-dea};
 }
 
 /* Wilder RSI using the latest available candle, including the live candle. */
@@ -501,7 +535,9 @@ function rsi(values,period){
 
 function readSelectedFilters(){
  const rsiFilters=[];
+ const difFilters=[];
  const deaFilters=[];
+ const macdFilters=[];
  const changeFilters=[];
 
  for(const [label,interval] of RSI_TFS){
@@ -520,18 +556,19 @@ function readSelectedFilters(){
   }
  }
 
- for(const [label,interval] of DEA_TFS){
-  if(enabled('deaOn_'+label)){
-   const min=num('deaMin_'+label);
-   const max=num('deaMax_'+label);
-
-   validRange(min,max,'DEA '+label);
-
-   if(min===null&&max===null){
-    throw new Error('DEA '+label+': enter a minimum or maximum value.');
+ for(const [label,interval] of MACD_TFS){
+  for(const [key,name,target] of [
+   ['dif','DIF',difFilters],['dea','DEA',deaFilters],['hist','MACD',macdFilters]
+  ]){
+   if(enabled('macd_'+key+'On_'+label)){
+    const min=num('macd_'+key+'Min_'+label);
+    const max=num('macd_'+key+'Max_'+label);
+    validRange(min,max,name+' '+label);
+    if(min===null&&max===null){
+     throw new Error(name+' '+label+': enter a minimum or maximum value.');
+    }
+    target.push({label,interval,min,max});
    }
-
-   deaFilters.push({label,interval,min,max});
   }
  }
 
@@ -558,9 +595,9 @@ function readSelectedFilters(){
   throw new Error('24h volume values cannot be negative.');
  }
 
- if(!rsiFilters.length&&!deaFilters.length&&!changeFilters.length&&
+ if(!rsiFilters.length&&!difFilters.length&&!deaFilters.length&&!macdFilters.length&&!changeFilters.length&&
     !enabled('useVol24')&&!enabled('useVol4')){
-  throw new Error('Enable at least one RSI, DEA, price-change, or volume filter.');
+  throw new Error('Enable at least one RSI, MACD component, price-change, or volume filter.');
  }
 
  if(enabled('useVol24')&&v24min===null&&v24max===null){
@@ -573,7 +610,9 @@ function readSelectedFilters(){
 
  return {
   rsi:rsiFilters,
+  dif:difFilters,
   dea:deaFilters,
+  macd:macdFilters,
   change:changeFilters,
   v24min,v24max,v4min,v4max
  };
@@ -587,7 +626,8 @@ function inRange(value,min,max){
 function updateFilterCounts(){
  $('rsiCount').textContent=
   RSI_TFS.filter(([label])=>enabled('rsiOn_'+label)).length+
-  DEA_TFS.filter(([label])=>enabled('deaOn_'+label)).length;
+  MACD_TFS.reduce((total,[label])=>total+
+   ['dif','dea','hist'].filter(key=>enabled('macd_'+key+'On_'+label)).length,0);
 }
 
 function render(){
@@ -595,7 +635,9 @@ function render(){
  const list=results.filter(x=>!q||x.symbol.includes(q));
 
  const selectedRsi=RSI_TFS.filter(([label])=>enabled('rsiOn_'+label));
- const selectedDea=DEA_TFS.filter(([label])=>enabled('deaOn_'+label));
+ const selectedDif=MACD_TFS.filter(([label])=>enabled('macd_difOn_'+label));
+ const selectedDea=MACD_TFS.filter(([label])=>enabled('macd_deaOn_'+label));
+ const selectedMacd=MACD_TFS.filter(([label])=>enabled('macd_histOn_'+label));
  const selectedChg=CHANGE_TFS.filter(([label])=>enabled('chgOn_'+label));
 
  const columns=[
@@ -611,12 +653,14 @@ function render(){
   });
  });
 
+ selectedDif.forEach(([label])=>{
+  columns.push({label:'DIF '+label,key:'dif:'+label,value:x=>x.dif[label]});
+ });
  selectedDea.forEach(([label])=>{
-  columns.push({
-   label:'DEA '+label,
-   key:'dea:'+label,
-   value:x=>x.dea[label]
-  });
+  columns.push({label:'DEA '+label,key:'dea:'+label,value:x=>x.dea[label]});
+ });
+ selectedMacd.forEach(([label])=>{
+  columns.push({label:'MACD '+label,key:'macd:'+label,value:x=>x.macd[label]});
  });
 
  selectedChg.forEach(([label])=>{
@@ -702,8 +746,16 @@ function render(){
    cells.push(v===undefined||!Number.isFinite(v)?'—':v.toFixed(2));
   });
 
+  selectedDif.forEach(([label])=>{
+   const v=x.dif[label];
+   cells.push(v===undefined||!Number.isFinite(v)?'—':v.toFixed(8));
+  });
   selectedDea.forEach(([label])=>{
    const v=x.dea[label];
+   cells.push(v===undefined||!Number.isFinite(v)?'—':v.toFixed(8));
+  });
+  selectedMacd.forEach(([label])=>{
+   const v=x.macd[label];
    cells.push(v===undefined||!Number.isFinite(v)?'—':v.toFixed(8));
   });
 
@@ -758,7 +810,9 @@ function selectedIntervals(filters){
  const set=new Set();
 
  filters.rsi.forEach(f=>set.add(f.interval));
+ filters.dif.forEach(f=>set.add(f.interval));
  filters.dea.forEach(f=>set.add(f.interval));
+ filters.macd.forEach(f=>set.add(f.interval));
 
  filters.change.forEach(f=>{
   if(f.interval!=='24h')set.add(f.interval);
@@ -874,7 +928,9 @@ async function scan(){
 
    const symbol=t.symbol;
    const rsiValues={};
+   const difValues={};
    const deaValues={};
+   const macdValues={};
    const changes={};
    const klineMap={};
 
@@ -883,7 +939,9 @@ async function scan(){
 
     const needIndicator=
      filters.rsi.some(f=>f.interval===interval)||
-     filters.dea.some(f=>f.interval===interval);
+     filters.dif.some(f=>f.interval===interval)||
+     filters.dea.some(f=>f.interval===interval)||
+     filters.macd.some(f=>f.interval===interval);
 
     const kLimit=
      (needIndicator||interval==='1m')?limit:3;
@@ -908,11 +966,19 @@ async function scan(){
 
    updateRsiMovement(symbol,trackerRsi);
 
-   for(const f of filters.dea){
-    const candles=klineMap[f.interval]||[];
-    const closes=candles.map(k=>Number(k[4]));
-    deaValues[f.label]=macdDea(closes);
+   const macdByInterval={};
+   for(const interval of need){
+    if(filters.dif.some(f=>f.interval===interval)||
+       filters.dea.some(f=>f.interval===interval)||
+       filters.macd.some(f=>f.interval===interval)){
+     const candles=klineMap[interval]||[];
+     const closes=candles.map(k=>Number(k[4]));
+     macdByInterval[interval]=macdComponents(closes);
+    }
    }
+   for(const f of filters.dif)difValues[f.label]=macdByInterval[f.interval]?.dif??NaN;
+   for(const f of filters.dea)deaValues[f.label]=macdByInterval[f.interval]?.dea??NaN;
+   for(const f of filters.macd)macdValues[f.label]=macdByInterval[f.interval]?.hist??NaN;
 
    for(const f of filters.change){
     if(f.label==='24h'){
@@ -953,11 +1019,18 @@ async function scan(){
    }
 
    if(match){
+    for(const f of filters.dif){
+     if(!inRange(difValues[f.label],f.min,f.max)){match=false;break;}
+    }
+   }
+   if(match){
     for(const f of filters.dea){
-     if(!inRange(deaValues[f.label],f.min,f.max)){
-      match=false;
-      break;
-     }
+     if(!inRange(deaValues[f.label],f.min,f.max)){match=false;break;}
+    }
+   }
+   if(match){
+    for(const f of filters.macd){
+     if(!inRange(macdValues[f.label],f.min,f.max)){match=false;break;}
     }
    }
 
@@ -991,7 +1064,9 @@ async function scan(){
      price:Number(t.lastPrice),
      quoteVol,
      rsi:rsiValues,
+     dif:difValues,
      dea:deaValues,
+     macd:macdValues,
      change:changes,
      vol4
     });
@@ -1098,13 +1173,17 @@ function exportCSV(){
  }
 
  const selectedRsi=RSI_TFS.filter(([label])=>enabled('rsiOn_'+label));
- const selectedDea=DEA_TFS.filter(([label])=>enabled('deaOn_'+label));
+ const selectedDif=MACD_TFS.filter(([label])=>enabled('macd_difOn_'+label));
+ const selectedDea=MACD_TFS.filter(([label])=>enabled('macd_deaOn_'+label));
+ const selectedMacd=MACD_TFS.filter(([label])=>enabled('macd_histOn_'+label));
  const selectedChg=CHANGE_TFS.filter(([label])=>enabled('chgOn_'+label));
 
  const headers=['Pair','Last price'];
 
  selectedRsi.forEach(([label])=>headers.push('RSI '+label));
+ selectedDif.forEach(([label])=>headers.push('DIF '+label));
  selectedDea.forEach(([label])=>headers.push('DEA '+label));
+ selectedMacd.forEach(([label])=>headers.push('MACD '+label));
  selectedChg.forEach(([label])=>headers.push('Change '+label+' %'));
 
  if(enabled('useVol24'))headers.push('24h quote volume USDT');
@@ -1114,7 +1193,9 @@ function exportCSV(){
   const row=[x.symbol,x.price];
 
   selectedRsi.forEach(([label])=>row.push(x.rsi[label]??''));
+  selectedDif.forEach(([label])=>row.push(x.dif[label]??''));
   selectedDea.forEach(([label])=>row.push(x.dea[label]??''));
+  selectedMacd.forEach(([label])=>row.push(x.macd[label]??''));
   selectedChg.forEach(([label])=>row.push(x.change[label]??''));
 
   if(enabled('useVol24'))row.push(x.quoteVol);
@@ -1142,6 +1223,10 @@ function exportCSV(){
 buildFilters();
 updateFilterCounts();
 renderRsiMovementTracker();
+setTrackerCollapsed(trackerCollapsed);
+$('trackerToggle').addEventListener('click',()=>{
+ setTrackerCollapsed(!trackerCollapsed);
+});
 
 $('start').addEventListener('click',()=>{
  resetAuto();
