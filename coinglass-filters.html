@@ -2,59 +2,66 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Binance Futures Scanner</title>
 <style>
-:root{color-scheme:dark;--bg:#0b0e11;--panel:#151a21;--line:#30363d;--text:#eaecef;--muted:#848e9c;--yellow:#f0b90b}
+:root{color-scheme:dark;--bg:#0b0e11;--panel:#151a21;--line:#30363d;--text:#eaecef;--muted:#848e9c;--yellow:#f0b90b;--green:#0ecb81;--red:#f6465d}
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--text);font:14px/1.45 system-ui,Arial,sans-serif}
-main{max-width:1250px;margin:auto;padding:14px}
-header{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+main{max-width:1450px;margin:auto;padding:12px}
+header,.actions,.tabs,.panelhead,.tracker-heading{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap}
 h1{font-size:21px;margin:4px 0;color:var(--yellow)}
-h2{font-size:16px;margin:0 0 12px}
-p,.muted{color:var(--muted)}
-.panel{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px;margin-top:12px}
-.grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
-.field label{display:block;color:var(--muted);font-size:12px;margin-bottom:5px}
-input,select{width:100%;min-width:0;background:var(--bg);color:var(--text);border:1px solid var(--line);border-radius:6px;padding:9px}
-button{padding:10px 13px;border:0;border-radius:6px;background:var(--yellow);color:#111;font-weight:700;cursor:pointer}
+h2{font-size:16px;margin:0}
+p,.muted,small{color:var(--muted)}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px;margin-top:10px}
+.panelhead{margin-bottom:8px}
+.grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px}
+.filtergrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.field label,.ranges label{display:block;color:var(--muted);font-size:12px;margin-bottom:4px}
+input,select{width:100%;min-width:0;background:var(--bg);color:var(--text);border:1px solid var(--line);border-radius:6px;padding:8px}
+input[type=checkbox]{width:auto;accent-color:var(--yellow)}
+button{padding:9px 12px;border:0;border-radius:6px;background:var(--yellow);color:#111;font-weight:700;cursor:pointer}
 button.secondary{background:transparent;color:var(--text);border:1px solid var(--line)}
 button:disabled{opacity:.5}
-.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;align-items:center}
-.filtergrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
-.filter{border:1px solid var(--line);border-radius:8px;padding:10px;min-width:0}
-.filtertop{display:flex;align-items:center;gap:8px;margin-bottom:8px;font-weight:700}
-.filtertop input{width:auto;accent-color:var(--yellow)}
-.ranges{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:12px}
-.stat{background:var(--panel);border:1px solid var(--line);padding:10px;border-radius:8px}
-.stat small{display:block;color:var(--muted)}
-.stat strong{font-size:20px}
-.tablewrap{overflow:auto;margin-top:10px}
+.actions{justify-content:flex-start;margin-top:10px}
+.filter{border:1px solid var(--line);border-radius:8px;padding:9px;min-width:0}
+.filtertop{display:flex;align-items:center;gap:7px;margin-bottom:8px;font-weight:700}
+.ranges{display:grid;grid-template-columns:1fr 1fr;gap:7px}
+.macd-component{border-top:1px solid var(--line);padding-top:7px;margin-top:7px}
+.macd-component-title{display:flex;align-items:center;gap:7px;font-weight:700;margin-bottom:5px}
+.stats{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px;margin-top:10px}
+.stat{background:var(--panel);border:1px solid var(--line);padding:9px;border-radius:8px;min-width:0}
+.stat small{display:block}.stat strong{font-size:19px;overflow-wrap:anywhere}
+.tablewrap{overflow:auto;margin-top:9px}
 table{border-collapse:collapse;width:100%;min-width:500px}
-th,td{padding:10px 9px;text-align:left;border-bottom:1px solid var(--line);white-space:nowrap}
+th,td{padding:9px;text-align:left;border-bottom:1px solid var(--line);white-space:nowrap}
 th{color:var(--muted);cursor:pointer;user-select:none}
 th:hover{color:var(--yellow)}
 tr:hover{background:#202833}
-.badge{border:1px solid var(--line);padding:5px 9px;border-radius:20px;color:var(--muted);font-size:12px}
-#status{white-space:pre-wrap;color:var(--muted);font-size:12px;margin-top:10px}
+.badge{border:1px solid var(--line);padding:4px 9px;border-radius:20px;color:var(--muted);font-size:12px}
+#status{white-space:pre-wrap;color:var(--muted);font-size:12px;margin-top:9px}
 progress{width:100%;height:8px;margin-top:10px;accent-color:var(--yellow)}
-#search{max-width:250px}
-.tracker-detected{font-weight:700;color:var(--yellow)}
-.tracker-tracking{color:var(--text)}
-.tracker-heading{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
-.tracker-heading h2{margin:0}
-.macd-component{border-top:1px solid var(--line);padding-top:8px;margin-top:8px}
-.macd-component:first-of-type{border-top:0;margin-top:0;padding-top:0}
-.macd-component-title{display:flex;align-items:center;gap:7px;font-weight:700;margin-bottom:7px}
-.macd-component-title input{width:auto;accent-color:var(--yellow)}
-.macd-component .ranges input{padding:7px}
-@media(max-width:650px){
-main{padding:9px}
-.grid{grid-template-columns:repeat(2,minmax(0,1fr))}
-.filtergrid{grid-template-columns:1fr}
-.stats{grid-template-columns:repeat(2,1fr)}
-h1{font-size:18px}
+.tabs{justify-content:flex-start;margin-top:12px;border-bottom:1px solid var(--line);padding-bottom:8px}
+.tabbtn{background:transparent;color:var(--muted);border:1px solid var(--line)}
+.tabbtn.active{background:var(--yellow);color:#111;border-color:var(--yellow)}
+.tabpage[hidden],.panelbody[hidden]{display:none!important}
+.signalcols{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.signalhead{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.signalhead h2{margin:0}
+.bull{color:var(--green);font-weight:700}
+.bear{color:var(--red);font-weight:700}
+.signalpanel{border:1px solid var(--line);border-radius:9px;padding:10px;min-width:0}
+.signalpanel.bullborder{border-top:3px solid var(--green)}
+.signalpanel.bearborder{border-top:3px solid var(--red)}
+.checklist{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px}
+.checkitem{display:flex;gap:6px;align-items:center;border:1px solid var(--line);border-radius:6px;padding:7px}
+.checkitem label{font-size:12px}
+.tracker-detected{color:var(--yellow);font-weight:700}
+@media(max-width:700px){
+ main{padding:8px}.grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .filtergrid{grid-template-columns:1fr}.stats{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .signalcols{grid-template-columns:1fr}.checklist{grid-template-columns:repeat(2,minmax(0,1fr))}
+ h1{font-size:18px}
 }
 </style>
 </head>
@@ -64,1078 +71,542 @@ h1{font-size:18px}
 <h1>BINANCE FUTURES SCANNER</h1>
 <span id="badge" class="badge">READY</span>
 </header>
-<p>Public Binance USDⓈ-M perpetual market data. Scanner only — it does not place trades.</p>
+<p>Public Binance USDⓈ-M perpetual market data. No API key required. This scanner does not place trades.</p>
 
+<div class="tabs">
+<button class="tabbtn active" data-tab="mainTab">Main Scanner</button>
+<button class="tabbtn" data-tab="signalTab">RSI + Supertrend Signals</button>
+</div>
+
+<!-- MAIN SCANNER -->
+<div id="mainTab" class="tabpage">
 <section class="panel">
-<h2>Scan settings</h2>
+<div class="panelhead"><h2>Scan settings</h2><button class="secondary collapse" data-target="mainSettings">Collapse</button></div>
+<div id="mainSettings" class="panelbody">
 <div class="grid">
-<div class="field"><label for="scope">Pairs to scan</label>
-<select id="scope">
-<option value="50">Top 50 by 24h volume</option>
-<option value="100" selected>Top 100 by 24h volume</option>
-<option value="200">Top 200 by 24h volume</option>
-<option value="all">All eligible pairs</option>
-</select></div>
-<div class="field"><label for="period">RSI period</label>
-<input id="period" type="number" min="2" max="50" value="14"></div>
-<div class="field"><label for="refresh">Auto-refresh</label>
-<select id="refresh">
-<option value="0">Off</option>
-<option value="30">Every 30 seconds</option>
-<option value="60">Every 60 seconds</option>
-<option value="120">Every 120 seconds</option>
-<option value="300">Every 300 seconds</option>
-</select></div>
-<div class="field"><label for="sort">Sort results</label>
-<select id="sort">
-<option value="extreme">Most extreme 5m RSI first</option>
-<option value="volume">24h quote volume: high to low</option>
-<option value="symbol">Pair: A–Z</option>
-<option value="rsiup">5m RSI: high to low</option>
-<option value="rsidown">5m RSI: low to high</option>
-<option value="custom" hidden>Custom column sort</option>
-</select></div>
-<div class="field"><label for="search">Search pair</label>
-<input id="search" placeholder="e.g. BTCUSDT"></div>
-<div class="field"><label for="minvol">Minimum 24h quote volume (USDT)</label>
-<input id="minvol" type="number" min="0" value="0"></div>
+<div class="field"><label>Pairs to scan</label><select id="scope"><option value="50">Top 50 by 24h volume</option><option value="100" selected>Top 100 by 24h volume</option><option value="200">Top 200 by 24h volume</option><option value="all">All eligible pairs</option></select></div>
+<div class="field"><label>RSI period</label><input id="period" type="number" min="2" max="50" value="14"></div>
+<div class="field"><label>Auto-refresh</label><select id="refresh"><option value="0">Off</option><option value="30">Every 30 seconds</option><option value="60">Every 60 seconds</option><option value="120">Every 120 seconds</option><option value="300">Every 300 seconds</option></select></div>
+<div class="field"><label>Sort results</label><select id="sort"><option value="extreme">Most extreme 5m RSI</option><option value="volume">24h volume high to low</option><option value="symbol">Pair A–Z</option><option value="rsiup">5m RSI high to low</option><option value="rsidown">5m RSI low to high</option><option value="custom" hidden>Custom sort</option></select></div>
+<div class="field"><label>Search pair</label><input id="search" placeholder="BTCUSDT"></div>
+<div class="field"><label>Minimum 24h quote volume (USDT)</label><input id="minvol" type="number" min="0" value="0"></div>
+</div>
 </div>
 </section>
 
 <section class="panel">
-<h2>RSI filters — select the timeframes to apply</h2>
-<p>All selected filters use AND logic. RSI values use the latest available candle, including its current forming candle. The 24h RSI uses Binance's 1-day candle.</p>
+<div class="panelhead"><h2>RSI filters</h2><button class="secondary collapse" data-target="rsiBody">Collapse</button></div>
+<div id="rsiBody" class="panelbody">
+<p>All selected filters use AND logic. Live RSI includes the current forming candle. 24h RSI uses the 1-day candle.</p>
 <div id="rsiFilters" class="filtergrid"></div>
+</div>
 </section>
 
 <section class="panel">
-<h2>MACD filters — select components and timeframes</h2>
-<p>Standard MACD settings: 12, 26, 9. DIF = EMA 12 − EMA 26; DEA = 9-period EMA of DIF; MACD histogram = DIF − DEA. Values use the latest available candle, including the current forming candle. Every selected component/timeframe filter uses AND logic. Negative and positive values are supported.</p>
+<div class="panelhead"><h2>MACD / DIF / DEA filters</h2><button class="secondary collapse" data-target="macdBody">Collapse</button></div>
+<div id="macdBody" class="panelbody">
+<p>Standard MACD 12/26/9. DIF = EMA12 − EMA26; DEA = signal line; histogram = DIF − DEA. All selected conditions use AND logic.</p>
 <div id="macdFilters" class="filtergrid"></div>
+</div>
 </section>
 
 <section class="panel">
-<h2>Price-change filters — select the timeframes to apply</h2>
-<p>Intraday changes compare the current forming candle price with the previous candle's close. The 24h change uses Binance's 24h ticker.</p>
+<div class="panelhead"><h2>Price-change filters</h2><button class="secondary collapse" data-target="changeBody">Collapse</button></div>
+<div id="changeBody" class="panelbody">
+<p>Intraday changes use the current live candle against the previous candle's close. 24h uses Binance's ticker change.</p>
 <div id="changeFilters" class="filtergrid"></div>
+</div>
 </section>
 
 <section class="panel">
-<h2>Supertrend filters — select timeframes and direction</h2>
-<p>Supertrend uses ATR(10) with a multiplier of 3. Choose Bullish or Bearish for each timeframe. The latest available candle, including its current forming candle, is used. All selected Supertrend conditions combine with your other filters using AND logic.</p>
+<div class="panelhead"><h2>Supertrend filters</h2><button class="secondary collapse" data-target="stBody">Collapse</button></div>
+<div id="stBody" class="panelbody">
+<p>ATR(10), multiplier 3. Select the required direction for each timeframe. Every selected condition must match.</p>
 <div id="supertrendFilters" class="filtergrid"></div>
+</div>
 </section>
 
 <section class="panel">
-<h2>Volume filters</h2>
+<div class="panelhead"><h2>Volume filters</h2><button class="secondary collapse" data-target="volumeBody">Collapse</button></div>
+<div id="volumeBody" class="panelbody">
 <div class="filtergrid">
-<div class="filter">
-<div class="filtertop">
-<input id="useVol24" type="checkbox">
-<label for="useVol24">24h quote volume (USDT)</label>
-</div>
-<div class="ranges">
-<div><label for="vol24min">Minimum</label>
-<input id="vol24min" type="number" min="0" placeholder="No minimum"></div>
-<div><label for="vol24max">Maximum</label>
-<input id="vol24max" type="number" min="0" placeholder="No maximum"></div>
-</div>
-</div>
-<div class="filter">
-<div class="filtertop">
-<input id="useVol4" type="checkbox">
-<label for="useVol4">4h candle quote-volume change</label>
-</div>
-<div class="ranges">
-<div><label for="vol4min">Minimum %</label>
-<input id="vol4min" type="number" step="0.1" placeholder="No minimum"></div>
-<div><label for="vol4max">Maximum %</label>
-<input id="vol4max" type="number" step="0.1" placeholder="No maximum"></div>
-</div>
-<p class="muted">Compares the latest completed 4h candle with the preceding completed 4h candle.</p>
+<div class="filter"><div class="filtertop"><input id="useVol24" type="checkbox"><label for="useVol24">24h quote volume (USDT)</label></div><div class="ranges"><div><label>Minimum</label><input id="vol24min" type="number" min="0" placeholder="No minimum"></div><div><label>Maximum</label><input id="vol24max" type="number" min="0" placeholder="No maximum"></div></div></div>
+<div class="filter"><div class="filtertop"><input id="useVol4" type="checkbox"><label for="useVol4">4h completed-candle volume change</label></div><div class="ranges"><div><label>Minimum %</label><input id="vol4min" type="number" step="0.1" placeholder="No minimum"></div><div><label>Maximum %</label><input id="vol4max" type="number" step="0.1" placeholder="No maximum"></div></div></div>
 </div>
 </div>
 </section>
 
 <div class="actions">
-<button id="start">Start scanning</button>
-<button id="once" class="secondary">Scan once</button>
-<button id="stop" class="secondary">Stop</button>
-<button id="clear" class="secondary">Clear results</button>
-<button id="csv" class="secondary">Export CSV</button>
+<button id="start">Start scanning</button><button id="once" class="secondary">Scan once</button><button id="stop" class="secondary">Stop</button><button id="clear" class="secondary">Clear results</button><button id="csv" class="secondary">Export CSV</button>
 </div>
-
 <progress id="progress" max="100" value="0"></progress>
-<div id="status">Ready. Select your filters and start scanning.</div>
-
+<div id="status">Ready. Select filters and start scanning.</div>
 <div class="stats">
 <div class="stat"><small>Pairs selected</small><strong id="pairCount">0</strong></div>
 <div class="stat"><small>Matching results</small><strong id="matchCount">0</strong></div>
 <div class="stat"><small>Request errors</small><strong id="errorCount">0</strong></div>
-<div class="stat"><small>Indicator filters enabled</small><strong id="rsiCount">1</strong></div>
+<div class="stat"><small>Filters enabled</small><strong id="rsiCount">1</strong></div>
+<div class="stat"><small>Elapsed</small><strong id="elapsed">0s</strong></div>
 </div>
 
 <section class="panel">
-<div class="tracker-heading">
-<h2>1m RSI Movement Tracker (40 → 70+)</h2>
-<button id="trackerToggle" class="secondary" type="button" aria-expanded="true">Collapse</button>
-</div>
+<div class="tracker-heading"><h2>1m RSI Movement Tracker (40 → 70+)</h2><button id="trackerToggle" class="secondary">Collapse</button></div>
 <div id="trackerContent">
-<p>
-Display-only tracker using RSI(14), regardless of the RSI period selected above.
-A pair is armed when 1m RSI reaches 40 or below. Its signal appears when RSI
-subsequently reaches 70 or above, remains visible while RSI stays at or above
-70, and resets when RSI drops below 70. This tracker does not affect the main
-scanner's filter logic.
-</p>
-<div class="tablewrap" style="max-height:320px;overflow:auto">
-<table style="min-width:350px">
-<thead>
-<tr>
-<th>Pair</th>
-<th>Live 1m RSI(14)</th>
-<th>Movement status</th>
-</tr>
-</thead>
-<tbody id="trackerRows">
-<tr><td colspan="3">Start a scan to monitor pairs.</td></tr>
-</tbody>
-</table>
+<p>Uses RSI(14) independently of the selected RSI period. Arms at RSI ≤ 40, then detects RSI ≥ 70. State is saved in this browser.</p>
+<div class="tablewrap" style="max-height:300px"><table style="min-width:350px"><thead><tr><th>Pair</th><th>Live 1m RSI(14)</th><th>Status</th></tr></thead><tbody id="trackerRows"><tr><td colspan="3">Start a scan to monitor pairs.</td></tr></tbody></table></div>
 </div>
-<p class="muted">TRACKING means RSI has reached 40 or below and is waiting for 70. DETECTED means RSI has reached 70 after being armed. Tracking state is saved in this browser.</p>
+</section>
+
+<section class="panel"><h2>Matching pairs</h2><div class="tablewrap"><table><thead id="thead"></thead><tbody id="rows"><tr><td>Run a scan to display results.</td></tr></tbody></table></div></section>
+</div>
+
+<!-- INDEPENDENT SIGNAL SCANNER -->
+<div id="signalTab" class="tabpage" hidden>
+<section class="panel">
+<div class="panelhead"><h2>Signal scan settings</h2><button class="secondary collapse" data-target="signalSettings">Collapse</button></div>
+<div id="signalSettings" class="panelbody">
+<div class="grid">
+<div class="field"><label>Pairs to scan</label><select id="sigScope"><option value="50">Top 50</option><option value="100" selected>Top 100</option><option value="200">Top 200</option><option value="all">All eligible pairs</option></select></div>
+<div class="field"><label>RSI period</label><input id="sigPeriod" type="number" min="2" max="50" value="14"></div>
+<div class="field"><label>Auto-refresh</label><select id="sigRefresh"><option value="0">Off</option><option value="30">Every 30 seconds</option><option value="60">Every 60 seconds</option><option value="120">Every 120 seconds</option><option value="300">Every 300 seconds</option></select></div>
+<div class="field"><label>Minimum 24h quote volume (USDT)</label><input id="sigMinVol" type="number" min="0" value="0"></div>
+<div class="field"><label>Price-change timeframe</label><select id="sigChangeTf"><option>1m</option><option>5m</option><option>15m</option><option>30m</option><option>1h</option><option>2h</option><option>4h</option><option>6h</option><option>12h</option><option value="24h" selected>24h</option></select></div>
+<div class="field"><label>Price-change threshold (%)</label><input id="sigChangeThreshold" type="number" min="0" step="0.1" value="10"></div>
+</div>
 </div>
 </section>
 
 <section class="panel">
-<h2>Matching pairs</h2>
-<div class="tablewrap">
-<table>
-<thead id="thead"></thead>
-<tbody id="rows"><tr><td>Run a scan to display results.</td></tr></tbody>
-</table>
+<div class="panelhead"><h2>RSI confirmation — select multiple timeframes</h2><button class="secondary collapse" data-target="sigRsiBody">Collapse</button></div>
+<div id="sigRsiBody" class="panelbody">
+<p>Every selected RSI timeframe must pass. Default bullish RSI is above 60; default bearish RSI is below 40. Leave a timeframe unchecked to ignore it.</p>
+<div class="grid">
+<div class="field"><label>Bullish RSI minimum (strictly above)</label><input id="bullRsi" type="number" min="0" max="100" value="60"></div>
+<div class="field"><label>Bearish RSI maximum (strictly below)</label><input id="bearRsi" type="number" min="0" max="100" value="40"></div>
 </div>
-<p class="muted">No colour classification or special 5m RSI exclusion is applied. A pair appears when it satisfies every selected filter. Only enabled RSI, Supertrend, DIF, DEA, MACD histogram, price-change and volume columns are displayed, alongside the pair and last price.</p>
+<div id="sigRsiChecks" class="checklist"></div>
+</div>
 </section>
+
+<section class="panel">
+<div class="panelhead"><h2>Supertrend confirmation — select multiple timeframes</h2><button class="secondary collapse" data-target="sigStBody">Collapse</button></div>
+<div id="sigStBody" class="panelbody">
+<p>All selected Supertrend timeframes must agree with the signal direction. Mixed directions mean no signal. At least one RSI or Supertrend timeframe must be selected.</p>
+<div id="sigStChecks" class="checklist"></div>
+</div>
+</section>
+
+<section class="panel">
+<div class="panelhead"><h2>Optional DEA confirmation</h2><button class="secondary collapse" data-target="sigDeaBody">Collapse</button></div>
+<div id="sigDeaBody" class="panelbody">
+<div class="filtertop"><input id="sigUseDea" type="checkbox"><label for="sigUseDea">Require DEA confirmation</label></div>
+<div class="grid">
+<div class="field"><label>DEA timeframe</label><select id="sigDeaTf"><option>1m</option><option>5m</option><option>15m</option><option>30m</option><option>1h</option><option>2h</option><option>4h</option><option>6h</option><option>12h</option><option value="24h">24h (1D)</option></select></div>
+<div class="field"><label>Bullish minimum DEA</label><input id="sigBullDea" type="number" step="any" value="0"></div>
+<div class="field"><label>Bearish maximum DEA</label><input id="sigBearDea" type="number" step="any" value="0"></div>
+</div>
+<p>When enabled, bullish signals require DEA at or above the bullish minimum; bearish signals require DEA at or below the bearish maximum.</p>
+</div>
+</section>
+
+<div class="actions">
+<button id="sigStart">Start signal scan</button><button id="sigOnce" class="secondary">Scan once</button><button id="sigStop" class="secondary">Stop</button><button id="sigCsv" class="secondary">Export signal CSV</button>
+</div>
+<progress id="sigProgress" max="100" value="0"></progress>
+<div id="sigStatus" class="muted">Configure signal conditions and start a scan.</div>
+<div class="stats">
+<div class="stat"><small>Pairs selected</small><strong id="sigPairs">0</strong></div>
+<div class="stat"><small>Bullish matches</small><strong id="bullCount">0</strong></div>
+<div class="stat"><small>Bearish matches</small><strong id="bearCount">0</strong></div>
+<div class="stat"><small>Request errors</small><strong id="sigErrors">0</strong></div>
+<div class="stat"><small>Elapsed</small><strong id="sigElapsed">0s</strong></div>
+</div>
+
+<div class="signalcols" style="margin-top:12px">
+<section class="signalpanel bullborder">
+<div class="signalhead"><h2 class="bull">🟢 Bullish</h2><select id="bullSort" style="width:auto"><option value="rsiHigh">RSI high to low</option><option value="rsiLow">RSI low to high</option><option value="az">Token A–Z</option></select></div>
+<div class="tablewrap"><table><thead id="bullHead"></thead><tbody id="bullRows"><tr><td>Run a signal scan.</td></tr></tbody></table></div>
+</section>
+<section class="signalpanel bearborder">
+<div class="signalhead"><h2 class="bear">🔴 Bearish</h2><select id="bearSort" style="width:auto"><option value="rsiLow">RSI low to high</option><option value="rsiHigh">RSI high to low</option><option value="az">Token A–Z</option></select></div>
+<div class="tablewrap"><table><thead id="bearHead"></thead><tbody id="bearRows"><tr><td>Run a signal scan.</td></tr></tbody></table></div>
+</section>
+</div>
+</div>
 </main>
 
 <script>
 'use strict';
-
 const API='https://fapi.binance.com';
-
-const RSI_TFS=[
- ['1m','1m'],['5m','5m'],['15m','15m'],['30m','30m'],
- ['1h','1h'],['2h','2h'],['4h','4h'],['6h','6h'],
- ['12h','12h'],['24h','1d']
-];
-
-const MACD_TFS=[
- ['1m','1m'],['5m','5m'],['15m','15m'],['30m','30m'],
- ['1h','1h'],['2h','2h'],['4h','4h'],['6h','6h'],
- ['12h','12h'],['24h','1d']
-];
-
-const CHANGE_TFS=[
- ['1m','1m'],['5m','5m'],['15m','15m'],['30m','30m'],
- ['1h','1h'],['2h','2h'],['4h','4h'],['6h','6h'],
- ['12h','12h'],['24h','24h']
-];
-
-const SUPERTREND_TFS=[
- ['1m','1m'],['5m','5m'],['15m','15m'],['30m','30m'],
- ['1h','1h'],['2h','2h'],['4h','4h'],['6h','6h'],
- ['12h','12h'],['1D','1d']
-];
-
+const RSI_TFS=[['1m','1m'],['5m','5m'],['15m','15m'],['30m','30m'],['1h','1h'],['2h','2h'],['4h','4h'],['6h','6h'],['12h','12h'],['24h','1d']];
+const MACD_TFS=RSI_TFS;
+const CHANGE_TFS=[['1m','1m'],['5m','5m'],['15m','15m'],['30m','30m'],['1h','1h'],['2h','2h'],['4h','4h'],['6h','6h'],['12h','12h'],['24h','24h']];
+const ST_TFS=[['1m','1m'],['5m','5m'],['15m','15m'],['30m','30m'],['1h','1h'],['2h','2h'],['4h','4h'],['6h','6h'],['12h','12h'],['1D','1d']];
 const $=id=>document.getElementById(id);
-
-let busy=false;
-let cancelled=false;
-let autoTimer=null;
-let results=[];
-let lastErrorCount=0;
-let lastErrorMessage='';
-let scanId=0;
-
+let activeTab='mainTab',busy=false,cancelled=false,scanId=0,autoTimer=null;
+let results=[],signalBull=[],signalBear=[],signalTimer=null;
+let errors=0,lastError='',startedAt=0,doneCount=0,totalCount=0;
 const activeRequests=new Set();
-let sortState={key:'extreme',direction:'desc'};
+const TRACKER_KEY='binanceScannerRsiMoveTrackerV1';
+let trackerStates={},trackerUniverse=[],trackerCollapsed=false;
+try{trackerStates=JSON.parse(localStorage.getItem(TRACKER_KEY)||'{}')||{};}catch{}
+try{trackerCollapsed=localStorage.getItem('binanceScannerTrackerCollapsedV1')==='1';}catch{}
 
-const TRACKER_STORAGE_KEY='binanceScannerRsiMoveTrackerV1';
-let trackerStates={};
-let trackerUniverse=[];
-let trackerLastUpdated=null;
-let trackerCollapsed=false;
-
-try{
- trackerStates=JSON.parse(localStorage.getItem(TRACKER_STORAGE_KEY)||'{}')||{};
-}catch{
- trackerStates={};
+function setStatus(s){$('status').textContent=s}
+function setSigStatus(s){$('sigStatus').textContent=s}
+function saveTracker(){try{localStorage.setItem(TRACKER_KEY,JSON.stringify(trackerStates))}catch{}}
+function trackerUpdate(symbol,v){
+ if(!Number.isFinite(v))return;
+ let s=trackerStates[symbol]||{armed:false,detected:false};
+ if(s.detected){if(v<70){s.detected=false;s.armed=v<=40}}
+ else if(s.armed){if(v>=70){s.detected=true;s.armed=false}}
+ else if(v<=40)s.armed=true;
+ s.rsi=v;s.updatedAt=Date.now();trackerStates[symbol]=s;saveTracker();
 }
-
-try{
- trackerCollapsed=localStorage.getItem('binanceScannerTrackerCollapsedV1')==='1';
-}catch{
- trackerCollapsed=false;
+function renderTracker(){
+ const items=trackerUniverse.map(symbol=>({symbol,s:trackerStates[symbol]})).filter(x=>x.s&&(x.s.armed||x.s.detected)).sort((a,b)=>(Number(b.s.detected)-Number(a.s.detected))||((b.s.rsi||0)-(a.s.rsi||0)));
+ $('trackerRows').innerHTML=items.map(x=>`<tr><td><b>${x.symbol}</b></td><td>${Number(x.s.rsi).toFixed(2)}</td><td class="${x.s.detected?'tracker-detected':''}">${x.s.detected?'DETECTED':'TRACKING'}</td></tr>`).join('')||'<tr><td colspan="3">No active movements. Waiting for RSI ≤ 40.</td></tr>';
 }
-
-function setTrackerCollapsed(collapsed){
- trackerCollapsed=!!collapsed;
- $('trackerContent').hidden=trackerCollapsed;
- $('trackerToggle').textContent=trackerCollapsed?'Expand':'Collapse';
- $('trackerToggle').setAttribute('aria-expanded',String(!trackerCollapsed));
- try{
-  localStorage.setItem('binanceScannerTrackerCollapsedV1',trackerCollapsed?'1':'0');
- }catch(e){}
+function setTrackerCollapsed(v){trackerCollapsed=v;$('trackerContent').hidden=v;$('trackerToggle').textContent=v?'Expand':'Collapse';try{localStorage.setItem('binanceScannerTrackerCollapsedV1',v?'1':'0')}catch{}}
+function addChecks(id,items,prefix,checked=[]){
+ $(id).innerHTML=items.map(([label])=>`<div class="checkitem"><input type="checkbox" id="${prefix}${label}" ${checked.includes(label)?'checked':''}><label for="${prefix}${label}">${label}</label></div>`).join('');
 }
-
-function saveTrackerStates(){
- try{
-  localStorage.setItem(TRACKER_STORAGE_KEY,JSON.stringify(trackerStates));
- }catch(e){}
-}
-
-function updateRsiMovement(symbol,value){
- if(!Number.isFinite(value))return;
- const state=trackerStates[symbol]||{armed:false,detected:false,rsi:null,updatedAt:null};
-
- if(state.detected){
-  if(value<70){
-   state.detected=false;
-   state.armed=false;
-   if(value<=40)state.armed=true;
-  }
- }else if(state.armed){
-  if(value>=70){
-   state.detected=true;
-   state.armed=false;
-  }
- }else if(value<=40){
-  state.armed=true;
- }
-
- state.rsi=value;
- state.updatedAt=Date.now();
- trackerStates[symbol]=state;
- trackerLastUpdated=state.updatedAt;
- saveTrackerStates();
-}
-
-function renderRsiMovementTracker(){
- const active=trackerUniverse
-  .map(symbol=>({symbol,state:trackerStates[symbol]}))
-  .filter(item=>item.state&&(item.state.armed||item.state.detected))
-  .sort((a,b)=>{
-   if(a.state.detected!==b.state.detected)return a.state.detected?-1:1;
-   return (b.state.rsi??-Infinity)-(a.state.rsi??-Infinity);
-  });
-
- $('trackerRows').innerHTML=active.map(item=>{
-  const state=item.state;
-  const status=state.detected?'DETECTED':'TRACKING';
-  const css=state.detected?'tracker-detected':'tracker-tracking';
-  return `<tr>
-   <td><strong>${item.symbol}</strong></td>
-   <td>${Number.isFinite(state.rsi)?state.rsi.toFixed(2):'—'}</td>
-   <td class="${css}">${status}</td>
-  </tr>`;
- }).join('')||'<tr><td colspan="3">No active movements. Waiting for RSI ≤ 40.</td></tr>';
-}
-
 function buildFilters(){
- $('rsiFilters').innerHTML=RSI_TFS.map(([label])=>`
- <div class="filter">
-  <div class="filtertop">
-   <input type="checkbox" id="rsiOn_${label}" ${label==='5m'?'checked':''}>
-   <label for="rsiOn_${label}">RSI ${label}</label>
-  </div>
-  <div class="ranges">
-   <div><label for="rsiMin_${label}">Minimum</label>
-   <input id="rsiMin_${label}" type="number" min="0" max="100" step="0.1" placeholder="No minimum"></div>
-   <div><label for="rsiMax_${label}">Maximum</label>
-   <input id="rsiMax_${label}" type="number" min="0" max="100" step="0.1" placeholder="No maximum"></div>
-  </div>
- </div>`).join('');
-
- $('macdFilters').innerHTML=MACD_TFS.map(([label])=>`
- <div class="filter">
-  <div class="filtertop"><strong>${label} timeframe</strong></div>
-  ${[['dif','DIF'],['dea','DEA'],['hist','MACD']].map(([key,name])=>`
-   <div class="macd-component">
-    <div class="macd-component-title">
-     <input type="checkbox" id="macd_${key}On_${label}">
-     <label for="macd_${key}On_${label}">${name}</label>
-    </div>
-    <div class="ranges">
-     <div><label for="macd_${key}Min_${label}">Minimum</label>
-     <input id="macd_${key}Min_${label}" type="number" step="any" placeholder="No minimum"></div>
-     <div><label for="macd_${key}Max_${label}">Maximum</label>
-     <input id="macd_${key}Max_${label}" type="number" step="any" placeholder="No maximum"></div>
-    </div>
-   </div>`).join('')}
- </div>`).join('');
-
- $('supertrendFilters').innerHTML=SUPERTREND_TFS.map(([label])=>`
- <div class="filter">
-  <div class="filtertop">
-   <input type="checkbox" id="stOn_${label}">
-   <label for="stOn_${label}">Supertrend ${label}</label>
-  </div>
-  <div class="field">
-   <label for="stDir_${label}">Direction</label>
-   <select id="stDir_${label}">
-    <option value="Bullish">Bullish</option>
-    <option value="Bearish">Bearish</option>
-   </select>
-  </div>
- </div>`).join('');
-
- $('changeFilters').innerHTML=CHANGE_TFS.map(([label])=>`
- <div class="filter">
-  <div class="filtertop">
-   <input type="checkbox" id="chgOn_${label}">
-   <label for="chgOn_${label}">Price change ${label}</label>
-  </div>
-  <div class="ranges">
-   <div><label for="chgMin_${label}">Minimum %</label>
-   <input id="chgMin_${label}" type="number" step="0.1" placeholder="No minimum"></div>
-   <div><label for="chgMax_${label}">Maximum %</label>
-   <input id="chgMax_${label}" type="number" step="0.1" placeholder="No maximum"></div>
-  </div>
- </div>`).join('');
+ $('rsiFilters').innerHTML=RSI_TFS.map(([l])=>`<div class="filter"><div class="filtertop"><input type="checkbox" id="rsiOn_${l}" ${l==='5m'?'checked':''}><label for="rsiOn_${l}">RSI ${l}</label></div><div class="ranges"><div><label>Minimum</label><input id="rsiMin_${l}" type="number" min="0" max="100" step=".1" placeholder="No minimum"></div><div><label>Maximum</label><input id="rsiMax_${l}" type="number" min="0" max="100" step=".1" placeholder="No maximum"></div></div></div>`).join('');
+ $('macdFilters').innerHTML=MACD_TFS.map(([l])=>`<div class="filter"><b>${l}</b>${[['dif','DIF'],['dea','DEA'],['hist','MACD']].map(([k,n])=>`<div class="macd-component"><div class="macd-component-title"><input type="checkbox" id="macd_${k}On_${l}"><label for="macd_${k}On_${l}">${n}</label></div><div class="ranges"><div><label>Minimum</label><input id="macd_${k}Min_${l}" type="number" step="any" placeholder="No minimum"></div><div><label>Maximum</label><input id="macd_${k}Max_${l}" type="number" step="any" placeholder="No maximum"></div></div></div>`).join('')}</div>`).join('');
+ $('supertrendFilters').innerHTML=ST_TFS.map(([l])=>`<div class="filter"><div class="filtertop"><input type="checkbox" id="stOn_${l}"><label for="stOn_${l}">Supertrend ${l}</label></div><label>Direction</label><select id="stDir_${l}"><option>Bullish</option><option>Bearish</option></select></div>`).join('');
+ $('changeFilters').innerHTML=CHANGE_TFS.map(([l])=>`<div class="filter"><div class="filtertop"><input type="checkbox" id="chgOn_${l}"><label for="chgOn_${l}">Price change ${l}</label></div><div class="ranges"><div><label>Minimum %</label><input id="chgMin_${l}" type="number" step=".1" placeholder="No minimum"></div><div><label>Maximum %</label><input id="chgMax_${l}" type="number" step=".1" placeholder="No maximum"></div></div></div>`).join('');
+ addChecks('sigRsiChecks',RSI_TFS,'sr_',['15m','1D'].filter(x=>RSI_TFS.some(y=>y[0]===x)));
+ addChecks('sigStChecks',ST_TFS,'ss_',['15m']);
+}
+function n(id){const v=$(id).value.trim();return v===''?null:Number(v)}
+function on(id){return $(id).checked}
+function range(min,max,label){
+ if(min!==null&&max!==null&&min>max)throw Error(label+': minimum cannot exceed maximum');
+}
+function inRange(v,min,max){return Number.isFinite(v)&&(min===null||v>=min)&&(max===null||v<=max)}
+function fmt(v){return Number.isFinite(v)?Number(v).toLocaleString(undefined,{maximumFractionDigits:8}):'—'}
+function pct(v){return (v>0?'+':'')+v.toFixed(2)+'%'}
+function ema(a,p){
+ const o=Array(a.length).fill(NaN);if(a.length<p)return o;
+ let s=0;for(let i=0;i<p;i++)s+=a[i];let prev=s/p;o[p-1]=prev;const al=2/(p+1);
+ for(let i=p;i<a.length;i++){prev=a[i]*al+prev*(1-al);o[i]=prev}return o;
+}
+function rsi(a,p){
+ if(a.length<p+1)return NaN;let g=0,l=0;
+ for(let i=1;i<=p;i++){const d=a[i]-a[i-1];if(d>0)g+=d;else l-=d}
+ let ag=g/p,al=l/p;
+ for(let i=p+1;i<a.length;i++){const d=a[i]-a[i-1];ag=(ag*(p-1)+Math.max(d,0))/p;al=(al*(p-1)+Math.max(-d,0))/p}
+ return al===0?(ag===0?50:100):100-100/(1+ag/al);
+}
+function macd(a){
+ if(a.length<35)return {dif:NaN,dea:NaN,hist:NaN};
+ const f=ema(a,12),s=ema(a,26),d=[];
+ for(let i=0;i<a.length;i++)if(Number.isFinite(f[i])&&Number.isFinite(s[i]))d.push(f[i]-s[i]);
+ const e=ema(d,9),dif=d.at(-1),dea=e.at(-1);return {dif,dea,hist:dif-dea};
+}
+function supertrend(k,p=10,m=3){
+ if(!k||k.length<p+2)return 'Unknown';
+ const h=k.map(x=>+x[2]),l=k.map(x=>+x[3]),c=k.map(x=>+x[4]),N=k.length,tr=Array(N).fill(0),atr=Array(N).fill(NaN);
+ for(let i=0;i<N;i++)tr[i]=i===0?h[i]-l[i]:Math.max(h[i]-l[i],Math.abs(h[i]-c[i-1]),Math.abs(l[i]-c[i-1]));
+ let sum=0;for(let i=1;i<=p;i++)sum+=tr[i];atr[p]=sum/p;
+ for(let i=p+1;i<N;i++)atr[i]=(atr[i-1]*(p-1)+tr[i])/p;
+ const u=Array(N).fill(NaN),d=Array(N).fill(NaN),t=Array(N).fill(1);
+ for(let i=p;i<N;i++){
+  const mid=(h[i]+l[i])/2,bu=mid+m*atr[i],bl=mid-m*atr[i];
+  if(i===p){u[i]=bu;d[i]=bl;t[i]=c[i]>=mid?1:-1;continue}
+  u[i]=(bu<u[i-1]||c[i-1]>u[i-1])?bu:u[i-1];
+  d[i]=(bl>d[i-1]||c[i-1]<d[i-1])?bl:d[i-1];
+  t[i]=c[i]>u[i-1]?1:c[i]<d[i-1]?-1:t[i-1];
+ }
+ return t[N-1]===1?'Bullish':'Bearish';
 }
 
-async function get(path){
- const controller=new AbortController();
- let timedOut=false;
- const timer=setTimeout(()=>{timedOut=true;controller.abort();},15000);
- activeRequests.add(controller);
-
+async function get(path,attempt=0){
+ const ctrl=new AbortController();activeRequests.add(ctrl);let timeout=false;
+ const timer=setTimeout(()=>{timeout=true;ctrl.abort()},15000);
  try{
-  const response=await fetch(API+path,{cache:'no-store',signal:controller.signal});
-  if(!response.ok)throw new Error('Binance HTTP '+response.status+' for '+path);
-  return await response.json();
+  const res=await fetch(API+path,{cache:'no-store',signal:ctrl.signal});
+  if(res.status===418)throw Object.assign(Error('Binance HTTP 418: IP temporarily restricted. Stop scanning and wait before retrying.'),{noRetry:true});
+  if(res.status===429)throw Object.assign(Error('Binance HTTP 429: rate limit. Backing off.'),{rateLimit:true});
+  if(!res.ok)throw Object.assign(Error('Binance HTTP '+res.status),{status:res.status});
+  return await res.json();
  }catch(e){
-  if(timedOut)throw new Error('Request timed out after 15 seconds: '+path);
-  if(controller.signal.aborted&&cancelled)throw new Error('Scan stopped.');
+  if(cancelled||ctrl.signal.aborted&&!timeout)throw Error('Scan stopped.');
+  if(attempt<2&&(timeout||e.rateLimit||e.status>=500)){
+   await new Promise(r=>setTimeout(r,e.rateLimit?2500:600*(attempt+1)));
+   if(cancelled)throw Error('Scan stopped.');
+   return get(path,attempt+1);
+  }
+  if(timeout)throw Error('Request timed out after 15 seconds: '+path);
   throw e;
- }finally{
-  clearTimeout(timer);
-  activeRequests.delete(controller);
- }
+ }finally{clearTimeout(timer);activeRequests.delete(ctrl)}
 }
-
-function num(id){
- const v=$(id).value.trim();
- return v===''?null:Number(v);
-}
-
-function enabled(id){return $(id).checked;}
-
-function validRange(min,max,label){
- if(min!==null&&max!==null&&min>max)throw new Error(label+': minimum cannot exceed maximum.');
-}
-
-function fmt(n){
- if(!Number.isFinite(n))return '—';
- return Number(n).toLocaleString(undefined,{maximumFractionDigits:8});
-}
-
-function pct(n){return (n>0?'+':'')+n.toFixed(2)+'%';}
-
-function emaSeries(values,period){
- const out=Array(values.length).fill(NaN);
- if(values.length<period)return out;
- let sum=0;
- for(let i=0;i<period;i++)sum+=values[i];
- let previous=sum/period;
- out[period-1]=previous;
- const alpha=2/(period+1);
- for(let i=period;i<values.length;i++){
-  previous=values[i]*alpha+previous*(1-alpha);
-  out[i]=previous;
- }
- return out;
-}
-
-function macdComponents(closes){
- if(closes.length<35)return {dif:NaN,dea:NaN,hist:NaN};
- const fast=emaSeries(closes,12);
- const slow=emaSeries(closes,26);
- const difSeries=[];
- for(let i=0;i<closes.length;i++){
-  if(Number.isFinite(fast[i])&&Number.isFinite(slow[i]))difSeries.push(fast[i]-slow[i]);
- }
- const deaSeries=emaSeries(difSeries,9);
- const dif=difSeries.length?difSeries[difSeries.length-1]:NaN;
- const dea=deaSeries.length?deaSeries[deaSeries.length-1]:NaN;
- return {dif,dea,hist:dif-dea};
-}
-
-function rsi(values,period){
- if(values.length<period+1)return NaN;
- let gains=0,losses=0;
- for(let i=1;i<=period;i++){
-  const d=values[i]-values[i-1];
-  if(d>0)gains+=d;
-  else losses-=d;
- }
- let avgGain=gains/period;
- let avgLoss=losses/period;
- for(let i=period+1;i<values.length;i++){
-  const d=values[i]-values[i-1];
-  avgGain=(avgGain*(period-1)+Math.max(d,0))/period;
-  avgLoss=(avgLoss*(period-1)+Math.max(-d,0))/period;
- }
- if(avgLoss===0)return avgGain===0?50:100;
- return 100-(100/(1+avgGain/avgLoss));
-}
-
-/* Supertrend: Wilder ATR(10), multiplier 3. */
-function supertrend(candles,period=10,multiplier=3){
- if(!candles||candles.length<period+2)return 'Unknown';
-
- const high=candles.map(k=>Number(k[2]));
- const low=candles.map(k=>Number(k[3]));
- const close=candles.map(k=>Number(k[4]));
- const n=candles.length;
- const tr=Array(n).fill(0);
- const atr=Array(n).fill(NaN);
-
- for(let i=0;i<n;i++){
-  tr[i]=i===0?high[i]-low[i]:Math.max(
-   high[i]-low[i],
-   Math.abs(high[i]-close[i-1]),
-   Math.abs(low[i]-close[i-1])
-  );
- }
-
- let seed=0;
- for(let i=1;i<=period;i++)seed+=tr[i];
- atr[period]=seed/period;
-
- for(let i=period+1;i<n;i++){
-  atr[i]=(atr[i-1]*(period-1)+tr[i])/period;
- }
-
- const upper=Array(n).fill(NaN);
- const lower=Array(n).fill(NaN);
- const trend=Array(n).fill(1);
-
- for(let i=period;i<n;i++){
-  const mid=(high[i]+low[i])/2;
-  const basicUpper=mid+multiplier*atr[i];
-  const basicLower=mid-multiplier*atr[i];
-
-  if(i===period){
-   upper[i]=basicUpper;
-   lower[i]=basicLower;
-   trend[i]=close[i]>=mid?1:-1;
-   continue;
-  }
-
-  upper[i]=(basicUpper<upper[i-1]||close[i-1]>upper[i-1])?basicUpper:upper[i-1];
-  lower[i]=(basicLower>lower[i-1]||close[i-1]<lower[i-1])?basicLower:lower[i-1];
-
-  if(close[i]>upper[i-1])trend[i]=1;
-  else if(close[i]<lower[i-1])trend[i]=-1;
-  else trend[i]=trend[i-1];
- }
-
- return trend[n-1]===1?'Bullish':'Bearish';
-}
-
-function readSelectedFilters(){
- const rsiFilters=[];
- const supertrendFilters=[];
- const difFilters=[];
- const deaFilters=[];
- const macdFilters=[];
- const changeFilters=[];
-
- for(const [label,interval] of RSI_TFS){
-  if(enabled('rsiOn_'+label)){
-   const min=num('rsiMin_'+label);
-   const max=num('rsiMax_'+label);
-   validRange(min,max,'RSI '+label);
-   if((min!==null&&(min<0||min>100))||(max!==null&&(max<0||max>100))){
-    throw new Error('RSI '+label+': values must be between 0 and 100.');
-   }
-   rsiFilters.push({label,interval,min,max});
-  }
- }
-
- for(const [label,interval] of MACD_TFS){
-  for(const [key,name,target] of [
-   ['dif','DIF',difFilters],['dea','DEA',deaFilters],['hist','MACD',macdFilters]
-  ]){
-   if(enabled('macd_'+key+'On_'+label)){
-    const min=num('macd_'+key+'Min_'+label);
-    const max=num('macd_'+key+'Max_'+label);
-    validRange(min,max,name+' '+label);
-    if(min===null&&max===null)throw new Error(name+' '+label+': enter a minimum or maximum value.');
-    target.push({label,interval,min,max});
-   }
-  }
- }
-
- for(const [label,interval] of SUPERTREND_TFS){
-  if(enabled('stOn_'+label)){
-   supertrendFilters.push({label,interval,direction:$('stDir_'+label).value});
-  }
- }
-
- for(const [label,interval] of CHANGE_TFS){
-  if(enabled('chgOn_'+label)){
-   const min=num('chgMin_'+label);
-   const max=num('chgMax_'+label);
-   validRange(min,max,'Price change '+label);
-   changeFilters.push({label,interval,min,max});
-  }
- }
-
- const v24min=enabled('useVol24')?num('vol24min'):null;
- const v24max=enabled('useVol24')?num('vol24max'):null;
- const v4min=enabled('useVol4')?num('vol4min'):null;
- const v4max=enabled('useVol4')?num('vol4max'):null;
-
- validRange(v24min,v24max,'24h volume');
- validRange(v4min,v4max,'4h volume change');
-
- if(enabled('useVol24')&&((v24min!==null&&v24min<0)||(v24max!==null&&v24max<0))){
-  throw new Error('24h volume values cannot be negative.');
- }
-
- if(!rsiFilters.length&&!supertrendFilters.length&&!difFilters.length&&!deaFilters.length&&!macdFilters.length&&!changeFilters.length&&!enabled('useVol24')&&!enabled('useVol4')){
-  throw new Error('Enable at least one RSI, Supertrend, MACD component, price-change, or volume filter.');
- }
-
- if(enabled('useVol24')&&v24min===null&&v24max===null)throw new Error('Enter a minimum or maximum for 24h quote volume.');
- if(enabled('useVol4')&&v4min===null&&v4max===null)throw new Error('Enter a minimum or maximum for 4h volume change.');
-
- return {
-  rsi:rsiFilters,supertrend:supertrendFilters,dif:difFilters,dea:deaFilters,
-  macd:macdFilters,change:changeFilters,v24min,v24max,v4min,v4max
- };
-}
-
-function inRange(value,min,max){
- if(!Number.isFinite(value))return false;
- return (min===null||value>=min)&&(max===null||value<=max);
-}
-
-function updateFilterCounts(){
- $('rsiCount').textContent=
-  RSI_TFS.filter(([label])=>enabled('rsiOn_'+label)).length+
-  SUPERTREND_TFS.filter(([label])=>enabled('stOn_'+label)).length+
-  MACD_TFS.reduce((total,[label])=>total+
-   ['dif','dea','hist'].filter(key=>enabled('macd_'+key+'On_'+label)).length,0);
-}
-
-function render(){
- const q=$('search').value.trim().toUpperCase();
- const list=results.filter(x=>!q||x.symbol.includes(q));
-
- const selectedRsi=RSI_TFS.filter(([label])=>enabled('rsiOn_'+label));
- const selectedSupertrend=SUPERTREND_TFS.filter(([label])=>enabled('stOn_'+label));
- const selectedDif=MACD_TFS.filter(([label])=>enabled('macd_difOn_'+label));
- const selectedDea=MACD_TFS.filter(([label])=>enabled('macd_deaOn_'+label));
- const selectedMacd=MACD_TFS.filter(([label])=>enabled('macd_histOn_'+label));
- const selectedChg=CHANGE_TFS.filter(([label])=>enabled('chgOn_'+label));
-
- const columns=[
-  {label:'Pair',key:'symbol',value:x=>x.symbol},
-  {label:'Last price',key:'price',value:x=>x.price}
- ];
-
- selectedRsi.forEach(([label])=>columns.push({
-  label:'RSI '+label,key:'rsi:'+label,value:x=>x.rsi[label]
- }));
-
- selectedSupertrend.forEach(([label])=>columns.push({
-  label:'Supertrend '+label,key:'supertrend:'+label,value:x=>x.supertrend[label]
- }));
-
- selectedDif.forEach(([label])=>columns.push({
-  label:'DIF '+label,key:'dif:'+label,value:x=>x.dif[label]
- }));
-
- selectedDea.forEach(([label])=>columns.push({
-  label:'DEA '+label,key:'dea:'+label,value:x=>x.dea[label]
- }));
-
- selectedMacd.forEach(([label])=>columns.push({
-  label:'MACD '+label,key:'macd:'+label,value:x=>x.macd[label]
- }));
-
- selectedChg.forEach(([label])=>columns.push({
-  label:'Change '+label,key:'change:'+label,value:x=>x.change[label]
- }));
-
- if(enabled('useVol24'))columns.push({label:'24h quote volume',key:'quoteVol',value:x=>x.quoteVol});
- if(enabled('useVol4'))columns.push({label:'4h volume change',key:'vol4',value:x=>x.vol4});
-
- const preset=$('sort').value;
- if(preset==='extreme')sortState={key:'extreme',direction:'desc'};
- else if(preset==='volume')sortState={key:'quoteVol',direction:'desc'};
- else if(preset==='symbol')sortState={key:'symbol',direction:'asc'};
- else if(preset==='rsiup')sortState={key:'rsi:5m',direction:'desc'};
- else if(preset==='rsidown')sortState={key:'rsi:5m',direction:'asc'};
-
- const compare=(a,b)=>{
-  let av,bv;
-  if(sortState.key==='extreme'){
-   av=Math.abs((a.rsi['5m']??50)-50);
-   bv=Math.abs((b.rsi['5m']??50)-50);
-  }else{
-   const column=columns.find(c=>c.key===sortState.key);
-   av=column?column.value(a):a.quoteVol;
-   bv=column?column.value(b):b.quoteVol;
-  }
-  let n;
-  if(typeof av==='string'||typeof bv==='string')n=String(av??'').localeCompare(String(bv??''));
-  else{
-   const na=Number(av),nb=Number(bv);
-   n=(Number.isFinite(na)?na:-Infinity)-(Number.isFinite(nb)?nb:-Infinity);
-  }
-  return sortState.direction==='asc'?n:-n;
- };
-
- list.sort(compare);
-
- $('thead').innerHTML='<tr>'+columns.map(c=>
-  `<th data-sort-key="${c.key}">${c.label}${sortState.key===c.key?(sortState.direction==='asc'?' ▲':' ▼'):''}</th>`
- ).join('')+'</tr>';
-
- $('rows').innerHTML=list.map(x=>{
-  const cells=[`<strong>${x.symbol}</strong>`,fmt(x.price)];
-
-  selectedRsi.forEach(([label])=>{
-   const v=x.rsi[label];
-   cells.push(v===undefined||!Number.isFinite(v)?'—':v.toFixed(2));
-  });
-
-  selectedSupertrend.forEach(([label])=>{
-   const v=x.supertrend[label];
-   cells.push(v==='Bullish'
-    ?'<span style="color:#0ecb81;font-weight:700">Bullish</span>'
-    :v==='Bearish'
-     ?'<span style="color:#f6465d;font-weight:700">Bearish</span>'
-     :'—');
-  });
-
-  selectedDif.forEach(([label])=>{
-   const v=x.dif[label];
-   cells.push(v===undefined||!Number.isFinite(v)?'—':v.toFixed(8));
-  });
-  selectedDea.forEach(([label])=>{
-   const v=x.dea[label];
-   cells.push(v===undefined||!Number.isFinite(v)?'—':v.toFixed(8));
-  });
-  selectedMacd.forEach(([label])=>{
-   const v=x.macd[label];
-   cells.push(v===undefined||!Number.isFinite(v)?'—':v.toFixed(8));
-  });
-  selectedChg.forEach(([label])=>{
-   const v=x.change[label];
-   cells.push(v===undefined||!Number.isFinite(v)?'—':pct(v));
-  });
-
-  if(enabled('useVol24'))cells.push(fmt(x.quoteVol));
-  if(enabled('useVol4'))cells.push(x.vol4===undefined||!Number.isFinite(x.vol4)?'—':pct(x.vol4));
-
-  return '<tr>'+cells.map(c=>'<td>'+c+'</td>').join('')+'</tr>';
- }).join('')||`<tr><td colspan="${columns.length}">No pairs match all selected filters.</td></tr>`;
-
- $('matchCount').textContent=list.length;
- updateFilterCounts();
-
- $('thead').querySelectorAll('th').forEach(th=>{
-  th.addEventListener('click',()=>{
-   const key=th.dataset.sortKey;
-   if(sortState.key===key)sortState.direction=sortState.direction==='asc'?'desc':'asc';
-   else{
-    sortState.key=key;
-    sortState.direction=key==='symbol'?'asc':'desc';
-   }
-   const dropdownPreset={
-    extreme:'extreme',quoteVol:'volume',symbol:'symbol',
-    'rsi:5m':sortState.direction==='asc'?'rsidown':'rsiup'
-   }[key];
-   $('sort').value=dropdownPreset||'custom';
-   render();
-  });
- });
-}
-
-function updateStatus(text){$('status').textContent=text;}
-
-function selectedIntervals(filters){
- const set=new Set();
- filters.rsi.forEach(f=>set.add(f.interval));
- filters.supertrend.forEach(f=>set.add(f.interval));
- filters.dif.forEach(f=>set.add(f.interval));
- filters.dea.forEach(f=>set.add(f.interval));
- filters.macd.forEach(f=>set.add(f.interval));
- filters.change.forEach(f=>{if(f.interval!=='24h')set.add(f.interval);});
- if(enabled('useVol4'))set.add('4h');
- set.add('1m');
- return [...set];
-}
-
 async function pool(items,limit,fn){
- let index=0;
- const workers=Array.from({length:limit},async()=>{
-  while(index<items.length&&!cancelled){
-   const current=items[index++];
-   try{await fn(current,index,items.length);}
-   catch(e){
-    if(!cancelled){
-     lastErrorCount++;
-     lastErrorMessage=e?.message||String(e);
-     $('errorCount').textContent=lastErrorCount;
-    }
-   }
+ let i=0;
+ await Promise.all(Array.from({length:limit},async()=>{
+  while(i<items.length&&!cancelled){
+   const x=items[i++];try{await fn(x)}catch(e){if(!cancelled){errors++;lastError=e.message||String(e);}}
   }
+ }));
+}
+function intervalsMain(f){
+ const s=new Set(['1m']);
+ [...f.rsi,...f.st,...f.dif,...f.dea,...f.hist].forEach(x=>s.add(x.interval));
+ f.chg.forEach(x=>{if(x.label!=='24h')s.add(x.interval)});
+ if(on('useVol4'))s.add('4h');return [...s];
+}
+function readMain(){
+ const f={rsi:[],st:[],dif:[],dea:[],hist:[],chg:[]};
+ for(const [label,interval] of RSI_TFS)if(on('rsiOn_'+label)){
+  const min=n('rsiMin_'+label),max=n('rsiMax_'+label);range(min,max,'RSI '+label);
+  if([min,max].some(v=>v!==null&&(v<0||v>100)))throw Error('RSI must be between 0 and 100');
+  f.rsi.push({label,interval,min,max});
+ }
+ for(const [label,interval] of MACD_TFS)for(const [key,target] of [['dif',f.dif],['dea',f.dea],['hist',f.hist]])if(on(`macd_${key}On_${label}`)){
+  const min=n(`macd_${key}Min_${label}`),max=n(`macd_${key}Max_${label}`);range(min,max,key+' '+label);
+  if(min===null&&max===null)throw Error(key+' '+label+': enter a minimum or maximum');
+  target.push({label,interval,min,max});
+ }
+ for(const [label,interval] of ST_TFS)if(on('stOn_'+label))f.st.push({label,interval,direction:$('stDir_'+label).value});
+ for(const [label,interval] of CHANGE_TFS)if(on('chgOn_'+label)){
+  const min=n('chgMin_'+label),max=n('chgMax_'+label);range(min,max,'Change '+label);f.chg.push({label,interval,min,max});
+ }
+ f.v24min=on('useVol24')?n('vol24min'):null;f.v24max=on('useVol24')?n('vol24max'):null;
+ f.v4min=on('useVol4')?n('vol4min'):null;f.v4max=on('useVol4')?n('vol4max'):null;
+ range(f.v24min,f.v24max,'24h volume');range(f.v4min,f.v4max,'4h volume');
+ if(on('useVol24')&&f.v24min===null&&f.v24max===null)throw Error('Enter a 24h volume minimum or maximum');
+ if(on('useVol4')&&f.v4min===null&&f.v4max===null)throw Error('Enter a 4h volume-change minimum or maximum');
+ if(!f.rsi.length&&!f.st.length&&!f.dif.length&&!f.dea.length&&!f.hist.length&&!f.chg.length&&!on('useVol24')&&!on('useVol4'))throw Error('Enable at least one filter');
+ return f;
+}
+function updateFilterCount(){
+ $('rsiCount').textContent=RSI_TFS.filter(([l])=>on('rsiOn_'+l)).length+ST_TFS.filter(([l])=>on('stOn_'+l)).length+MACD_TFS.reduce((a,[l])=>a+['dif','dea','hist'].filter(k=>on(`macd_${k}On_${l}`)).length,0);
+}
+function mainRender(){
+ const q=$('search').value.trim().toUpperCase(),list=results.filter(x=>!q||x.symbol.includes(q));
+ const cols=[['Pair','symbol'],['Last price','price']];
+ const selected=[];
+ RSI_TFS.forEach(([l])=>{if(on('rsiOn_'+l)){cols.push(['RSI '+l,'rsi:'+l]);selected.push(['rsi',l])}});
+ ST_TFS.forEach(([l])=>{if(on('stOn_'+l)){cols.push(['Supertrend '+l,'st:'+l]);selected.push(['st',l])}});
+ for(const [k,name] of [['dif','DIF'],['dea','DEA'],['hist','MACD']])MACD_TFS.forEach(([l])=>{if(on(`macd_${k}On_${l}`)){cols.push([name+' '+l,k+':'+l]);selected.push([k,l])}});
+ CHANGE_TFS.forEach(([l])=>{if(on('chgOn_'+l)){cols.push(['Change '+l,'chg:'+l]);selected.push(['chg',l])}});
+ if(on('useVol24'))cols.push(['24h volume','quoteVol']);if(on('useVol4'))cols.push(['4h volume change','vol4']);
+ const sort=$('sort').value;
+ list.sort((a,b)=>{
+  let av,bv,dir=-1;
+  if(sort==='symbol'){av=a.symbol;bv=b.symbol;dir=1}
+  else if(sort==='volume'){av=a.quoteVol;bv=b.quoteVol}
+  else if(sort==='rsiup'){av=a.rsi['5m'];bv=b.rsi['5m']}
+  else if(sort==='rsidown'){av=a.rsi['5m'];bv=b.rsi['5m'];dir=1}
+  else{av=Math.abs((a.rsi['5m']??50)-50);bv=Math.abs((b.rsi['5m']??50)-50)}
+  return (typeof av==='string'?av.localeCompare(bv):((Number(av)||0)-(Number(bv)||0)))*dir;
  });
- await Promise.all(workers);
-}
-
-async function scan(){
- if(busy)return;
- let filters;
- try{filters=readSelectedFilters();}
- catch(e){updateStatus(e.message);return;}
-
- busy=true;
- cancelled=false;
- lastErrorCount=0;
- lastErrorMessage='';
- const thisScan=++scanId;
-
- $('start').disabled=true;
- $('once').disabled=true;
- $('badge').textContent='SCANNING';
- $('progress').value=0;
- $('errorCount').textContent='0';
- results=[];
- render();
-
- try{
-  updateStatus('Fetching Binance futures contracts and 24h tickers…');
-
-  const [info,tickers]=await Promise.all([
-   get('/fapi/v1/exchangeInfo'),
-   get('/fapi/v1/ticker/24hr')
-  ]);
-
-  if(cancelled||thisScan!==scanId)return;
-
-  const valid=new Set(info.symbols.filter(s=>
-   s.status==='TRADING'&&s.contractType==='PERPETUAL'&&s.quoteAsset==='USDT'
-  ).map(s=>s.symbol));
-
-  const tickerMap=new Map(tickers.filter(t=>valid.has(t.symbol)).map(t=>[t.symbol,t]));
-
-  let universe=[...tickerMap.values()]
-   .filter(t=>Number(t.quoteVolume)>=Number($('minvol').value||0))
-   .sort((a,b)=>Number(b.quoteVolume)-Number(a.quoteVolume));
-
-  if($('scope').value!=='all')universe=universe.slice(0,Number($('scope').value));
-
-  $('pairCount').textContent=universe.length;
-  trackerUniverse=universe.map(t=>t.symbol);
-  renderRsiMovementTracker();
-
-  const period=Math.max(2,Math.min(50,Number($('period').value)||14));
-  const need=selectedIntervals(filters);
-  const limit=Math.max(period+30,60);
-
-  updateStatus(`Scanning ${universe.length} pairs. Selected candle intervals: ${need.join(', ')}. The movement tracker uses 1m RSI(14).`);
-
-  let done=0;
-  const found=[];
-
-  await pool(universe,3,async(t)=>{
-   if(cancelled||thisScan!==scanId)return;
-
-   const symbol=t.symbol;
-   const rsiValues={};
-   const supertrendValues={};
-   const difValues={};
-   const deaValues={};
-   const macdValues={};
-   const changes={};
-   const klineMap={};
-
-   for(const interval of need){
-    if(cancelled)break;
-
-    const needIndicator=
-     filters.rsi.some(f=>f.interval===interval)||
-     filters.supertrend.some(f=>f.interval===interval)||
-     filters.dif.some(f=>f.interval===interval)||
-     filters.dea.some(f=>f.interval===interval)||
-     filters.macd.some(f=>f.interval===interval);
-
-    const kLimit=(needIndicator||interval==='1m')?limit:3;
-
-    klineMap[interval]=await get(
-     `/fapi/v1/klines?symbol=${symbol}&interval=${interval}&limit=${kLimit}`
-    );
-   }
-
-   if(cancelled)return;
-
-   for(const f of filters.rsi){
-    const candles=klineMap[f.interval]||[];
-    const closes=candles.map(k=>Number(k[4]));
-    rsiValues[f.label]=rsi(closes,period);
-   }
-
-   for(const f of filters.supertrend){
-    supertrendValues[f.label]=supertrend(klineMap[f.interval]||[],10,3);
-   }
-
-   const trackerCandles=klineMap['1m']||[];
-   const trackerCloses=trackerCandles.map(k=>Number(k[4]));
-   const trackerRsi=rsi(trackerCloses,14);
-   updateRsiMovement(symbol,trackerRsi);
-
-   const macdByInterval={};
-   for(const interval of need){
-    if(filters.dif.some(f=>f.interval===interval)||
-       filters.dea.some(f=>f.interval===interval)||
-       filters.macd.some(f=>f.interval===interval)){
-     const candles=klineMap[interval]||[];
-     const closes=candles.map(k=>Number(k[4]));
-     macdByInterval[interval]=macdComponents(closes);
-    }
-   }
-
-   for(const f of filters.dif)difValues[f.label]=macdByInterval[f.interval]?.dif??NaN;
-   for(const f of filters.dea)deaValues[f.label]=macdByInterval[f.interval]?.dea??NaN;
-   for(const f of filters.macd)macdValues[f.label]=macdByInterval[f.interval]?.hist??NaN;
-
-   for(const f of filters.change){
-    if(f.label==='24h')changes[f.label]=Number(t.priceChangePercent);
-    else{
-     const candles=klineMap[f.interval]||[];
-     if(candles.length>=2){
-      const previousClose=Number(candles[candles.length-2][4]);
-      const currentLiveClose=Number(candles[candles.length-1][4]);
-      changes[f.label]=previousClose>0?(currentLiveClose/previousClose-1)*100:NaN;
-     }
-    }
-   }
-
-   let vol4;
-   if(enabled('useVol4')){
-    const k4=klineMap['4h']||[];
-    if(k4.length>=3){
-     const prev=Number(k4[k4.length-3][7]);
-     const last=Number(k4[k4.length-2][7]);
-     vol4=prev>0?(last/prev-1)*100:NaN;
-    }
-   }
-
-   let match=true;
-
-   for(const f of filters.rsi){
-    if(!inRange(rsiValues[f.label],f.min,f.max)){match=false;break;}
-   }
-
-   if(match){
-    for(const f of filters.supertrend){
-     if(supertrendValues[f.label]!==f.direction){match=false;break;}
-    }
-   }
-
-   if(match){
-    for(const f of filters.dif){
-     if(!inRange(difValues[f.label],f.min,f.max)){match=false;break;}
-    }
-   }
-
-   if(match){
-    for(const f of filters.dea){
-     if(!inRange(deaValues[f.label],f.min,f.max)){match=false;break;}
-    }
-   }
-
-   if(match){
-    for(const f of filters.macd){
-     if(!inRange(macdValues[f.label],f.min,f.max)){match=false;break;}
-    }
-   }
-
-   if(match){
-    for(const f of filters.change){
-     if(!inRange(changes[f.label],f.min,f.max)){match=false;break;}
-    }
-   }
-
-   const quoteVol=Number(t.quoteVolume);
-
-   if(match&&enabled('useVol24')){
-    if(!inRange(quoteVol,filters.v24min,filters.v24max))match=false;
-   }
-
-   if(match&&enabled('useVol4')){
-    if(!inRange(vol4,filters.v4min,filters.v4max))match=false;
-   }
-
-   if(match){
-    found.push({
-     symbol,
-     price:Number(t.lastPrice),
-     quoteVol,
-     rsi:rsiValues,
-     supertrend:supertrendValues,
-     dif:difValues,
-     dea:deaValues,
-     macd:macdValues,
-     change:changes,
-     vol4
-    });
-   }
-
-   done++;
-   results=found.slice();
-   $('progress').value=universe.length?done/universe.length*100:100;
-   $('errorCount').textContent=lastErrorCount;
-   render();
-   renderRsiMovementTracker();
-
-   updateStatus(`Scanned ${done}/${universe.length}. Matches: ${found.length}. Request errors: ${lastErrorCount}.${lastErrorMessage?' Last error: '+lastErrorMessage:''}`);
+ $('thead').innerHTML='<tr>'+cols.map(c=>`<th>${c[0]}</th>`).join('')+'</tr>';
+ $('rows').innerHTML=list.map(x=>{
+  const cells=[`<b>${x.symbol}</b>`,fmt(x.price)];
+  selected.forEach(([k,l])=>{
+   const v=x[k]?.[l];
+   if(k==='st')cells.push(v==='Bullish'?'<span class="bull">Bullish</span>':v==='Bearish'?'<span class="bear">Bearish</span>':'—');
+   else if(k==='chg')cells.push(Number.isFinite(v)?pct(v):'—');
+   else cells.push(Number.isFinite(v)?v.toFixed(4):'—');
   });
-
-  if(!cancelled){
-   $('badge').textContent='LIVE DATA';
-   updateStatus(`Scan complete. ${done}/${universe.length} pairs processed; ${found.length} matches; ${lastErrorCount} request errors.${lastErrorMessage?' Last error: '+lastErrorMessage:''} Last update: ${new Date().toLocaleTimeString()}.`);
-  }else{
-   $('badge').textContent='STOPPED';
-   updateStatus(`Scan stopped. Partial results: ${found.length}.`);
-  }
- }catch(e){
-  if(!cancelled){
-   $('badge').textContent='API ERROR';
-   updateStatus('Scan failed: '+e.message+'\nIf Binance returns HTTP 418 or 429, wait before scanning again and reduce the number of selected pairs/timeframes.');
-  }
- }finally{
-  busy=false;
-  $('start').disabled=false;
-  $('once').disabled=false;
-  if(thisScan===scanId&&!cancelled)resetAuto();
+  if(on('useVol24'))cells.push(fmt(x.quoteVol));if(on('useVol4'))cells.push(Number.isFinite(x.vol4)?pct(x.vol4):'—');
+  return '<tr>'+cells.map(v=>'<td>'+v+'</td>').join('')+'</tr>';
+ }).join('')||`<tr><td colspan="${cols.length}">No pairs match all selected filters.</td></tr>`;
+ $('matchCount').textContent=list.length;updateFilterCount();
+}
+function tabSwitch(id){
+ if(id===activeTab)return;
+ stopAll();activeTab=id;
+ document.querySelectorAll('.tabbtn').forEach(b=>b.classList.toggle('active',b.dataset.tab===id));
+ document.querySelectorAll('.tabpage').forEach(p=>p.hidden=p.id!==id);
+ $('badge').textContent='READY';
+}
+async function getUniverse(scope,minVol){
+ const [info,tickers]=await Promise.all([get('/fapi/v1/exchangeInfo'),get('/fapi/v1/ticker/24hr')]);
+ const valid=new Set(info.symbols.filter(s=>s.status==='TRADING'&&s.contractType==='PERPETUAL'&&s.quoteAsset==='USDT').map(s=>s.symbol));
+ let u=tickers.filter(t=>valid.has(t.symbol)&&Number(t.quoteVolume)>=minVol).sort((a,b)=>Number(b.quoteVolume)-Number(a.quoteVolume));
+ if(scope!=='all')u=u.slice(0,Number(scope));return u;
+}
+function updateProgress(id,done,total,start){
+ const elapsed=(Date.now()-start)/1000,rate=done?elapsed/done:0,eta=Math.max(0,Math.round(rate*(total-done)));
+ if(id==='mainTab'){
+  $('progress').value=total?done/total*100:100;$('elapsed').textContent=Math.round(elapsed)+'s';
+  setStatus(`Processed ${done}/${total} pairs (${total?Math.round(done/total*100):100}%). Errors: ${errors}. Elapsed: ${Math.round(elapsed)}s. ETA: ${eta}s.${lastError?' Last error: '+lastError:''}`);
+ }else{
+  $('sigProgress').value=total?done/total*100:100;$('sigElapsed').textContent=Math.round(elapsed)+'s';
+  setSigStatus(`Processed ${done}/${total} pairs (${total?Math.round(done/total*100):100}%). Errors: ${errors}. Elapsed: ${Math.round(elapsed)}s. ETA: ${eta}s.${lastError?' Last error: '+lastError:''}`);
  }
 }
-
-function resetAuto(){
- if(autoTimer)clearInterval(autoTimer);
- autoTimer=null;
- const seconds=Number($('refresh').value);
- if(seconds>0)autoTimer=setInterval(()=>{if(!busy)scan();},seconds*1000);
+async function scanMain(){
+ if(busy||activeTab!=='mainTab')return;
+ let f;try{f=readMain()}catch(e){setStatus(e.message);return}
+ busy=true;cancelled=false;const id=++scanId;errors=0;lastError='';startedAt=Date.now();
+ $('start').disabled=$('once').disabled=true;$('badge').textContent='SCANNING';$('progress').value=0;
+ results=[];mainRender();
+ try{
+  setStatus('Loading Binance contracts and tickers…');
+  const u=await getUniverse($('scope').value,Number($('minvol').value||0));
+  if(cancelled||id!==scanId)return;
+  $('pairCount').textContent=u.length;trackerUniverse=u.map(x=>x.symbol);
+  const period=Math.max(2,Math.min(50,Number($('period').value)||14)),need=intervalsMain(f),found=[];let done=0;
+  await pool(u,3,async t=>{
+   if(cancelled||id!==scanId)return;
+   const data={};const kLimit=Math.max(60,period+30);
+   for(const it of need){
+    if(cancelled)return;
+    data[it]=await get(`/fapi/v1/klines?symbol=${t.symbol}&interval=${it}&limit=${it==='1m'||f.rsi.some(x=>x.interval===it)||f.st.some(x=>x.interval===it)||f.dif.some(x=>x.interval===it)||f.dea.some(x=>x.interval===it)||f.hist.some(x=>x.interval===it)?kLimit:3}`);
+   }
+   if(cancelled)return;
+   const rv={},sv={},dv={},ev={},hv={},cv={};
+   for(const x of f.rsi)rv[x.label]=rsi(data[x.interval].map(k=>+k[4]),period);
+   for(const x of f.st)sv[x.label]=supertrend(data[x.interval]);
+   trackerUpdate(t.symbol,rsi(data['1m'].map(k=>+k[4]),14));
+   const mm={};for(const it of need)if([...f.dif,...f.dea,...f.hist].some(x=>x.interval===it))mm[it]=macd(data[it].map(k=>+k[4]));
+   f.dif.forEach(x=>dv[x.label]=mm[x.interval]?.dif);f.dea.forEach(x=>ev[x.label]=mm[x.interval]?.dea);f.hist.forEach(x=>hv[x.label]=mm[x.interval]?.hist);
+   f.chg.forEach(x=>{if(x.label==='24h')cv[x.label]=+t.priceChangePercent;else{const k=data[x.interval];if(k?.length>=2){const p=+k[k.length-2][4],c=+k[k.length-1][4];cv[x.label]=p?(c/p-1)*100:NaN}}});
+   let vol4;if(on('useVol4')){const k=data['4h'];if(k?.length>=3){const a=+k[k.length-3][7],b=+k[k.length-2][7];vol4=a?(b/a-1)*100:NaN}}
+   let match=f.rsi.every(x=>inRange(rv[x.label],x.min,x.max))&&f.st.every(x=>sv[x.label]===x.direction)&&f.dif.every(x=>inRange(dv[x.label],x.min,x.max))&&f.dea.every(x=>inRange(ev[x.label],x.min,x.max))&&f.hist.every(x=>inRange(hv[x.label],x.min,x.max))&&f.chg.every(x=>inRange(cv[x.label],x.min,x.max));
+   const qv=+t.quoteVolume;if(on('useVol24'))match=match&&inRange(qv,f.v24min,f.v24max);if(on('useVol4'))match=match&&inRange(vol4,f.v4min,f.v4max);
+   if(match)found.push({symbol:t.symbol,price:+t.lastPrice,quoteVol:qv,rsi:rv,st:sv,dif:dv,dea:ev,hist:hv,chg:cv,vol4});
+   done++;results=found.slice();mainRender();renderTracker();$('errorCount').textContent=errors;updateProgress('mainTab',done,u.length,startedAt);
+  });
+  if(!cancelled){$('badge').textContent='LIVE DATA';setStatus(`Scan complete. ${done}/${u.length} processed. ${found.length} matches. Errors: ${errors}. Last update: ${new Date().toLocaleTimeString()}.${lastError?' Last error: '+lastError:''}`)}
+ }catch(e){if(!cancelled){$('badge').textContent='API ERROR';setStatus('Scan failed: '+e.message)}}
+ finally{busy=false;$('start').disabled=$('once').disabled=false;if(id===scanId&&!cancelled&&activeTab==='mainTab')resetMainAuto()}
 }
-
-function stop(){
- cancelled=true;
- scanId++;
- if(autoTimer)clearInterval(autoTimer);
- autoTimer=null;
- for(const controller of activeRequests){
-  try{controller.abort();}catch{}
+function selectedSigFilters(){
+ const rs=RSI_TFS.filter(([l])=>on('sr_'+l)),st=ST_TFS.filter(([l])=>on('ss_'+l));
+ const br=Number($('bullRsi').value),bear=Number($('bearRsi').value),threshold=Number($('sigChangeThreshold').value);
+ if(!rs.length&&!st.length)throw Error('Select at least one RSI or Supertrend timeframe.');
+ if(!Number.isFinite(br)||!Number.isFinite(bear)||br<0||br>100||bear<0||bear>100)throw Error('RSI thresholds must be from 0 to 100.');
+ if(!Number.isFinite(threshold)||threshold<0)throw Error('Price-change threshold must be zero or greater.');
+ return {rs,st,br,bear,threshold,changeTf:$('sigChangeTf').value,useDea:on('sigUseDea'),deaTf:$('sigDeaTf').value,bdea:Number($('sigBullDea').value),sdea:Number($('sigBearDea').value)};
+}
+function sigIntervals(f){
+ const s=new Set(['1m']);f.rs.forEach(([l,it])=>s.add(it));f.st.forEach(([l,it])=>s.add(it));
+ if(f.changeTf!=='24h')s.add(f.changeTf);if(f.useDea)s.add(f.deaTf==='24h'?'1d':f.deaTf);return [...s];
+}
+function renderSignalTables(){
+ const rsiLabels=RSI_TFS.filter(([l])=>on('sr_'+l)).map(([l])=>l);
+ const headers=['Pair','Price','24h % change',...rsiLabels.map(l=>'RSI '+l),'Supertrend','DEA'];
+ function sortList(list,kind){
+  const mode=$(kind==='bull'?'bullSort':'bearSort').value;
+  return list.slice().sort((a,b)=>mode==='az'?a.symbol.localeCompare(b.symbol):mode==='rsiHigh'?(b.sortRsi-a.sortRsi):(a.sortRsi-b.sortRsi));
  }
- $('badge').textContent='STOPPING';
- updateStatus('Stop requested. Aborting outstanding Binance requests…');
-}
-
-function clearResults(){
- results=[];
- render();
- $('pairCount').textContent='0';
- $('matchCount').textContent='0';
- $('errorCount').textContent='0';
- $('progress').value=0;
- updateStatus('Matching results cleared. Tracker history retained.');
-}
-
-function exportCSV(){
- if(!results.length){
-  updateStatus('There are no results to export.');
-  return;
+ function rows(list,kind){
+  return sortList(list,kind).map(x=>'<tr>'+[
+   `<b>${x.symbol}</b>`,fmt(x.price),pct(x.change24),
+   ...rsiLabels.map(l=>Number.isFinite(x.rsi[l])?x.rsi[l].toFixed(2):'—'),
+   x.stSummary||'—',Number.isFinite(x.dea)?x.dea.toFixed(8):'—'
+  ].map(v=>`<td>${v}</td>`).join('')+'</tr>').join('')||`<tr><td colspan="${headers.length}">No ${kind==='bull'?'bullish':'bearish'} matches.</td></tr>`;
  }
-
- const selectedRsi=RSI_TFS.filter(([label])=>enabled('rsiOn_'+label));
- const selectedSupertrend=SUPERTREND_TFS.filter(([label])=>enabled('stOn_'+label));
- const selectedDif=MACD_TFS.filter(([label])=>enabled('macd_difOn_'+label));
- const selectedDea=MACD_TFS.filter(([label])=>enabled('macd_deaOn_'+label));
- const selectedMacd=MACD_TFS.filter(([label])=>enabled('macd_histOn_'+label));
- const selectedChg=CHANGE_TFS.filter(([label])=>enabled('chgOn_'+label));
-
- const headers=['Pair','Last price'];
- selectedRsi.forEach(([label])=>headers.push('RSI '+label));
- selectedSupertrend.forEach(([label])=>headers.push('Supertrend '+label));
- selectedDif.forEach(([label])=>headers.push('DIF '+label));
- selectedDea.forEach(([label])=>headers.push('DEA '+label));
- selectedMacd.forEach(([label])=>headers.push('MACD '+label));
- selectedChg.forEach(([label])=>headers.push('Change '+label+' %'));
-
- if(enabled('useVol24'))headers.push('24h quote volume USDT');
- if(enabled('useVol4'))headers.push('4h volume change %');
-
- const lines=[headers,...results.map(x=>{
-  const row=[x.symbol,x.price];
-  selectedRsi.forEach(([label])=>row.push(x.rsi[label]??''));
-  selectedSupertrend.forEach(([label])=>row.push(x.supertrend[label]??''));
-  selectedDif.forEach(([label])=>row.push(x.dif[label]??''));
-  selectedDea.forEach(([label])=>row.push(x.dea[label]??''));
-  selectedMacd.forEach(([label])=>row.push(x.macd[label]??''));
-  selectedChg.forEach(([label])=>row.push(x.change[label]??''));
-  if(enabled('useVol24'))row.push(x.quoteVol);
-  if(enabled('useVol4'))row.push(x.vol4??'');
-  return row;
- })];
-
- const csv=lines.map(row=>row.map(v=>'"'+String(v??'').replaceAll('"','""')+'"').join(',')).join('\r\n');
- const url=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8;'}));
- const a=document.createElement('a');
- a.href=url;
- a.download='binance-futures-scanner.csv';
- a.click();
- setTimeout(()=>URL.revokeObjectURL(url),1000);
+ $('bullHead').innerHTML='<tr>'+headers.map(x=>`<th>${x}</th>`).join('')+'</tr>';
+ $('bearHead').innerHTML='<tr>'+headers.map(x=>`<th>${x}</th>`).join('')+'</tr>';
+ $('bullRows').innerHTML=rows(signalBull,'bull');$('bearRows').innerHTML=rows(signalBear,'bear');
+ $('bullCount').textContent=signalBull.length;$('bearCount').textContent=signalBear.length;
 }
-
-buildFilters();
-updateFilterCounts();
-renderRsiMovementTracker();
-setTrackerCollapsed(trackerCollapsed);
-
+async function scanSignals(){
+ if(busy||activeTab!=='signalTab')return;
+ let f;try{f=selectedSigFilters()}catch(e){setSigStatus(e.message);return}
+ busy=true;cancelled=false;const id=++scanId;errors=0;lastError='';startedAt=Date.now();
+ $('sigStart').disabled=$('sigOnce').disabled=true;$('badge').textContent='SIGNAL SCAN';$('sigProgress').value=0;signalBull=[];signalBear=[];renderSignalTables();
+ try{
+  setSigStatus('Loading Binance contracts and tickers…');
+  const u=await getUniverse($('sigScope').value,Number($('sigMinVol').value||0));
+  if(cancelled||id!==scanId)return;
+  $('sigPairs').textContent=u.length;const period=Math.max(2,Math.min(50,Number($('sigPeriod').value)||14)),need=sigIntervals(f),doneRef={done:0};
+  await pool(u,3,async t=>{
+   if(cancelled||id!==scanId)return;
+   const data={};
+   for(const it of need){
+    if(cancelled)return;
+    const actual=it==='24h'?'1d':it;
+    data[it]=await get(`/fapi/v1/klines?symbol=${t.symbol}&interval=${actual}&limit=80`);
+   }
+   if(cancelled)return;
+   const rv={};for(const [l,it] of f.rs)rv[l]=rsi(data[it].map(k=>+k[4]),period);
+   const sv={};for(const [l,it] of f.st)sv[l]=supertrend(data[it]);
+   const changeTf=f.changeTf;
+   let change;
+   if(changeTf==='24h')change=+t.priceChangePercent;
+   else{const k=data[changeTf];if(k?.length>=2){const prev=+k[k.length-2][4],curr=+k[k.length-1][4];change=prev?(curr/prev-1)*100:NaN}}
+   let dea=NaN;
+   if(f.useDea){const it=f.deaTf==='24h'?'1d':f.deaTf;dea=macd(data[it].map(k=>+k[4])).dea}
+   const rsiBull=f.rs.every(([l])=>Number.isFinite(rv[l])&&rv[l]>f.br);
+   const rsiBear=f.rs.every(([l])=>Number.isFinite(rv[l])&&rv[l]<f.bear);
+   const stBull=f.st.every(([l])=>sv[l]==='Bullish');
+   const stBear=f.st.every(([l])=>sv[l]==='Bearish');
+   const hasRsi=f.rs.length>0,hasSt=f.st.length>0;
+   const priceBull=Number.isFinite(change)&&change>=f.threshold;
+   const priceBear=Number.isFinite(change)&&change<=-f.threshold;
+   const deaBull=!f.useDea||(Number.isFinite(dea)&&dea>=f.bdea);
+   const deaBear=!f.useDea||(Number.isFinite(dea)&&dea<=f.sdea);
+   const bullRsiOk=!hasRsi||rsiBull,bearRsiOk=!hasRsi||rsiBear;
+   const bullStOk=!hasSt||stBull,bearStOk=!hasSt||stBear;
+   const common={symbol:t.symbol,price:+t.lastPrice,change24:+t.priceChangePercent,rsi:rv,st:sv,dea,sortRsi:hasRsi?rv[f.rs[0][0]]:50,stSummary:f.st.map(([l])=>l+': '+sv[l]).join(' | ')};
+   if(bullRsiOk&&bullStOk&&priceBull&&deaBull)signalBull.push({...common});
+   if(bearRsiOk&&bearStOk&&priceBear&&deaBear)signalBear.push({...common});
+   doneRef.done++;renderSignalTables();$('sigErrors').textContent=errors;updateProgress('signalTab',doneRef.done,u.length,startedAt);
+  });
+  if(!cancelled){$('badge').textContent='SIGNALS UPDATED';setSigStatus(`Signal scan complete. ${doneRef.done}/${u.length} processed. Bullish: ${signalBull.length}; Bearish: ${signalBear.length}. Errors: ${errors}. Last update: ${new Date().toLocaleTimeString()}.${lastError?' Last error: '+lastError:''}`)}
+ }catch(e){if(!cancelled){$('badge').textContent='API ERROR';setSigStatus('Signal scan failed: '+e.message)}}
+ finally{busy=false;$('sigStart').disabled=$('sigOnce').disabled=false;if(id===scanId&&!cancelled&&activeTab==='signalTab')resetSignalAuto()}
+}
+function resetMainAuto(){
+ if(autoTimer)clearTimeout(autoTimer);autoTimer=null;
+ const s=Number($('refresh').value);if(s>0)autoTimer=setTimeout(()=>{if(!busy&&activeTab==='mainTab')scanMain()},s*1000);
+}
+function resetSignalAuto(){
+ if(signalTimer)clearTimeout(signalTimer);signalTimer=null;
+ const s=Number($('sigRefresh').value);if(s>0)signalTimer=setTimeout(()=>{if(!busy&&activeTab==='signalTab')scanSignals()},s*1000);
+}
+function stopAll(){
+ cancelled=true;scanId++;
+ if(autoTimer)clearTimeout(autoTimer);if(signalTimer)clearTimeout(signalTimer);autoTimer=signalTimer=null;
+ for(const c of activeRequests)try{c.abort()}catch{}
+ if(busy){$('badge').textContent='STOPPING';setStatus('Stop requested.');setSigStatus('Stop requested.')}
+}
+function clearMain(){results=[];mainRender();$('pairCount').textContent='0';$('matchCount').textContent='0';$('errorCount').textContent='0';$('progress').value=0;setStatus('Results cleared. Tracker history retained.')}
+function csvDownload(headers,rows,name){
+ const content=[headers,...rows].map(row=>row.map(v=>'"'+String(v??'').replaceAll('"','""')+'"').join(',')).join('\r\n');
+ const url=URL.createObjectURL(new Blob([content],{type:'text/csv;charset=utf-8;'}));const a=document.createElement('a');a.href=url;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
+}
+function exportMain(){
+ if(!results.length){setStatus('No results to export.');return}
+ const headers=['Pair','Last price'],rows=[];
+ const active=[];
+ RSI_TFS.forEach(([l])=>{if(on('rsiOn_'+l)){headers.push('RSI '+l);active.push(['rsi',l])}});
+ ST_TFS.forEach(([l])=>{if(on('stOn_'+l)){headers.push('Supertrend '+l);active.push(['st',l])}});
+ for(const [k,name] of [['dif','DIF'],['dea','DEA'],['hist','MACD']])MACD_TFS.forEach(([l])=>{if(on(`macd_${k}On_${l}`)){headers.push(name+' '+l);active.push([k,l])}});
+ CHANGE_TFS.forEach(([l])=>{if(on('chgOn_'+l)){headers.push('Change '+l+' %');active.push(['chg',l])}});
+ if(on('useVol24'))headers.push('24h quote volume');if(on('useVol4'))headers.push('4h volume change %');
+ for(const x of results){const row=[x.symbol,x.price];active.forEach(([k,l])=>row.push(x[k]?.[l]??''));if(on('useVol24'))row.push(x.quoteVol);if(on('useVol4'))row.push(x.vol4??'');rows.push(row)}
+ csvDownload(headers,rows,'binance-futures-scanner.csv');
+}
+function exportSignals(){
+ const labels=RSI_TFS.filter(([l])=>on('sr_'+l)).map(([l])=>l),headers=['Direction','Pair','Price','24h change %',...labels.map(l=>'RSI '+l),'Supertrend','DEA'];
+ const rows=[];for(const [direction,list] of [['BULLISH',signalBull],['BEARISH',signalBear]])for(const x of list)rows.push([direction,x.symbol,x.price,x.change24,...labels.map(l=>x.rsi[l]??''),x.stSummary,x.dea]);
+ if(!rows.length){setSigStatus('No signals to export.');return}csvDownload(headers,rows,'binance-rsi-supertrend-signals.csv');
+}
+buildFilters();updateFilterCount();renderTracker();setTrackerCollapsed(trackerCollapsed);
+document.querySelectorAll('.collapse').forEach(b=>b.addEventListener('click',()=>{
+ const el=$(b.dataset.target);el.hidden=!el.hidden;b.textContent=el.hidden?'Expand':'Collapse';
+}));
+document.querySelectorAll('.tabbtn').forEach(b=>b.addEventListener('click',()=>tabSwitch(b.dataset.tab)));
 $('trackerToggle').addEventListener('click',()=>setTrackerCollapsed(!trackerCollapsed));
-$('start').addEventListener('click',()=>{resetAuto();scan();});
-$('once').addEventListener('click',()=>{if(autoTimer)clearInterval(autoTimer);autoTimer=null;scan();});
-$('stop').addEventListener('click',stop);
-$('clear').addEventListener('click',clearResults);
-$('csv').addEventListener('click',exportCSV);
-$('refresh').addEventListener('change',resetAuto);
-$('search').addEventListener('input',render);
-
-$('sort').addEventListener('change',()=>{
- const v=$('sort').value;
- if(v==='extreme')sortState={key:'extreme',direction:'desc'};
- else if(v==='volume')sortState={key:'quoteVol',direction:'desc'};
- else if(v==='symbol')sortState={key:'symbol',direction:'asc'};
- else if(v==='rsiup')sortState={key:'rsi:5m',direction:'desc'};
- else if(v==='rsidown')sortState={key:'rsi:5m',direction:'asc'};
- render();
-});
-
-$('scope').addEventListener('change',()=>updateStatus('Pair scope changed. Start a new scan to apply it.'));
-
-document.addEventListener('change',e=>{
- if(e.target.matches('input[type="checkbox"]')){
-  updateFilterCounts();
-  render();
- }
-});
+$('start').addEventListener('click',()=>{if(autoTimer)clearTimeout(autoTimer);autoTimer=null;scanMain()});
+$('once').addEventListener('click',()=>{if(autoTimer)clearTimeout(autoTimer);autoTimer=null;scanMain()});
+$('stop').addEventListener('click',stopAll);$('clear').addEventListener('click',clearMain);$('csv').addEventListener('click',exportMain);
+$('refresh').addEventListener('change',resetMainAuto);$('search').addEventListener('input',mainRender);
+$('sort').addEventListener('change',mainRender);
+$('sigStart').addEventListener('click',()=>{if(signalTimer)clearTimeout(signalTimer);signalTimer=null;scanSignals()});
+$('sigOnce').addEventListener('click',()=>{if(signalTimer)clearTimeout(signalTimer);signalTimer=null;scanSignals()});
+$('sigStop').addEventListener('click',stopAll);$('sigCsv').addEventListener('click',exportSignals);
+$('sigRefresh').addEventListener('change',resetSignalAuto);
+$('bullSort').addEventListener('change',renderSignalTables);$('bearSort').addEventListener('change',renderSignalTables);
+document.addEventListener('change',e=>{if(e.target.matches('input[type=checkbox]')){updateFilterCount();mainRender()}});
 </script>
 </body>
 </html>
