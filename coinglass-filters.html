@@ -55,6 +55,10 @@ progress{width:100%;height:8px;margin-top:10px;accent-color:var(--yellow)}
 .signalcontrol.tfcontrol{width:78px}
 .signalcontrol.rangecontrol{width:78px}
 .signalcontrol.sortcontrol{width:135px}
+.signalcontrol.rsidisplaytoggle{width:auto;min-width:76px;align-self:center}
+.signalcontrol.rsidisplaytoggle label{display:flex;align-items:center;gap:5px;white-space:nowrap}
+.signalcontrol.rsidisplaytoggle input{width:auto}
+.signalcontrol.rsidisplayrange{width:72px}
 .bull{color:var(--green);font-weight:700}
 .bear{color:var(--red);font-weight:700}
 .signalpanel{border:1px solid var(--line);border-radius:9px;padding:10px;min-width:0}
@@ -64,6 +68,7 @@ progress{width:100%;height:8px;margin-top:10px;accent-color:var(--yellow)}
 .checkitem{display:flex;gap:6px;align-items:center;border:1px solid var(--line);border-radius:6px;padding:7px}
 .checkitem label{font-size:12px}
 .tracker-detected{color:var(--yellow);font-weight:700}
+.display-filter-note{font-size:11px;color:var(--muted);margin-top:5px}
 @media(max-width:900px){
  .signalcols{grid-template-columns:1fr}
  .signalhead{align-items:flex-start}
@@ -71,6 +76,8 @@ progress{width:100%;height:8px;margin-top:10px;accent-color:var(--yellow)}
  .signalcontrol{flex:1}
  .signalcontrol.tfcontrol,.signalcontrol.rangecontrol{width:auto;min-width:70px}
  .signalcontrol.sortcontrol{width:auto;min-width:125px}
+ .signalcontrol.rsidisplaytoggle{flex:0 0 auto}
+ .signalcontrol.rsidisplayrange{width:auto;min-width:70px}
 }
 @media(max-width:700px){
  main{padding:8px}.grid{grid-template-columns:repeat(2,minmax(0,1fr))}
@@ -79,6 +86,8 @@ progress{width:100%;height:8px;margin-top:10px;accent-color:var(--yellow)}
  h1{font-size:18px}
  .signalcontrols{display:grid;grid-template-columns:repeat(3,minmax(0,1fr))}
  .signalcontrol,.signalcontrol.tfcontrol,.signalcontrol.rangecontrol,.signalcontrol.sortcontrol{width:auto;min-width:0}
+ .signalcontrol.rsidisplaytoggle{grid-column:span 3}
+ .signalcontrol.rsidisplayrange{width:auto;min-width:0}
 }
 </style>
 </head>
@@ -229,8 +238,8 @@ progress{width:100%;height:8px;margin-top:10px;accent-color:var(--yellow)}
 <div id="sigStatus" class="muted">Configure signal conditions and start a scan.</div>
 <div class="stats">
 <div class="stat"><small>Pairs selected</small><strong id="sigPairs">0</strong></div>
-<div class="stat"><small>Bullish matches</small><strong id="bullCount">0</strong></div>
-<div class="stat"><small>Bearish matches</small><strong id="bearCount">0</strong></div>
+<div class="stat"><small>Bullish visible</small><strong id="bullCount">0</strong></div>
+<div class="stat"><small>Bearish visible</small><strong id="bearCount">0</strong></div>
 <div class="stat"><small>Request errors</small><strong id="sigErrors">0</strong></div>
 <div class="stat"><small>Elapsed</small><strong id="sigElapsed">0s</strong></div>
 </div>
@@ -243,9 +252,15 @@ progress{width:100%;height:8px;margin-top:10px;accent-color:var(--yellow)}
 <div class="signalcontrol tfcontrol"><label for="bullChangeTf">Change TF</label><select id="bullChangeTf"><option>1m</option><option>5m</option><option>15m</option><option>30m</option><option>1h</option><option>2h</option><option>4h</option><option>6h</option><option>12h</option><option value="24h" selected>24h</option></select></div>
 <div class="signalcontrol rangecontrol"><label for="bullChangeMin">Min %</label><input id="bullChangeMin" type="number" step="0.1" value="10" placeholder="No min"></div>
 <div class="signalcontrol rangecontrol"><label for="bullChangeMax">Max %</label><input id="bullChangeMax" type="number" step="0.1" value="50" placeholder="No max"></div>
+
+<div class="signalcontrol rsidisplaytoggle"><label for="bullRsiDisplayOn"><input id="bullRsiDisplayOn" type="checkbox"> RSI display</label></div>
+<div class="signalcontrol rsidisplayrange"><label for="bullRsiDisplayMin">RSI min</label><input id="bullRsiDisplayMin" type="number" min="0" max="100" step="0.1" placeholder="No min"></div>
+<div class="signalcontrol rsidisplayrange"><label for="bullRsiDisplayMax">RSI max</label><input id="bullRsiDisplayMax" type="number" min="0" max="100" step="0.1" placeholder="No max"></div>
+
 <div class="signalcontrol sortcontrol"><label for="bullSort">Sort results</label><select id="bullSort"><option value="rsiHigh">RSI high to low</option><option value="rsiLow">RSI low to high</option><option value="az">Token A–Z</option></select></div>
 </div>
 </div>
+<div class="display-filter-note">RSI display filter only affects visible bullish rows. All selected RSI timeframe columns must be within the range.</div>
 <div class="tablewrap"><table><thead id="bullHead"></thead><tbody id="bullRows"><tr><td>Run a signal scan.</td></tr></tbody></table></div>
 </section>
 
@@ -256,9 +271,15 @@ progress{width:100%;height:8px;margin-top:10px;accent-color:var(--yellow)}
 <div class="signalcontrol tfcontrol"><label for="bearChangeTf">Change TF</label><select id="bearChangeTf"><option>1m</option><option>5m</option><option>15m</option><option>30m</option><option>1h</option><option>2h</option><option>4h</option><option>6h</option><option>12h</option><option value="24h">24h</option></select></div>
 <div class="signalcontrol rangecontrol"><label for="bearChangeMin">Min %</label><input id="bearChangeMin" type="number" step="0.1" value="-10" placeholder="No min"></div>
 <div class="signalcontrol rangecontrol"><label for="bearChangeMax">Max %</label><input id="bearChangeMax" type="number" step="0.1" value="10" placeholder="No max"></div>
+
+<div class="signalcontrol rsidisplaytoggle"><label for="bearRsiDisplayOn"><input id="bearRsiDisplayOn" type="checkbox"> RSI display</label></div>
+<div class="signalcontrol rsidisplayrange"><label for="bearRsiDisplayMin">RSI min</label><input id="bearRsiDisplayMin" type="number" min="0" max="100" step="0.1" placeholder="No min"></div>
+<div class="signalcontrol rsidisplayrange"><label for="bearRsiDisplayMax">RSI max</label><input id="bearRsiDisplayMax" type="number" min="0" max="100" step="0.1" placeholder="No max"></div>
+
 <div class="signalcontrol sortcontrol"><label for="bearSort">Sort results</label><select id="bearSort"><option value="rsiLow">RSI low to high</option><option value="rsiHigh">RSI high to low</option><option value="az">Token A–Z</option></select></div>
 </div>
 </div>
+<div class="display-filter-note">RSI display filter only affects visible bearish rows. All selected RSI timeframe columns must be within the range.</div>
 <div class="tablewrap"><table><thead id="bearHead"></thead><tbody id="bearRows"><tr><td>Run a signal scan.</td></tr></tbody></table></div>
 </section>
 </div>
@@ -504,7 +525,7 @@ async function scanMain(){
  finally{busy=false;$('start').disabled=$('once').disabled=false;if(id===scanId&&!cancelled&&activeTab==='mainTab')resetMainAuto()}
 }
 
-/* Signal filters now use independent bullish and bearish price-change ranges. */
+/* Signal conditions remain independent from the display-only RSI ranges. */
 function selectedSigFilters(){
  const rs=RSI_TFS.filter(([l])=>on('sr_'+l)),st=ST_TFS.filter(([l])=>on('ss_'+l));
  const br=Number($('bullRsi').value),bear=Number($('bearRsi').value);
@@ -546,6 +567,32 @@ function signalChange(tf,t,data){
  }
  return NaN;
 }
+
+/* Display-only RSI filtering: applied separately to each signal table. */
+function applyRsiDisplayFilter(list,kind,rsiLabels){
+ const enabled=on(kind+'RsiDisplayOn');
+ if(!enabled)return {list,error:''};
+
+ const min=n(kind+'RsiDisplayMin');
+ const max=n(kind+'RsiDisplayMax');
+
+ if([min,max].some(v=>v!==null&&(!Number.isFinite(v)||v<0||v>100))){
+  return {list,error:'RSI display values must be between 0 and 100.'};
+ }
+ if(min!==null&&max!==null&&min>max){
+  return {list,error:'RSI display minimum cannot exceed maximum.'};
+ }
+ if(min===null&&max===null)return {list,error:''};
+
+ /* If no RSI timeframe is selected, there are no RSI columns to filter. */
+ if(!rsiLabels.length)return {list,error:'Select an RSI timeframe to apply this display filter.'};
+
+ const filtered=list.filter(x=>
+  rsiLabels.every(label=>inRange(x.rsi[label],min,max))
+ );
+ return {list:filtered,error:''};
+}
+
 function renderSignalTables(){
  const rsiLabels=RSI_TFS.filter(([l])=>on('sr_'+l)).map(([l])=>l);
  const useDea=on('sigUseDea');
@@ -571,7 +618,10 @@ function renderSignalTables(){
   $(kind==='bull'?'bullHead':'bearHead').innerHTML='<tr>'+headers.map(x=>`<th>${x}</th>`).join('')+'</tr>';
   return headers;
  }
- function rows(list,kind,headers){
+ function rows(list,kind,headers,filterError){
+  if(filterError){
+   return `<tr><td colspan="${headers.length}">${filterError}</td></tr>`;
+  }
   return sortList(list,kind).map(x=>{
    const change=kind==='bull'?x.bullChange:x.bearChange;
    const cells=[
@@ -582,15 +632,20 @@ function renderSignalTables(){
    if(useDea)cells.push(Number.isFinite(x.dea)?x.dea.toFixed(8):'—');
    cells.push(Number.isFinite(change)?pct(change):'—');
    return '<tr>'+cells.map(v=>`<td>${v}</td>`).join('')+'</tr>';
-  }).join('')||`<tr><td colspan="${headers.length}">No ${kind==='bull'?'bullish':'bearish'} matches.</td></tr>`;
+  }).join('')||`<tr><td colspan="${headers.length}">No ${kind==='bull'?'bullish':'bearish'} rows match the current display filter.</td></tr>`;
  }
 
  const bullHeaders=renderHead('bull');
  const bearHeaders=renderHead('bear');
- $('bullRows').innerHTML=rows(signalBull,'bull',bullHeaders);
- $('bearRows').innerHTML=rows(signalBear,'bear',bearHeaders);
- $('bullCount').textContent=signalBull.length;
- $('bearCount').textContent=signalBear.length;
+
+ const bullDisplay=applyRsiDisplayFilter(signalBull,'bull',rsiLabels);
+ const bearDisplay=applyRsiDisplayFilter(signalBear,'bear',rsiLabels);
+
+ $('bullRows').innerHTML=rows(bullDisplay.list,'bull',bullHeaders,bullDisplay.error);
+ $('bearRows').innerHTML=rows(bearDisplay.list,'bear',bearHeaders,bearDisplay.error);
+
+ $('bullCount').textContent=bullDisplay.error?'—':bullDisplay.list.length;
+ $('bearCount').textContent=bearDisplay.error?'—':bearDisplay.list.length;
 }
 
 async function scanSignals(){
@@ -632,7 +687,6 @@ async function scanSignals(){
    const stBear=f.st.every(([l])=>sv[l]==='Bearish');
    const hasRsi=f.rs.length>0,hasSt=f.st.length>0;
 
-   /* Signed ranges are independent: no automatic positive/negative restriction. */
    const bullChangeOk=inRange(bullChange,f.bullMin,f.bullMax);
    const bearChangeOk=inRange(bearChange,f.bearMin,f.bearMax);
 
@@ -666,7 +720,7 @@ async function scanSignals(){
   });
   if(!cancelled){
    $('badge').textContent='SIGNALS UPDATED';
-   setSigStatus(`Signal scan complete. ${doneRef.done}/${u.length} processed. Bullish: ${signalBull.length}; Bearish: ${signalBear.length}. Errors: ${errors}. Last update: ${new Date().toLocaleTimeString()}.${lastError?' Last error: '+lastError:''}`);
+   setSigStatus(`Signal scan complete. ${doneRef.done}/${u.length} processed. Bullish signals: ${signalBull.length}; Bearish signals: ${signalBear.length}. Errors: ${errors}. Last update: ${new Date().toLocaleTimeString()}.${lastError?' Last error: '+lastError:''}`);
   }
  }catch(e){if(!cancelled){$('badge').textContent='API ERROR';setSigStatus('Signal scan failed: '+e.message)}}
  finally{busy=false;$('sigStart').disabled=$('sigOnce').disabled=false;if(id===scanId&&!cancelled&&activeTab==='signalTab')resetSignalAuto()}
@@ -751,14 +805,26 @@ $('bearSort').addEventListener('change',renderSignalTables);
 /* Update table headings immediately when either direction's settings change. */
 ['bullChangeTf','bearChangeTf'].forEach(id=>$(id).addEventListener('change',renderSignalTables));
 
-/* Editing ranges affects the next scan; the existing results remain visible until then. */
+/* Existing price-change settings affect the next signal scan. */
 ['bullChangeMin','bullChangeMax','bearChangeMin','bearChangeMax'].forEach(id=>{
  $(id).addEventListener('change',()=>{
-  const f=selectedSigFilters();
-  setSigStatus('Price-change ranges updated. Run a signal scan to refresh results.');
+  try{
+   selectedSigFilters();
+   setSigStatus('Price-change ranges updated. Run a signal scan to refresh results.');
+  }catch(e){setSigStatus(e.message)}
  });
 });
 
+/* New RSI display settings update their own table immediately, without rescanning. */
+[
+ 'bullRsiDisplayOn','bullRsiDisplayMin','bullRsiDisplayMax',
+ 'bearRsiDisplayOn','bearRsiDisplayMin','bearRsiDisplayMax'
+].forEach(id=>{
+ $(id).addEventListener('input',renderSignalTables);
+ $(id).addEventListener('change',renderSignalTables);
+});
+
+/* Existing controls continue to update the relevant table displays. */
 document.addEventListener('change',e=>{
  if(e.target.matches('input[type=checkbox]')){
   updateFilterCount();
