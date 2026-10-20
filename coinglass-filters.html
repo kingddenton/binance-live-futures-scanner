@@ -78,7 +78,6 @@ progress{width:100%;height:8px;margin-top:10px;accent-color:var(--yellow)}
 <button class="tabbtn" data-tab="signalTab">RSI + Supertrend Signals</button>
 </div>
 
-<!-- MAIN SCANNER -->
 <div id="mainTab" class="tabpage">
 <section class="panel">
 <div class="panelhead"><h2>Scan settings</h2><button class="secondary collapse" data-target="mainSettings">Collapse</button></div>
@@ -160,7 +159,6 @@ progress{width:100%;height:8px;margin-top:10px;accent-color:var(--yellow)}
 <section class="panel"><h2>Matching pairs</h2><div class="tablewrap"><table><thead id="thead"></thead><tbody id="rows"><tr><td>Run a scan to display results.</td></tr></tbody></table></div></section>
 </div>
 
-<!-- INDEPENDENT SIGNAL SCANNER -->
 <div id="signalTab" class="tabpage" hidden>
 <section class="panel">
 <div class="panelhead"><h2>Signal scan settings</h2><button class="secondary collapse" data-target="signalSettings">Collapse</button></div>
@@ -245,7 +243,7 @@ const ST_TFS=[['1m','1m'],['5m','5m'],['15m','15m'],['30m','30m'],['1h','1h'],['
 const $=id=>document.getElementById(id);
 let activeTab='mainTab',busy=false,cancelled=false,scanId=0,autoTimer=null;
 let results=[],signalBull=[],signalBear=[],signalTimer=null;
-let errors=0,lastError='',startedAt=0,doneCount=0,totalCount=0;
+let errors=0,lastError='',startedAt=0;
 const activeRequests=new Set();
 const TRACKER_KEY='binanceScannerRsiMoveTrackerV1';
 let trackerStates={},trackerUniverse=[],trackerCollapsed=false;
@@ -281,9 +279,7 @@ function buildFilters(){
 }
 function n(id){const v=$(id).value.trim();return v===''?null:Number(v)}
 function on(id){return $(id).checked}
-function range(min,max,label){
- if(min!==null&&max!==null&&min>max)throw Error(label+': minimum cannot exceed maximum');
-}
+function range(min,max,label){if(min!==null&&max!==null&&min>max)throw Error(label+': minimum cannot exceed maximum')}
 function inRange(v,min,max){return Number.isFinite(v)&&(min===null||v>=min)&&(max===null||v<=max)}
 function fmt(v){return Number.isFinite(v)?Number(v).toLocaleString(undefined,{maximumFractionDigits:8}):'—'}
 function pct(v){return (v>0?'+':'')+v.toFixed(2)+'%'}
@@ -321,7 +317,6 @@ function supertrend(k,p=10,m=3){
  }
  return t[N-1]===1?'Bullish':'Bearish';
 }
-
 async function get(path,attempt=0){
  const ctrl=new AbortController();activeRequests.add(ctrl);let timeout=false;
  const timer=setTimeout(()=>{timeout=true;ctrl.abort()},15000);
@@ -488,25 +483,49 @@ function sigIntervals(f){
  const s=new Set(['1m']);f.rs.forEach(([l,it])=>s.add(it));f.st.forEach(([l,it])=>s.add(it));
  if(f.changeTf!=='24h')s.add(f.changeTf);if(f.useDea)s.add(f.deaTf==='24h'?'1d':f.deaTf);return [...s];
 }
+
+/* UPDATED: optional DEA column; selected price-change timeframe last. */
 function renderSignalTables(){
  const rsiLabels=RSI_TFS.filter(([l])=>on('sr_'+l)).map(([l])=>l);
- const headers=['Pair','Price','24h % change',...rsiLabels.map(l=>'RSI '+l),'Supertrend','DEA'];
+ const useDea=on('sigUseDea');
+ const changeTf=$('sigChangeTf').value;
+ const headers=[
+  'Pair',
+  ...rsiLabels.map(l=>'RSI '+l),
+  'Supertrend',
+  ...(useDea?['DEA']:[]),
+  'Change '+changeTf
+ ];
+
  function sortList(list,kind){
   const mode=$(kind==='bull'?'bullSort':'bearSort').value;
-  return list.slice().sort((a,b)=>mode==='az'?a.symbol.localeCompare(b.symbol):mode==='rsiHigh'?(b.sortRsi-a.sortRsi):(a.sortRsi-b.sortRsi));
+  return list.slice().sort((a,b)=>
+   mode==='az'?a.symbol.localeCompare(b.symbol):
+   mode==='rsiHigh'?(b.sortRsi-a.sortRsi):(a.sortRsi-b.sortRsi)
+  );
  }
+
  function rows(list,kind){
-  return sortList(list,kind).map(x=>'<tr>'+[
-   `<b>${x.symbol}</b>`,fmt(x.price),pct(x.change24),
-   ...rsiLabels.map(l=>Number.isFinite(x.rsi[l])?x.rsi[l].toFixed(2):'—'),
-   x.stSummary||'—',Number.isFinite(x.dea)?x.dea.toFixed(8):'—'
-  ].map(v=>`<td>${v}</td>`).join('')+'</tr>').join('')||`<tr><td colspan="${headers.length}">No ${kind==='bull'?'bullish':'bearish'} matches.</td></tr>`;
+  return sortList(list,kind).map(x=>{
+   const cells=[
+    `<b>${x.symbol}</b>`,
+    ...rsiLabels.map(l=>Number.isFinite(x.rsi[l])?x.rsi[l].toFixed(2):'—'),
+    x.stSummary||'—'
+   ];
+   if(useDea)cells.push(Number.isFinite(x.dea)?x.dea.toFixed(8):'—');
+   cells.push(Number.isFinite(x.change)?pct(x.change):'—');
+   return '<tr>'+cells.map(v=>`<td>${v}</td>`).join('')+'</tr>';
+  }).join('')||`<tr><td colspan="${headers.length}">No ${kind==='bull'?'bullish':'bearish'} matches.</td></tr>`;
  }
+
  $('bullHead').innerHTML='<tr>'+headers.map(x=>`<th>${x}</th>`).join('')+'</tr>';
  $('bearHead').innerHTML='<tr>'+headers.map(x=>`<th>${x}</th>`).join('')+'</tr>';
- $('bullRows').innerHTML=rows(signalBull,'bull');$('bearRows').innerHTML=rows(signalBear,'bear');
- $('bullCount').textContent=signalBull.length;$('bearCount').textContent=signalBear.length;
+ $('bullRows').innerHTML=rows(signalBull,'bull');
+ $('bearRows').innerHTML=rows(signalBear,'bear');
+ $('bullCount').textContent=signalBull.length;
+ $('bearCount').textContent=signalBear.length;
 }
+
 async function scanSignals(){
  if(busy||activeTab!=='signalTab')return;
  let f;try{f=selectedSigFilters()}catch(e){setSigStatus(e.message);return}
@@ -540,12 +559,27 @@ async function scanSignals(){
    const stBear=f.st.every(([l])=>sv[l]==='Bearish');
    const hasRsi=f.rs.length>0,hasSt=f.st.length>0;
    const priceBull=Number.isFinite(change)&&change>=f.threshold;
+   // Threshold stays positive in settings; bearish price must be <= negative threshold.
    const priceBear=Number.isFinite(change)&&change<=-f.threshold;
    const deaBull=!f.useDea||(Number.isFinite(dea)&&dea>=f.bdea);
    const deaBear=!f.useDea||(Number.isFinite(dea)&&dea<=f.sdea);
    const bullRsiOk=!hasRsi||rsiBull,bearRsiOk=!hasRsi||rsiBear;
    const bullStOk=!hasSt||stBull,bearStOk=!hasSt||stBear;
-   const common={symbol:t.symbol,price:+t.lastPrice,change24:+t.priceChangePercent,rsi:rv,st:sv,dea,sortRsi:hasRsi?rv[f.rs[0][0]]:50,stSummary:f.st.map(([l])=>l+': '+sv[l]).join(' | ')};
+
+   // Store the selected timeframe's change for display and export.
+   const common={
+    symbol:t.symbol,
+    price:+t.lastPrice,
+    change24:+t.priceChangePercent,
+    change,
+    changeTf:f.changeTf,
+    rsi:rv,
+    st:sv,
+    dea,
+    sortRsi:hasRsi?rv[f.rs[0][0]]:50,
+    stSummary:f.st.map(([l])=>l+': '+sv[l]).join(' | ')
+   };
+
    if(bullRsiOk&&bullStOk&&priceBull&&deaBull)signalBull.push({...common});
    if(bearRsiOk&&bearStOk&&priceBear&&deaBear)signalBear.push({...common});
    doneRef.done++;renderSignalTables();$('sigErrors').textContent=errors;updateProgress('signalTab',doneRef.done,u.length,startedAt);
@@ -585,11 +619,33 @@ function exportMain(){
  for(const x of results){const row=[x.symbol,x.price];active.forEach(([k,l])=>row.push(x[k]?.[l]??''));if(on('useVol24'))row.push(x.quoteVol);if(on('useVol4'))row.push(x.vol4??'');rows.push(row)}
  csvDownload(headers,rows,'binance-futures-scanner.csv');
 }
+
+/* UPDATED: CSV column order matches the signal table and hides DEA when disabled. */
 function exportSignals(){
- const labels=RSI_TFS.filter(([l])=>on('sr_'+l)).map(([l])=>l),headers=['Direction','Pair','Price','24h change %',...labels.map(l=>'RSI '+l),'Supertrend','DEA'];
- const rows=[];for(const [direction,list] of [['BULLISH',signalBull],['BEARISH',signalBear]])for(const x of list)rows.push([direction,x.symbol,x.price,x.change24,...labels.map(l=>x.rsi[l]??''),x.stSummary,x.dea]);
- if(!rows.length){setSigStatus('No signals to export.');return}csvDownload(headers,rows,'binance-rsi-supertrend-signals.csv');
+ const labels=RSI_TFS.filter(([l])=>on('sr_'+l)).map(([l])=>l);
+ const useDea=on('sigUseDea');
+ const changeTf=$('sigChangeTf').value;
+ const headers=[
+  'Direction',
+  'Pair',
+  ...labels.map(l=>'RSI '+l),
+  'Supertrend',
+  ...(useDea?['DEA']:[]),
+  'Change '+changeTf+' %'
+ ];
+ const rows=[];
+ for(const [direction,list] of [['BULLISH',signalBull],['BEARISH',signalBear]]){
+  for(const x of list){
+   const row=[direction,x.symbol,...labels.map(l=>x.rsi[l]??''),x.stSummary];
+   if(useDea)row.push(x.dea);
+   row.push(x.change??'');
+   rows.push(row);
+  }
+ }
+ if(!rows.length){setSigStatus('No signals to export.');return}
+ csvDownload(headers,rows,'binance-rsi-supertrend-signals.csv');
 }
+
 buildFilters();updateFilterCount();renderTracker();setTrackerCollapsed(trackerCollapsed);
 document.querySelectorAll('.collapse').forEach(b=>b.addEventListener('click',()=>{
  const el=$(b.dataset.target);el.hidden=!el.hidden;b.textContent=el.hidden?'Expand':'Collapse';
@@ -606,7 +662,13 @@ $('sigOnce').addEventListener('click',()=>{if(signalTimer)clearTimeout(signalTim
 $('sigStop').addEventListener('click',stopAll);$('sigCsv').addEventListener('click',exportSignals);
 $('sigRefresh').addEventListener('change',resetSignalAuto);
 $('bullSort').addEventListener('change',renderSignalTables);$('bearSort').addEventListener('change',renderSignalTables);
-document.addEventListener('change',e=>{if(e.target.matches('input[type=checkbox]')){updateFilterCount();mainRender()}});
+document.addEventListener('change',e=>{
+ if(e.target.matches('input[type=checkbox]')){
+  updateFilterCount();
+  mainRender();
+  renderSignalTables();
+ }
+});
 </script>
 </body>
 </html>
